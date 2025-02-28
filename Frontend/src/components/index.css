@@ -1,0 +1,33 @@
+@keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+  
+  .swiper-pagination-bullet {
+    width: 12px !important;
+    height: 12px !important;
+    background: white !important;
+    opacity: 0.5 !important;
+  }
+  
+  .swiper-pagination-bullet-active {
+    opacity: 1 !important;
+  }
+  
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: white !important;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  

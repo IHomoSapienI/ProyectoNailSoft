@@ -1,0 +1,31 @@
+.custom-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #D53F8C; /* Color del borde rosa */
+    border-radius: 4px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-checkbox.checked {
+    background: #D53F8C; /* Color de fondo rosa cuando está marcado */
+    border-color: #D53F8C; /* Color del borde rosa cuando está marcado */
+}
+
+  
+  .custom-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%; /* Centra verticalmente */
+    left: 50%; /* Centra horizontalmente */
+    width: 8px;
+    height: 14px;
+    border: solid white; /* Color de la marca de verificación */
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg); /* Ajusta la posición y rota */
+  }
+  
