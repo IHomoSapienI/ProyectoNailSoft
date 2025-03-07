@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import './Formulario.css'
 
 const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     const [nombreRol, setNombreRol] = useState('');
@@ -100,7 +101,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     };
 
     return (
-        <div className="max-h-96 overflow-y-auto">
+        <div className="formulario max-h-96 overflow-y-auto">
             <form onSubmit={manejarEnvio} className="space-y-4">
                 <div>
                     <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">Nombre del Rol: <span className="text-red-500">*</span></label>

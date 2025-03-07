@@ -1,120 +1,260 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { FaHeart } from 'react-icons/fa'; // Importa el ícono de corazón
-import './SeleccionarServicios.css'; // Asegúrate de que la ruta sea correcta
+"use client"
+
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import { FaHeart, FaChevronLeft, FaChevronRight, FaBookmark, FaPen } from "react-icons/fa"
+import "./SeleccionarServicios.css"
+
+const HeartBurst = ({ x, y }) => {
+  return (
+    <div className="heart-burst" style={{ left: x, top: y }}>
+      {[...Array(8)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="floating-heart"
+          initial={{
+            scale: 0,
+            x: 0,
+            y: 0,
+            opacity: 1,
+          }}
+          animate={{
+            scale: [0, 1.5, 1],
+            x: Math.cos((i * 45 * Math.PI) / 180) * 50,
+            y: Math.sin((i * 45 * Math.PI) / 180) * 50,
+            opacity: [1, 0],
+          }}
+          transition={{
+            duration: 1,
+            ease: "easeOut",
+          }}
+        >
+          <FaHeart />
+        </motion.div>
+      ))}
+    </div>
+  )
+}
 
 const SeleccionarServicios = () => {
-  const [servicios, setServicios] = useState([]);
-  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
-  const [total, setTotal] = useState(0);
-  const navigate = useNavigate();
+  const [servicios, setServicios] = useState([])
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([])
+  const [total, setTotal] = useState(0)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [heartBursts, setHeartBursts] = useState([])
+  const navigate = useNavigate()
+
+  const ITEMS_PER_PAGE = 4
+  const totalPages = Math.ceil(servicios.length / ITEMS_PER_PAGE)
 
   useEffect(() => {
     const obtenerServicios = async () => {
       try {
-        const response = await axios.get('https://gitbf.onrender.com/api/servicios');
-        setServicios(response.data.servicios);
+        const response = await axios.get("https://gitbf.onrender.com/api/servicios")
+        setServicios(response.data.servicios)
       } catch (error) {
-        console.error('Error al obtener los servicios:', error);
+        console.error("Error al obtener los servicios:", error)
       }
-    };
+    }
 
-    obtenerServicios();
-  }, []);
+    obtenerServicios()
+  }, [])
 
-  const manejarSeleccionServicio = (servicio) => {
-    const yaSeleccionado = serviciosSeleccionados.find((s) => s._id === servicio._id);
+  const manejarSeleccionServicio = (servicio, event) => {
+    // Crear explosión de corazones en la posición del clic
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    const newBurst = {
+      id: Date.now(),
+      x,
+      y,
+    }
+
+    setHeartBursts((prev) => [...prev, newBurst])
+    setTimeout(() => {
+      setHeartBursts((prev) => prev.filter((burst) => burst.id !== newBurst.id))
+    }, 1000)
+
+    const yaSeleccionado = serviciosSeleccionados.find((s) => s._id === servicio._id)
 
     if (yaSeleccionado) {
-      const nuevosServiciosSeleccionados = serviciosSeleccionados.filter(
-        (s) => s._id !== servicio._id
-      );
-      setServiciosSeleccionados(nuevosServiciosSeleccionados);
-      setTotal(total - servicio.precio);
+      const nuevosServiciosSeleccionados = serviciosSeleccionados.filter((s) => s._id !== servicio._id)
+      setServiciosSeleccionados(nuevosServiciosSeleccionados)
+      setTotal(total - servicio.precio)
     } else {
-      setServiciosSeleccionados([...serviciosSeleccionados, servicio]);
-      setTotal(total + servicio.precio);
+      setServiciosSeleccionados([...serviciosSeleccionados, servicio])
+      setTotal(total + servicio.precio)
     }
-  };
+  }
 
   const manejarAgendarCita = () => {
     if (serviciosSeleccionados.length > 0) {
-      navigate('/citas', { state: { serviciosSeleccionados, total } });
+      navigate("/citas", { state: { serviciosSeleccionados, total } })
     } else {
-      alert('Por favor, selecciona al menos un servicio.');
+      alert("Por favor, selecciona al menos un servicio.")
     }
-  };
+  }
+
+  const nextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setIsFlipping(true)
+      setCurrentPage((prev) => prev + 1)
+      setTimeout(() => setIsFlipping(false), 500)
+    }
+  }
+
+  const prevPage = () => {
+    if (currentPage > 0) {
+      setIsFlipping(true)
+      setCurrentPage((prev) => prev - 1)
+      setTimeout(() => setIsFlipping(false), 500)
+    }
+  }
+
+  const getCurrentPageServices = () => {
+    const start = currentPage * ITEMS_PER_PAGE
+    return servicios.slice(start, start + ITEMS_PER_PAGE)
+  }
 
   return (
-    <div className="container my-12 mx-auto px-4 md:px-12">
-      {/* Título de Bienvenida */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-purple-700">¡Bienvenidos a nuestro Servicio de Uñas!</h1>
-        <p className="text-lg text-gray-600">Selecciona los mejores servicios para tus uñas y agenda tu cita hoy mismo.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Lista de Servicios con Checkboxes */}
-        <div className="border rounded-lg shadow-lg p-6 bg-white">
-          <h2 className="text-2xl font-bold mb-4 text-center text-purple-600">Selecciona tus Servicios</h2>
-          <div className="max-h-96 overflow-y-auto scrollbar-hidden space-y-4">
-            {servicios.map((servicio) => (
-              <div
-                key={servicio._id}
-                className="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-100 transition duration-200 cursor-pointer"
-                onClick={() => manejarSeleccionServicio(servicio)}
-              >
-                <div
-                  className={`custom-checkbox mr-4 ${serviciosSeleccionados.find((s) => s._id === servicio._id) ? 'checked' : ''}`}
-                >
-                  {serviciosSeleccionados.find((s) => s._id === servicio._id) && (
-                    <FaHeart className="text-white" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold">{servicio.nombreServicio}</h3>
-                  <p className="text-sm text-gray-600 font-semibold">Precio: ${servicio.precio}</p>
-                  <p className="text-gray-600 text-sm">{servicio.descripcion || 'Descripción no disponible'}</p>
-                  <span className="text-yellow-400">⭐⭐⭐⭐⭐</span>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="notebook-container">
+      <div className="notebook">
+        {/* Espiral de la libreta */}
+        <div className="notebook-spiral">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="spiral-ring"></div>
+          ))}
         </div>
 
-        {/* Resumen de Servicios Seleccionados */}
-        <div className="border rounded-lg shadow-lg p-6 bg-white flex flex-col">
-          <h2 className="text-2xl font-bold mb-4 text-center text-violet-600">Resumen de Selección</h2>
-          <div className="max-h-80 overflow-y-auto scrollbar-hidden mb-4">
-            {serviciosSeleccionados.length === 0 ? (
-              <p className="text-center text-gray-600">No has seleccionado ningún servicio.</p>
-            ) : (
-              <div>
-                {serviciosSeleccionados.map((servicio) => (
-                  <div key={servicio._id} className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                    <p>
-                      <strong>{servicio.nombreServicio}</strong> - ${servicio.precio}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Marcador */}
+        <div className="bookmark">
+          <FaBookmark />
+        </div>
 
-          {/* Total estático */}
-          <p className="text-lg font-bold text-center">Total: ${total}</p>
+        {/* Botones de navegación */}
+        <button
+          className={`page-nav-button prev ${currentPage === 0 ? "disabled" : ""}`}
+          onClick={prevPage}
+          disabled={currentPage === 0}
+        >
+          <FaChevronLeft />
+        </button>
 
-          <button
-            className="mt-4 w-full bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 rounded"
-            onClick={manejarAgendarCita}
+        <button
+          className={`page-nav-button next ${currentPage === totalPages - 1 ? "disabled" : ""}`}
+          onClick={nextPage}
+          disabled={currentPage === totalPages - 1}
+        >
+          <FaChevronRight />
+        </button>
+
+        {/* Contenido de la libreta */}
+        <div className="notebook-content">
+          {/* Página izquierda - Servicios */}
+          <motion.div
+            className={`notebook-page left-page ${isFlipping ? "flipping" : ""}`}
+            initial={{ rotateY: 0 }}
+            animate={{ rotateY: isFlipping ? -180 : 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Agendar Cita
-          </button>
+            <div className="page-header">
+              <h2>Servicios Disponibles</h2>
+              <span className="page-number">Página {currentPage + 1}</span>
+            </div>
+
+            <div className="services-list custom-scrollbar">
+              {getCurrentPageServices().map((servicio) => (
+                <motion.div
+                  key={servicio._id}
+                  className={`service-item ${
+                    serviciosSeleccionados.find((s) => s._id === servicio._id) ? "selected" : ""
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={(e) => manejarSeleccionServicio(servicio, e)}
+                >
+                  <div className="service-checkbox">
+                    {serviciosSeleccionados.find((s) => s._id === servicio._id) ? (
+                      <FaHeart className="heart-icon" />
+                    ) : (
+                      <div className="checkbox-empty" />
+                    )}
+                  </div>
+                  <div className="service-details">
+                    <h3>{servicio.nombreServicio}</h3>
+                    <div className="service-price">${servicio.precio}</div>
+                    <p className="service-description">{servicio.descripcion || "Sin descripción"}</p>
+                    <div className="service-rating">⭐⭐⭐⭐⭐</div>
+                  </div>
+
+                  {/* Animación de explosión de corazones */}
+                  <AnimatePresence>
+                    {heartBursts.map((burst) => (
+                      <HeartBurst key={burst.id} x={burst.x} y={burst.y} />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Página derecha - Selecciones */}
+          <div className="notebook-page right-page">
+            <div className="page-header">
+              <h2>Mi Selección</h2>
+              <FaPen className="pen-icon" />
+            </div>
+
+            <div className="selected-services custom-scrollbar">
+              {serviciosSeleccionados.length === 0 ? (
+                <div className="empty-selection">
+                  <p>No has seleccionado ningún servicio aún.</p>
+                  <p className="hint">Haz clic en los servicios de la izquierda para agregarlos.</p>
+                </div>
+              ) : (
+                <div className="selection-list">
+                  {serviciosSeleccionados.map((servicio) => (
+                    <motion.div
+                      key={servicio._id}
+                      className="selected-item"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                    >
+                      <span className="item-name">{servicio.nombreServicio}</span>
+                      <span className="item-price">${servicio.precio}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="total-section">
+              <div className="total-line">
+                <span>Total:</span>
+                <span className="total-amount">${total}</span>
+              </div>
+
+              <motion.button
+                className="schedule-button"
+                onClick={manejarAgendarCita}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={serviciosSeleccionados.length === 0}
+              >
+                Agendar Cita
+              </motion.button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SeleccionarServicios;
+export default SeleccionarServicios
+

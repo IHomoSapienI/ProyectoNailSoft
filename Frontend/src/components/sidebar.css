@@ -1,5 +1,6 @@
 .sidebar-container {
   position: fixed;
+  display: flex;
   top: 0;
   left: 0;
   height: 100vh;
@@ -33,9 +34,11 @@
 }
 
 .sidebar-header {
+  display: flex;
   padding: 1rem 0;
   margin-bottom: 1rem;
   border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+  position: sticky;
 }
 
 .logo-container {

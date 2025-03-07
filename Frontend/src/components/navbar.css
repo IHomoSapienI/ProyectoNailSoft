@@ -1,13 +1,15 @@
 .navbar {
-  position: fixed;
+  position:sticky;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.8);
+
+  z-index: 500;
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 0.75rem 2rem;
   transition: all 0.3s ease;
+  /* height: 16vh; */
 }
 
 .navbar.scrolled {
@@ -17,10 +19,11 @@
 
 .navbar-container {
   max-width: 1400px;
-  margin: 0 auto;
+  margin: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 10vh;
 }
 
 .navbar-brand {
@@ -31,10 +34,10 @@
 }
 
 .navbar-brand img {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  transition: transform 0.3s ease;
+  width: 70px;
+  height: 70px;
+  border-radius: 100%;
+  transition: transform 0.1s ease;
 }
 
 .brand-name {
@@ -48,7 +51,8 @@
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2.5rem;
+  /* cursor: pointer; */
 }
 
 .menu-item {
@@ -64,10 +68,11 @@
   border: none;
   border-radius: 8px;
   color: #4a5568;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.900rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.4s ease;
+  
 }
 
 .menu-trigger:hover {
@@ -76,7 +81,7 @@
 }
 
 .menu-icon {
-  width: 1.25rem;
+  width: 2.50rem;
   height: 1.25rem;
 }
 
@@ -88,7 +93,7 @@
 
 .menu-dropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(80% + 0.1rem);
   left: 50%;
   transform-origin: top center;
   min-width: 220px;
@@ -102,7 +107,7 @@
   content: "";
   position: absolute;
   top: -6px;
-  left: 50%;
+  left: 0%;
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
@@ -137,7 +142,7 @@
   height: 2px;
   background: linear-gradient(to right, #ff69b4, #da70d6);
   transform: translateX(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.50s ease;
 }
 
 .menu-link:hover::after {
@@ -150,14 +155,15 @@
 }
 
 .logout-button {
-  display: flex;
+  display: flexbox;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem ;
+  margin: auto;
   background: linear-gradient(135deg, #ff69b4, #da70d6);
   border: none;
   border-radius: 8px;
-  color: white;
+  color: black;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -186,7 +192,7 @@
     flex-direction: column;
     align-items: stretch;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.6s ease;
   }
 
   .navbar-menu.open {
@@ -224,20 +230,20 @@
 }
 
 .menu-item {
-  animation: slideIn 0.3s ease forwards;
+  animation: slideIn 0.1s ease forwards;
 }
 
 .menu-item:nth-child(2) {
-  animation-delay: 0.1s;
-}
+  animation-delay: 0s;
+} 
 .menu-item:nth-child(3) {
-  animation-delay: 0.2s;
+  animation-delay: 0s;
 }
 .menu-item:nth-child(4) {
-  animation-delay: 0.3s;
+  animation-delay: 0s;
 }
 .menu-item:nth-child(5) {
-  animation-delay: 0.4s;
+  animation-delay:0s;
 }
 
 /* Efecto de brillo en hover */
@@ -246,13 +252,13 @@
   position: absolute;
   top: -50%;
   left: -50%;
-  width: 200%;
+  width: 150%;
   height: 200%;
   background: linear-gradient(
     to bottom right,
     rgba(255, 255, 255, 0) 0%,
     rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0) 100%
+    rgba(255, 255, s255, 0) 100%
   );
   transform: rotate(45deg);
   transition: all 0.3s ease;

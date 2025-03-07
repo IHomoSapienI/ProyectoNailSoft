@@ -5,6 +5,7 @@ import Swal from 'sweetalert2'; // Importar SweetAlert2
 const FormularioEmpleado = ({ empleado, onClose }) => {
     const [nombre, setNombre] = useState('');
     const [apellido, setApellido] = useState('');
+    const [correo, setCorreo] = useState('');
     const [telefono, setTelefono] = useState('');
     const [estado, setEstado] = useState('Activo');
 
@@ -12,6 +13,7 @@ const FormularioEmpleado = ({ empleado, onClose }) => {
         if (empleado) {
             setNombre(empleado.nombreempleado);
             setApellido(empleado.apellidoempleado);
+            setCorreo(empleado.correoempleado);
             setTelefono(empleado.telefonoempleado);
             setEstado(empleado.estadoempleado);
         }
@@ -23,6 +25,7 @@ const FormularioEmpleado = ({ empleado, onClose }) => {
         const nuevoEmpleado = {
             nombreempleado: nombre,
             apellidoempleado: apellido,
+            correoempleado: correo,
             telefonoempleado: telefono,
             estadoempleado: estado,
         };
@@ -48,10 +51,14 @@ const FormularioEmpleado = ({ empleado, onClose }) => {
             onClose(); // Cerrar el formulario después de guardar
         } catch (error) {
             console.error('Error al guardar el empleado:', error);
+            let mensajeError = 'Hubo un problema al guardar el empleado. Por favor, inténtalo de nuevo.';
+            if (error.response && error.response.data.message) {
+                mensajeError = error.response.data.message;
+            }
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Hubo un problema al guardar el empleado. Por favor, inténtalo de nuevo.',
+                text: mensajeError,
             });
         }
     };
@@ -79,6 +86,16 @@ const FormularioEmpleado = ({ empleado, onClose }) => {
                 />
             </div>
             <div>
+                <label className="block text-gray-700">Correo:</label>
+                <input
+                    type="email"
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                    required
+                />
+            </div>
+            <div>
                 <label className="block text-gray-700">Teléfono:</label>
                 <input
                     type="tel"
@@ -100,7 +117,14 @@ const FormularioEmpleado = ({ empleado, onClose }) => {
                     <option value="Inactivo">Inactivo</option>
                 </select>
             </div>
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-2">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+                >
+                    Cancelar
+                </button>
                 <button
                     type="submit"
                     className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"

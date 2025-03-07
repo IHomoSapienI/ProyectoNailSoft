@@ -44,7 +44,7 @@ router.use('/uploads', express.static('uploads'));
 
 
 router.get('/',serviciosGet);
-router.post('/', serviciosPost);
+router.post('/', upload.single('imagen'), serviciosPost);
 router.put('/:id', upload.single('imagen'), serviciosPut); // Actualizar un servicio
 router.delete('/:id', serviciosDelete);
 

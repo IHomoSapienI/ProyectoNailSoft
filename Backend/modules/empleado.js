@@ -9,14 +9,19 @@ const EmpleadoSchema = Schema({
         type: String,
         required: true
     },
+    correoempleado: {  // Nuevo campo agregado
+        type: String,
+        required: true,
+        unique: true // Asegura que no haya duplicados de correo de empleado
+    },
     telefonoempleado: {
         type: String,
         required: true
     },
     estadoempleado: {
-        type: String,
-        enum: ['Activo', 'Inactivo'], // Limita a estos dos valores
-        default: 'Activo'
+        type: Boolean,
+        default: true,
+        required: [true, 'El estado es obligatorio']
     }
 });
 

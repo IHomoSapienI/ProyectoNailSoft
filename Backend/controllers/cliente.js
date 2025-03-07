@@ -3,13 +3,29 @@ const Cliente = require('../modules/cliente');
 // Crear un nuevo cliente
 const crearCliente = async (req, res) => {
     try {
-        const { documentocliente, nombrecliente, direccioncliente, celularcliente, estadocliente } = req.body;
+        const { nombrecliente, apellidocliente, correocliente, celularcliente, estadocliente } = req.body;
+
+        // Validar campos obligatorios
+        if (!nombrecliente || !apellidocliente || !correocliente || !celularcliente) {
+            return res.status(400).json({ message: 'Faltan campos obligatorios' });
+        }
+
+        // Verificar si el correo o el celular ya existen
+        const existeCorreo = await Cliente.findOne({ correocliente });
+        if (existeCorreo) {
+            return res.status(400).json({ message: 'El correo ya está en uso' });
+        }
+
+        const existeCelular = await Cliente.findOne({ celularcliente });
+        if (existeCelular) {
+            return res.status(400).json({ message: 'El celular ya está en uso' });
+        }
 
         // Crear una nueva instancia de Cliente
         const nuevoCliente = new Cliente({
-            documentocliente,
             nombrecliente,
-            direccioncliente,
+            apellidocliente,
+            correocliente,
             celularcliente,
             estadocliente
         });
@@ -49,12 +65,35 @@ const obtenerClientePorId = async (req, res) => {
 const actualizarCliente = async (req, res) => {
     try {
         const { id } = req.params;
-        const datosActualizados = req.body;
+        const { nombrecliente, apellidocliente, correocliente, celularcliente, estadocliente } = req.body;
 
-        const clienteActualizado = await Cliente.findByIdAndUpdate(id, datosActualizados, { new: true });
-        if (!clienteActualizado) {
+        // Verificar si el cliente existe
+        const clienteExistente = await Cliente.findById(id);
+        if (!clienteExistente) {
             return res.status(404).json({ message: 'Cliente no encontrado' });
         }
+
+        // Verificar si el correo o el celular ya están en uso por otro cliente
+        if (correocliente && correocliente !== clienteExistente.correocliente) {
+            const existeCorreo = await Cliente.findOne({ correocliente });
+            if (existeCorreo) {
+                return res.status(400).json({ message: 'El correo ya está en uso' });
+            }
+        }
+
+        if (celularcliente && celularcliente !== clienteExistente.celularcliente) {
+            const existeCelular = await Cliente.findOne({ celularcliente });
+            if (existeCelular) {
+                return res.status(400).json({ message: 'El celular ya está en uso' });
+            }
+        }
+
+        const clienteActualizado = await Cliente.findByIdAndUpdate(
+            id,
+            { nombrecliente, apellidocliente, correocliente, celularcliente, estadocliente },
+            { new: true }
+        );
+
         res.status(200).json({ message: 'Cliente actualizado con éxito', cliente: clienteActualizado });
     } catch (error) {
         res.status(500).json({ message: 'Error al actualizar el cliente', error });

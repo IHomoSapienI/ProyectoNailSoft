@@ -1,27 +1,64 @@
-const bcrypt = require('bcryptjs');
-const User = require('../modules/usuario');
+const bcrypt = require("bcryptjs")
+const Usuario = require("../modules/usuario")
+const Rol = require("../modules/rol")
 
-const createUser = async ({ nombre, email, password, rol, estado }) => {
-    try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        console.log('Contraseña encriptada antes de guardar:', hashedPassword);
+/**
+ * Crea un nuevo usuario en la base de datos
+ * @param {Object} userData - Datos del usuario a crear
+ * @returns {Promise<Object>} - Usuario creado
+ */
+const createUser = async (userData) => {
+  try {
+    console.log("createUser - Datos recibidos:", JSON.stringify(userData, null, 2))
 
-        const newUser = new User({
-            nombre,
-            email,
-            password: hashedPassword,
-            rol,
-            estado
-        });
-
-        await newUser.save();
-        console.log('Usuario creado exitosamente:', JSON.stringify(newUser, null, 2));
-
-        return newUser;
-    } catch (error) {
-        throw new Error('Error al crear el usuario: ' + error.message);
+    // Verificar si el rol existe
+    let rolId = userData.rol
+    if (rolId) {
+      const rolExiste = await Rol.findById(rolId)
+      if (!rolExiste) {
+        throw new Error(`El rol con ID ${rolId} no existe`)
+      }
+    } else {
+      // Asignar rol por defecto (Cliente)
+      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
+      if (!defaultRol) {
+        throw new Error("No se encontró el rol por defecto (Cliente)")
+      }
+      rolId = defaultRol._id
     }
-};
 
-module.exports = { createUser };
+    // Encriptar la contraseña
+    const salt = bcrypt.genSaltSync(10)
+    const hashedPassword = bcrypt.hashSync(userData.password, salt)
+
+    // Crear el usuario con los datos proporcionados
+    const nuevoUsuario = new Usuario({
+      nombre: userData.nombre,
+      apellido: userData.apellido || "",
+      email: userData.email,
+      correo: userData.email, // Asegurar que ambos campos tengan el mismo valor
+      celular: userData.celular || "",
+      password: hashedPassword,
+      rol: rolId,
+      estado: userData.estado !== undefined ? userData.estado : true,
+    })
+
+    // Guardar el usuario en la base de datos
+    await nuevoUsuario.save()
+
+    // Obtener el usuario con el rol poblado
+    const usuarioGuardado = await Usuario.findById(nuevoUsuario._id).populate("rol")
+
+    console.log("Usuario creado exitosamente:", JSON.stringify(usuarioGuardado, null, 2))
+
+    return usuarioGuardado
+  } catch (error) {
+    console.error("Error en createUser:", error)
+    throw error
+  }
+}
+
+module.exports = {
+  createUser,
+}
+

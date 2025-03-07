@@ -72,17 +72,50 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 };
 
 const Layout = ({ children }) => {
-  const userRole = localStorage.getItem("userRole")
-  const isAdmin = userRole === "admin"
+  const userRole = localStorage.getItem("userRole");
+  const isAdmin = userRole === "admin";
 
   return (
     <div className="min-h-screen bg-gray-10">
       {isAdmin ? <Sidebar /> : <Navbar />}
       <div className={`content min-h-screen ${isAdmin ? "md:ml-[250px]" : ""}`}>{children}</div>
       <Footer />
+      
+      {/* Botones de redes sociales solo para la vista del cliente */}
+      {!isAdmin && (
+        <>
+          <a 
+            href="https://wa.me/3015789978?text=Quisiera realizar una reserva y poner magia en mis uñas" 
+            className="fixed bottom-5 right-5 p-2 rounded-full shadow-lg transition duration-300 z-50"
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <img 
+              data-ripple-light="true" data-tooltip-target="tooltip"
+              src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" 
+              alt="WhatsApp" 
+              className="w-12 h-12"
+            />
+              
+           
+          </a>
+          <a 
+  href="https://www.instagram.com/belleza_spacol/" 
+  className="fixed bottom-5 left-5 p-2 rounded-full shadow-lg transition duration-300 z-50"
+  target="_blank" 
+  rel="noopener noreferrer"
+>
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" 
+    alt="Instagram" 
+    className="w-12 h-12"
+  />
+</a>
+        </>
+      )}
     </div>
-  )
-}
+  );
+};
 
 
 const AuthLayout = ({ children }) => (

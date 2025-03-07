@@ -1,108 +1,303 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+"use client"
+
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import { FaClock, FaTags, FaStar, FaHeart, FaCalendarPlus, FaTimes, FaCheck } from "react-icons/fa"
+import "./articlesgrid.css"
 
 const ArticlesGrid = () => {
-  const [servicios, setServicios] = useState([]);
-  const navigate = useNavigate();
+  const [servicios, setServicios] = useState([])
+  const [selectedService, setSelectedService] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const obtenerServicios = async () => {
       try {
-        const response = await axios.get('https://gitbf.onrender.com/api/servicios');
-        setServicios(response.data.servicios);
+        const response = await axios.get("https://gitbf.onrender.com/api/servicios")
+        setServicios(response.data.servicios)
+        setLoading(false)
       } catch (error) {
-        console.error('Error al obtener los servicios:', error);
+        console.error("Error al obtener los servicios:", error)
+        setLoading(false)
       }
-    };
+    }
 
-    obtenerServicios();
-  }, []);
+    obtenerServicios()
+  }, [])
 
-  const baseUrl = 'https://gitbf.onrender.com/uploads';
+  const baseUrl = "https://gitbf.onrender.com/uploads"
 
   const manejarClickServicio = (servicio) => {
-    const total = servicio.precio;
-    navigate('/citas', { state: { total } });
-  };
+    setSelectedService(servicio)
+  }
 
   const manejarAgregarCita = () => {
-    navigate('/seleccionarservicios');
-  };
+    navigate("/seleccionarservicios")
+  }
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  }
 
   return (
-    <div className="container my-12 mx-auto px-8 md:px-12">
-      <h2 className="text-3xl font-bold text-center mb-8 text-purple-600">
-        💖 ¡Descubre Nuestros Magníficos Servicios de Uñas! 💖
-      </h2>
-      <div className="mt-8 text-center">
-        <button
-          className="bg-pink-300 text-white py-2 px-4 rounded-full font-semibold hover:bg-pink-500 transition-transform transform hover:scale-105"
+    <div className="services-container">
+      {/* Header Section */}
+      <motion.div
+        className="services-header"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h1 className="services-title">Descubre la Magia en Tus Manos</h1>
+        <p className="services-subtitle">Servicios exclusivos diseñados para realzar tu belleza natural</p>
+        <motion.button
+          className="schedule-button primary"
           onClick={manejarAgregarCita}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          Selecciona los servicios & Agenda tú Cita
-        </button>
-      </div>
-      <div className="flex flex-wrap -mx-2">
-        {servicios.map((servicio) => (
-          <div
-            key={servicio._id}
-            className="my-4 px-2 w-full md:w-1/2 lg:w-1/3"
+          <FaCalendarPlus className="button-icon" />
+          <span>Agenda tu Cita Ahora</span>
+        </motion.button>
+      </motion.div>
+
+      {/* Services Grid */}
+      <motion.div className="services-grid" variants={container} initial="hidden" animate="show">
+        {loading
+          ? // Loading skeleton
+            [...Array(6)].map((_, index) => (
+              <motion.div key={index} className="service-card skeleton" variants={item}>
+                <div className="skeleton-image" />
+                <div className="skeleton-content">
+                  <div className="skeleton-title" />
+                  <div className="skeleton-text" />
+                </div>
+              </motion.div>
+            ))
+          : servicios.map((servicio) => (
+              <motion.article
+                key={servicio._id}
+                className="service-card"
+                variants={item}
+                whileHover={{ y: -10 }}
+                onClick={() => manejarClickServicio(servicio)}
+              >
+                <div className="card-image-container">
+                  <img src={`${baseUrl}/${servicio.imagenUrl}`} alt={servicio.nombreServicio} className="card-image" />
+                  <div className="card-overlay">
+                    <motion.div className="overlay-content" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }}>
+                      <FaHeart className="heart-icon" />
+                      <span>Ver Detalles</span>
+                    </motion.div>
+                  </div>
+                </div>
+
+                <div className="card-content">
+                  <div className="card-header">
+                    <h2 className="card-title">{servicio.nombreServicio}</h2>
+                    <div className="price-tag">
+                      <span>${servicio.precio}</span>
+                    </div>
+                  </div>
+
+                  <p className="card-description">{servicio.descripcion || "Descripción no disponible"}</p>
+
+                  <div className="card-footer">
+                    <div className="service-meta">
+                      <div className="meta-item">
+                        <FaTags className="meta-icon" />
+                        <span>{servicio.tipoServicio.nombreTs}</span>
+                      </div>
+                      <div className="meta-item">
+                        <FaClock className="meta-icon" />
+                        <span>{servicio.tiempo} mins</span>
+                      </div>
+                    </div>
+                    <div className="rating">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar key={i} className="star-icon" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+      </motion.div>
+
+      {/* Call to Action Section */}
+      <motion.div className="cta-section" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+        <div className="cta-content">
+          <h2 className="cta-title">¿Lista para Transformar tu Estilo?</h2>
+          <p className="cta-text">Déjanos crear la obra maestra que tus manos merecen</p>
+          <motion.button
+            className="schedule-button secondary"
+            onClick={manejarAgregarCita}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <article
-              className="flex flex-col h-full overflow-hidden rounded-lg shadow-2xl transition-transform transform hover:scale-105 bg-white p-4 cursor-pointer"
-              onClick={() => manejarClickServicio(servicio)}
+            <FaCalendarPlus className="button-icon" />
+            <span>Reserva tu Experiencia</span>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {selectedService && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedService(null)}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ scale: 0.5, opacity: 0, y: 100 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: 100 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative overflow-hidden rounded-lg group">
-                <img
-                  alt={servicio.nombreServicio}
-                  className="h-48 w-full object-cover rounded-lg transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-2"
-                  src={`${baseUrl}/${servicio.imagenUrl}`}
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <p className="text-white text-lg font-bold text-center">
-                    ¡Haz clic para más detalles!
-                  </p>
+              <button className="modal-close" onClick={() => setSelectedService(null)}>
+                <FaTimes />
+              </button>
+
+              <div className="modal-grid">
+                <div className="modal-image-section">
+                  <div className="image-wrapper">
+                    <img
+                      src={`${baseUrl}/${selectedService.imagenUrl}`}
+                      alt={selectedService.nombreServicio}
+                      className="modal-main-image"
+                    />
+                    <div className="image-overlay">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="service-rating"
+                      >
+                        <div className="stars">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar key={i} className="star-icon" />
+                          ))}
+                        </div>
+                        <span>4.9</span>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-details">
+                  <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="modal-title">
+                    {selectedService.nombreServicio}
+                  </motion.h2>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="modal-meta"
+                  >
+                    <div className="meta-tag">
+                      <FaTags className="meta-icon" />
+                      <span>{selectedService.tipoServicio.nombreTs}</span>
+                    </div>
+                    <div className="meta-tag">
+                      <FaClock className="meta-icon" />
+                      <span>{selectedService.tiempo} minutos</span>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="modal-price"
+                  >
+                    <span className="price-label">Precio del Servicio</span>
+                    <span className="price-amount">${selectedService.precio}</span>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="modal-description"
+                  >
+                    <h3>Descripción</h3>
+                    <p>{selectedService.descripcion || "Descripción no disponible"}</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="modal-features"
+                  >
+                    <h3>Características</h3>
+                    <ul>
+                      <li>
+                        <FaCheck className="feature-icon" />
+                        <span>Servicio personalizado</span>
+                      </li>
+                      <li>
+                        <FaCheck className="feature-icon" />
+                        <span>Productos premium</span>
+                      </li>
+                      <li>
+                        <FaCheck className="feature-icon" />
+                        <span>Personal capacitado</span>
+                      </li>
+                      <li>
+                        <FaCheck className="feature-icon" />
+                        <span>Garantía de satisfacción</span>
+                      </li>
+                    </ul>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="modal-actions"
+                  >
+                    <motion.button
+                      className="modal-button schedule"
+                      onClick={() => {
+                        const total = selectedService.precio
+                        navigate("/citas", { state: { total } })
+                      }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <FaCalendarPlus className="button-icon" />
+                      <span>Agendar Cita</span>
+                    </motion.button>
+                  </motion.div>
                 </div>
               </div>
-
-              <header className="flex items-center justify-between leading-tight mb-2 mt-4">
-                <h1 className="text-lg font-bold text-purple-700">{servicio.nombreServicio}</h1>
-                <p className="text-lg text-pink-600 font-semibold">${servicio.precio}</p>
-              </header>
-
-              <div className="flex-1 p-2 bg-gray-50 mb-2 rounded-lg shadow-inner">
-                <p className="text-gray-800 text-sm">{servicio.descripcion || 'Descripción no disponible'}</p>
-              </div>
-
-              <footer className="flex items-center justify-between leading-none p-2">
-                <div className="flex items-center">
-                  <span className="text-pink-600 text-sm mr-1">Tipo:</span>
-                  <span className="ml-1 text-sm font-medium">{servicio.tipoServicio.nombreTs}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-pink-600 text-sm mr-1">Duración:</span>
-                  <span className="text-sm font-medium">{servicio.tiempo} mins</span>
-                </div>
-              </footer>
-            </article>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-8 text-center">
-        <h2 className="text-3xl font-bold text-center mb-8 text-pink-600">
-          ✨ ¡No pierdas tu tiempo, descubre nuestros servicios y novedades! ✨
-        </h2>
-        <button
-          className="bg-pink-300 text-white py-2 px-4 rounded-full font-semibold hover:bg-pink-500 transition-transform transform hover:scale-105"
-          onClick={manejarAgregarCita}
-        >
-          Agendar Cita
-        </button>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  );
-};
+  )
+}
 
-export default ArticlesGrid;
+export default ArticlesGrid
+

@@ -13,6 +13,7 @@ const TablaEmpleados = () => {
     const [empleados, setEmpleados] = useState([]);
     const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState(null);
     const [formModalIsOpen, setFormModalIsOpen] = useState(false);
+    const [busqueda, setBusqueda] = useState('');
 
     // Estado para paginación
     const [paginaActual, setPaginaActual] = useState(1);
@@ -69,16 +70,26 @@ const TablaEmpleados = () => {
         }
     };
 
+    // Filtrar empleados según la búsqueda
+    const empleadosFiltrados = empleados.filter((empleado) => {
+        return (
+            empleado.nombreempleado.toLowerCase().includes(busqueda.toLowerCase()) ||
+            empleado.apellidoempleado.toLowerCase().includes(busqueda.toLowerCase()) ||
+            empleado.correoempleado.toLowerCase().includes(busqueda.toLowerCase()) ||
+            empleado.telefonoempleado.toLowerCase().includes(busqueda.toLowerCase())
+        );
+    });
+
     // Funciones de paginación
     const indiceUltimoEmpleado = paginaActual * empleadosPorPagina;
     const indicePrimerEmpleado = indiceUltimoEmpleado - empleadosPorPagina;
-    const empleadosActuales = empleados.slice(indicePrimerEmpleado, indiceUltimoEmpleado);
+    const empleadosActuales = empleadosFiltrados.slice(indicePrimerEmpleado, indiceUltimoEmpleado);
 
     const cambiarPagina = (numeroPagina) => {
         setPaginaActual(numeroPagina);
     };
 
-    const paginasTotales = Math.ceil(empleados.length / empleadosPorPagina);
+    const paginasTotales = Math.ceil(empleadosFiltrados.length / empleadosPorPagina);
 
     const paginaAnterior = () => {
         if (paginaActual > 1) setPaginaActual(paginaActual - 1);
@@ -104,6 +115,8 @@ const TablaEmpleados = () => {
                     id="searchInput"
                     className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="Buscar en la tabla"
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
                 />
             </div>
             {/* Tabla de empleados ajustada */}
@@ -113,6 +126,7 @@ const TablaEmpleados = () => {
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -124,8 +138,15 @@ const TablaEmpleados = () => {
                                 <tr key={empleado._id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{empleado.nombreempleado}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{empleado.apellidoempleado}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{empleado.correoempleado}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{empleado.telefonoempleado}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{empleado.estadoempleado}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                            empleado.estadoempleado === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            {empleado.estadoempleado}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2">
                                         <button
                                             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
@@ -144,7 +165,7 @@ const TablaEmpleados = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="px-6 py-4 text-center text-sm font-medium text-gray-500">No hay empleados disponibles</td>
+                                <td colSpan="6" className="px-6 py-4 text-center text-sm font-medium text-gray-500">No hay empleados disponibles</td>
                             </tr>
                         )}
                     </tbody>

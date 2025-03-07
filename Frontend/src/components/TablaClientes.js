@@ -1,221 +1,223 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Modal from 'react-modal';
-import FormularioCliente from './FormularioCliente';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Swal from 'sweetalert2'; // Importa SweetAlert2
+"use client"
 
-// Configura el contenedor del modal
-Modal.setAppElement('#root');
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Modal from "react-modal"
+import FormularioCliente from "./FormularioCliente"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faPlus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons"
+import Swal from "sweetalert2"
+
+Modal.setAppElement("#root")
 
 const TablaClientes = () => {
-    const [clientes, setClientes] = useState([]);
-    const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
-    const [formModalIsOpen, setFormModalIsOpen] = useState(false);
+  const [clientes, setClientes] = useState([])
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
+  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [paginaActual, setPaginaActual] = useState(1)
+  const [busqueda, setBusqueda] = useState("")
+  const clientesPorPagina = 5
 
-    // Estado para paginación
-    const [paginaActual, setPaginaActual] = useState(1);
-    const clientesPorPagina = 5; // Cantidad de clientes a mostrar por página
+  useEffect(() => {
+    obtenerClientes()
+  }, [])
 
-    useEffect(() => {
-        obtenerClientes();
-    }, []);
+  const obtenerClientes = async () => {
+    try {
+      const respuesta = await axios.get("https://gitbf.onrender.com/api/clientes")
+      setClientes(respuesta.data || [])
+    } catch (error) {
+      console.error("Error al obtener los clientes:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error al obtener los clientes",
+      })
+    }
+  }
 
-    const obtenerClientes = async () => {
-        try {
-            const respuesta = await axios.get('https://gitbf.onrender.com/api/clientes');
-            setClientes(respuesta.data || []);
-        } catch (error) {
-            console.error('Error al obtener los clientes:', error);
-        }
-    };
+  const filtrarClientes = () => {
+    return clientes.filter(
+      (cliente) =>
+        cliente.nombrecliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        cliente.apellidocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        cliente.correocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase()),
+    )
+  }
 
-    const abrirFormulario = (cliente) => {
-        setClienteSeleccionado(cliente);
-        setFormModalIsOpen(true);
-    };
+  const clientesFiltrados = filtrarClientes()
+  const indiceUltimoCliente = paginaActual * clientesPorPagina
+  const indicePrimerCliente = indiceUltimoCliente - clientesPorPagina
+  const clientesActuales = clientesFiltrados.slice(indicePrimerCliente, indiceUltimoCliente)
+  const paginasTotales = Math.ceil(clientesFiltrados.length / clientesPorPagina)
 
-    const cerrarFormulario = () => {
-        setFormModalIsOpen(false);
-        setClienteSeleccionado(null);
-    };
+  return (
+    <div className="p-6 flex flex-col items-center">
+      <h2 className="text-3xl font-semibold mb-8">Gestión de Clientes</h2>
 
-    const manejarClienteActualizado = () => {
-        obtenerClientes();
-        cerrarFormulario();
-    };
+      <div className="flex justify-between mb-5 w-full max-w-4xl">
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+          onClick={() => {
+            setFormModalIsOpen(true)
+            setClienteSeleccionado(null)
+          }}
+        >
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+          Nuevo Cliente
+        </button>
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          placeholder="Buscar cliente..."
+        />
+      </div>
 
-    const manejarEliminarCliente = async (id) => {
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminarlo!',
-            cancelButtonText: 'Cancelar'
-        });
+      <div className="w-full max-w-4xl overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Apellido
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Celular
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {clientesActuales.map((cliente) => (
+              <tr key={cliente._id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cliente.nombrecliente}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.apellidocliente}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.correocliente}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.celularcliente}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      cliente.estadocliente ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {cliente.estadocliente ? "Activo" : "Inactivo"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded mr-2 transition duration-300"
+                    onClick={() => {
+                      setClienteSeleccionado(cliente)
+                      setFormModalIsOpen(true)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </button>
+                  <button
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
+                    onClick={() => {
+                      Swal.fire({
+                        title: "¿Estás seguro?",
+                        text: "No podrás revertir esta acción",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        cancelButtonColor: "#3085d6",
+                        confirmButtonText: "Sí, eliminar",
+                        cancelButtonText: "Cancelar",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          // Aquí va la lógica para eliminar
+                          axios
+                            .delete(`https://gitbf.onrender.com/api/clientes/${cliente._id}`)
+                            .then(() => {
+                              obtenerClientes()
+                              Swal.fire("Eliminado!", "El cliente ha sido eliminado.", "success")
+                            })
+                            .catch((error) => {
+                              console.error("Error:", error)
+                              Swal.fire("Error!", "No se pudo eliminar el cliente.", "error")
+                            })
+                        }
+                      })
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        if (result.isConfirmed) {
-            try {
-                await axios.delete(`https://gitbf.onrender.com/api/clientes/${id}`);
-                obtenerClientes();
-                Swal.fire('Eliminado!', 'El cliente ha sido eliminado.', 'success');
-            } catch (error) {
-                console.error('Error al eliminar el cliente:', error);
-            }
-        }
-    };
+      {/* Paginación */}
+      <div className="mt-4">
+        <nav className="flex justify-center">
+          <ul className="inline-flex items-center -space-x-px">
+            <li>
+              <button
+                onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+                disabled={paginaActual === 1}
+                className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:bg-gray-200 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+            </li>
+            {[...Array(paginasTotales)].map((_, index) => (
+              <li key={index}>
+                <button
+                  onClick={() => setPaginaActual(index + 1)}
+                  className={`px-3 py-2 leading-tight border border-gray-300 
+                                        ${
+                                          paginaActual === index + 1
+                                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
+                                            : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
+                                        }`}
+                >
+                  {index + 1}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={() => setPaginaActual((prev) => Math.min(prev + 1, paginasTotales))}
+                disabled={paginaActual === paginasTotales}
+                className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:bg-gray-200 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
 
-    // Funciones de paginación
-    const indiceUltimoCliente = paginaActual * clientesPorPagina;
-    const indicePrimerCliente = indiceUltimoCliente - clientesPorPagina;
-    const clientesActuales = clientes.slice(indicePrimerCliente, indiceUltimoCliente);
-
-    const cambiarPagina = (numeroPagina) => {
-        setPaginaActual(numeroPagina);
-    };
-
-    const paginasTotales = Math.ceil(clientes.length / clientesPorPagina);
-
-    const paginaAnterior = () => {
-        if (paginaActual > 1) setPaginaActual(paginaActual - 1);
-    };
-
-    const paginaSiguiente = () => {
-        if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
-    };
-
-    return (
-        <div className="p-6 flex flex-col items-center">
-            <h2 className="text-3xl font-semibold mb-8">Gestión de Clientes</h2>
-
-            <div className="flex justify-between mb-5 w-full h-7 max-w-4xl">
-            {/* Botón para agregar nuevo cliente ajustado */}
-            <button
-               className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                onClick={() => { setFormModalIsOpen(true); setClienteSeleccionado(null); }}
-            >
-                <FontAwesomeIcon icon={faPlus} />
-                
-            </button>
-                {/* Buscador */}
-                <input
-                    type="text"
-                    id="searchInput"
-                    className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Buscar en la tabla"
-                />
-            </div>
-        
-            {/* Tabla de clientes ajustada */}
-            <div className="w-full max-w-4xl">
-                <table className="table min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celular</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {clientesActuales.length > 0 ? (
-                            clientesActuales.map((cliente) => (
-                                <tr key={cliente._id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cliente.documentocliente}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.nombrecliente}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.direccioncliente}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.celularcliente}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.estadocliente}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2">
-                                        <button
-                                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                            onClick={() => abrirFormulario(cliente)}
-                                        >
-                                            <FontAwesomeIcon icon={faEdit} /> 
-                                        </button>
-                                        <button
-                                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                            onClick={() => manejarEliminarCliente(cliente._id)}
-                                        >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-sm font-medium text-gray-500">No hay clientes disponibles</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Paginación */}
-            <div className="mt-4">
-                <nav className="flex justify-center">
-                    <ul className="inline-flex items-center">
-                        <li>
-                            <button
-                                onClick={paginaAnterior}
-                                disabled={paginaActual === 1}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === 1 ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &lt; {/* Flecha izquierda */}
-                            </button>
-                        </li>
-                        {Array.from({ length: paginasTotales }, (_, index) => (
-                            <li key={index}>
-                                <button
-                                    onClick={() => cambiarPagina(index + 1)}
-                                    className={`px-3 py-1 mx-1 rounded ${
-                                        paginaActual === index + 1
-                                            ? 'bg-gray-300 text-gray-700'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {index + 1}
-                                </button>
-                            </li>
-                        ))}
-                        <li>
-                            <button
-                                onClick={paginaSiguiente}
-                                disabled={paginaActual === paginasTotales}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === paginasTotales ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &gt; {/* Flecha derecha */}
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-
-            {/* El Modal */}
-            <Modal
-                isOpen={formModalIsOpen}
-                onRequestClose={cerrarFormulario}
-                contentLabel="Formulario de Cliente"
-                className="fixed inset-0 flex items-center justify-center p-4"
-                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-                    <h2 className="text-lg font-semibold mb-4">{clienteSeleccionado ? 'Editar Cliente' : 'Agregar Cliente'}</h2>
-                    <FormularioCliente cliente={clienteSeleccionado} onClose={manejarClienteActualizado} />
-                </div>
-            </Modal>
+      <Modal
+        isOpen={formModalIsOpen}
+        onRequestClose={() => setFormModalIsOpen(false)}
+        className="fixed inset-0 flex items-center justify-center p-4"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+          <FormularioCliente
+            cliente={clienteSeleccionado}
+            onClose={() => {
+              setFormModalIsOpen(false)
+              obtenerClientes()
+            }}
+          />
         </div>
-    );
-};
+      </Modal>
+    </div>
+  )
+}
 
-export default TablaClientes;
+export default TablaClientes
+

@@ -5,6 +5,7 @@ import FormularioCompra from './FormularioCompra';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import Swal from 'sweetalert2';
+//import "@fortawesome/fontawesome-free/css/all.min.css";
 
 Modal.setAppElement('#root');
 
@@ -44,6 +45,8 @@ const TablaCompras = () => {
             Swal.fire('Error', 'No tienes permiso para estar aqui :) post: tu token no es válido', 'error');
         }
     };
+
+    
     
     
     const abrirFormulario = (compra) => {
@@ -124,31 +127,40 @@ const TablaCompras = () => {
             <h1 className="text-2xl font-semibold mb-4">Compras</h1>
 
             <div className="flex justify-between mb-5 w-full h-7 max-w-4xl">
-                <button
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-                    onClick={() => { setFormModalIsOpen(true); setCompraSeleccionada(null); }}
-                >
-                    <FontAwesomeIcon icon={faPlus} />
-                </button>
+            <button
+    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center gap-2"
+    onClick={() => { setFormModalIsOpen(true); setCompraSeleccionada(null); }}
+>
+    <FontAwesomeIcon icon={faPlus} />
+    <span>Agregar compra</span>
+</button>
 
                 <input
                     type="text"
                     className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="Buscar compras"
                     onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                />                
             </div>
+            <a 
+    href="https://wa.me/3015789978?text=Quisiera realizar una reserva y poner magia en mis uñas" 
+    className="fixed bottom-5 right-5 bg-green-500 text-white p-4 rounded-full shadow-lg hover:bg-green-600 transition duration-300 z-50"
+    target="_blank" 
+    rel="noopener noreferrer"
+>
+    <i className="fab fa-whatsapp text-2xl"></i>
+</a>
 
             <div className="overflow-x-auto w-full max-w-4xl">
                 <table className="table min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recibo</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Compra</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Registro</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Insumos</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Recibo</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Compra</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Registro</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Insumos</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
@@ -249,49 +261,72 @@ const TablaCompras = () => {
             </Modal>
 
             <Modal
-                isOpen={detallesModalIsOpen}
-                onRequestClose={cerrarDetalles}
-                className="fixed inset-0 flex items-center justify-center p-4"
-                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-                    <h2 className="text-xl font-semibold mb-4">Detalles de la Compra</h2>
-                    {compraSeleccionada && (
-                        <div>
-                            <p><strong>Proveedor:</strong> {compraSeleccionada.proveedor.nombre}</p>
-                            <p><strong>Recibo:</strong> {compraSeleccionada.recibo}</p>
-                            <p><strong>Fecha de Compra:</strong> {new Date(compraSeleccionada.fechaCompra).toLocaleDateString()}</p>
-                            <p><strong>Fecha de Registro:</strong> {new Date(compraSeleccionada.fechaRegistro).toLocaleDateString()}</p>
-                            <p><strong>Monto Total:</strong> ${compraSeleccionada.monto.toFixed(2)}</p>
-                            <h3 className="text-lg font-semibold mt-4 mb-2">Insumos:</h3>
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Insumo</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Unitario</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {compraSeleccionada.insumos.map((insumo, index) => (
-                                        <tr key={index}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{insumo.insumo.nombreInsumo}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{insumo.cantidad}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${insumo.insumo.precio.toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    <button
-                        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                        onClick={cerrarDetalles}
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </Modal>
+  isOpen={detallesModalIsOpen}
+  onRequestClose={cerrarDetalles}
+  className="fixed inset-0 flex items-center justify-center p-4"
+  overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+>
+  <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-xl font-semibold">Detalles de la Compra</h2>
+      <button
+        className="text-gray-500 hover:text-gray-700"
+        onClick={cerrarDetalles}
+      >
+        ✕
+      </button>
+    </div>
+
+    {compraSeleccionada ? (
+      <div>
+        <p><strong>Proveedor:</strong> {compraSeleccionada?.proveedor?.nombreProveedor || "N/A"}</p>
+        <p><strong>Recibo:</strong> {compraSeleccionada?.recibo || "N/A"}</p>
+        <p><strong>Fecha de Compra:</strong> {compraSeleccionada?.fechaCompra ? new Date(compraSeleccionada.fechaCompra).toLocaleDateString() : "N/A"}</p>
+        <p><strong>Fecha de Registro:</strong> {compraSeleccionada?.fechaRegistro ? new Date(compraSeleccionada.fechaRegistro).toLocaleDateString() : "N/A"}</p>
+        <p><strong>Monto Total:</strong> ${compraSeleccionada.monto.toFixed(2)}</p>
+
+        <h3 className="text-lg font-semibold mt-4 mb-2">Insumos:</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 border">Insumo</th>
+                <th className="px-4 py-2 border">Cantidad</th>
+                <th className="px-4 py-2 border">Precio Unitario</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compraSeleccionada?.insumos?.length > 0 ? (
+                compraSeleccionada.insumos.map((insumo, index) => (
+                  <tr key={index} className="border">
+                    <td className="px-4 py-2 border">{insumo?.insumo?.nombreInsumo || "N/A"}</td>
+                    <td className="px-4 py-2 border">{insumo?.cantidad || 0}</td>
+                    <td className="px-4 py-2 border">${insumo.insumo.precio.toFixed(2)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="px-4 py-2 text-center text-gray-500">No hay insumos registrados</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ) : (
+      <p className="text-gray-500">No hay datos disponibles.</p>
+    )}
+
+    <div className="flex justify-end mt-4">
+      <button
+        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        onClick={cerrarDetalles}
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</Modal>
         </div>
     );
 };

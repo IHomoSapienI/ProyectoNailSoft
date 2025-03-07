@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import './Formulario.css'
 
 const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualizado }) => {
     const [formData, setFormData] = useState({
@@ -85,7 +86,7 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
         }
     };
     return (
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-xl max-h-[80vh] overflow-y-auto">
+        <div className="formulario bg-white p-8 rounded-lg shadow-md w-full max-w-xl max-h-[80vh] overflow-y-auto">
             <h2 className="text-2xl font-semibold mb-6 text-center">
                 {servicioSeleccionado ? 'Editar Servicio' : 'Agregar Servicio'}
             </h2>
@@ -104,9 +105,9 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                         placeholder="Ingrese el nombre del servicio"
                     />
-                    <p className="mt-1 text-sm text-gray-500">Ingrese un nombre descriptivo para el servicio.</p>
+                    
                 </div>
-
+                <br></br>
                 <div>
                     <label htmlFor="tipoServicio" className="block text-sm font-medium text-gray-700">
                         Tipo de Servicio <span className="text-red-500">*</span>
@@ -119,14 +120,14 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     >
-                        <option value="">Seleccione un tipo</option>
+                        <option value="">Seleccione la categoría a la que pertenece el servicio</option>
                         {tiposServicios.map((tipo) => (
                             <option key={tipo._id} value={tipo._id}>{tipo.nombreTs}</option>
                         ))}
                     </select>
-                    <p className="mt-1 text-sm text-gray-500">Seleccione la categoría a la que pertenece el servicio.</p>
+                    
                 </div>
-
+                        <br></br>
                 <div className="flex space-x-4">
                     <div className="flex-1">
                         <label htmlFor="tiempo" className="block text-sm font-medium text-gray-700">
@@ -140,10 +141,11 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                             onChange={manejarCambio}
                             required
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                            placeholder="Ingrese la duración del servicio"
+                            
                         />
                         <p className="mt-1 text-sm text-gray-500">Ingrese la duración del servicio en minutos.</p>
                     </div>
+                    <hr></hr>
                     <div className="flex-1">
                         <label htmlFor="precio" className="block text-sm font-medium text-gray-700">
                             Precio <span className="text-red-500">*</span>
@@ -157,12 +159,12 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                             required
                             step="0.01"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                            placeholder="Ingrese el precio"
+                            
                         />
                         <p className="mt-1 text-sm text-gray-500">Ingrese el precio del servicio (use punto para decimales).</p>
                     </div>
                 </div>
-
+                        <br></br>
                 <div>
                     <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700">
                         Descripción
@@ -176,11 +178,11 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                         rows="3"
                         placeholder="Ingrese la descripción del servicio"
                     ></textarea>
-                    <p className="mt-1 text-sm text-gray-500">Proporcione una descripción detallada del servicio.</p>
+                    
                 </div>
-
+                    <br></br>
                 <div>
-                    <label htmlFor="estado" className="block text-sm font-medium text-gray-700">Estado</label>
+                    <label htmlFor="estado" className="block text-sm font-medium text-gray-700">Estado del Servicio</label>
                     <select
                         id="estado"
                         name="estado"
@@ -191,9 +193,9 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
                         <option value={true}>Activo</option>
                         <option value={false}>Inactivo</option>
                     </select>
-                    <p className="mt-1 text-sm text-gray-500">Seleccione si el servicio está activo o inactivo.</p>
+                    
                 </div>
-
+                <br></br>
                 <div>
                     <label htmlFor="imagen" className="block text-sm font-medium text-gray-700">
                         Imagen del Servicio <span className="text-red-500">*</span>

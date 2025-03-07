@@ -9,15 +9,42 @@ import "./register.css"
 export default function Register() {
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "", // Añadido campo de apellido
     email: "",
+    celular: "", // Añadido campo de celular
     password: "",
     confirmPassword: "",
+    tipoUsuario: "cliente", // Por defecto es cliente
+    rol: "", // Se asignará automáticamente según el tipo de usuario
   })
+  const [roles, setRoles] = useState([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [passwordStrength, setPasswordStrength] = useState(0)
   const navigate = useNavigate()
+
+  // Cargar roles disponibles al iniciar
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await axios.get("https://gitbf.onrender.com/api/roles")
+        setRoles(response.data.roles || [])
+
+        // Asignar rol por defecto (cliente) si hay roles disponibles
+        if (response.data.roles && response.data.roles.length > 0) {
+          const clienteRole = response.data.roles.find((r) => r.nombre === "CLIENTE_ROLE")
+          if (clienteRole) {
+            setFormData((prev) => ({ ...prev, rol: clienteRole._id }))
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar roles:", error)
+      }
+    }
+
+    fetchRoles()
+  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -34,6 +61,18 @@ export default function Register() {
       ...prev,
       [name]: value,
     }))
+
+    // Si cambia el tipo de usuario, actualizar automáticamente el rol
+    if (name === "tipoUsuario") {
+      const rolCliente = roles.find((r) => r.nombre === "CLIENTE_ROLE")
+      const rolEmpleado = roles.find((r) => r.nombre === "EMPLEADO_ROLE")
+
+      if (value === "cliente" && rolCliente) {
+        setFormData((prev) => ({ ...prev, rol: rolCliente._id }))
+      } else if (value === "empleado" && rolEmpleado) {
+        setFormData((prev) => ({ ...prev, rol: rolEmpleado._id }))
+      }
+    }
 
     if (name === "password") {
       // Calcular la fortaleza de la contraseña
@@ -57,27 +96,44 @@ export default function Register() {
       return
     }
 
+    if (!formData.rol) {
+      setError("Debe seleccionar un rol válido")
+      setLoading(false)
+      return
+    }
+
     const payload = {
       nombre: formData.nombre.trim(),
-      email: formData.email.trim(),
+      apellido: formData.apellido.trim(),
+      correo: formData.email.trim(),
+      celular: formData.celular.trim(),
       password: formData.password,
-      confirmPassword: formData.password,
+      rol: formData.rol,
+      tipoUsuario: formData.tipoUsuario,
       estado: true,
     }
 
     try {
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/register", payload)
-      const { token, role } = response.data
+      // Usar la ruta correcta para el registro de usuarios
+      const response = await axios.post("https://gitbf.onrender.com/api/usuarios", payload)
+      const { token, usuario } = response.data
 
-      if (role) {
-        localStorage.setItem("userRole", role.toLowerCase())
+      if (usuario && usuario.rol) {
+        localStorage.setItem("userRole", formData.tipoUsuario.toLowerCase())
       }
       localStorage.setItem("token", token)
-      navigate("/")
+
+      // Redirigir según el tipo de usuario
+      if (formData.tipoUsuario === "cliente") {
+        navigate("/dashboard-cliente")
+      } else {
+        navigate("/dashboard-empleado")
+      }
     } catch (error) {
-      const message = error.response?.data?.message
+      console.error("Error de registro:", error)
+      const message = error.response?.data?.msg || error.response?.data?.message
       setError(
-        message === "El usuario ya existe"
+        message === "El correo ya está registrado" || message === "El usuario ya existe"
           ? "Este correo electrónico ya está registrado. Intenta con otro."
           : message || "Error al registrar, intenta nuevamente",
       )
@@ -139,7 +195,20 @@ export default function Register() {
                   className="form-input"
                   placeholder=" "
                 />
-                <label className="input-label">Nombre completo</label>
+                <label className="input-label">Nombre</label>
+              </div>
+
+              <div className="input-group">
+                <input
+                  type="text"
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleChange}
+                  required
+                  className="form-input"
+                  placeholder=" "
+                />
+                <label className="input-label">Apellido</label>
               </div>
 
               <div className="input-group">
@@ -153,6 +222,32 @@ export default function Register() {
                   placeholder=" "
                 />
                 <label className="input-label">Correo electrónico</label>
+              </div>
+
+              <div className="input-group">
+                <input
+                  type="tel"
+                  name="celular"
+                  value={formData.celular}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder=" "
+                />
+                <label className="input-label">Celular</label>
+              </div>
+
+              <div className="input-group">
+                <select
+                  name="tipoUsuario"
+                  value={formData.tipoUsuario}
+                  onChange={handleChange}
+                  required
+                  className="form-input"
+                >
+                  <option value="cliente">Cliente</option>
+                  <option value="empleado">Empleado</option>
+                </select>
+                <label className="input-label select-label">Tipo de usuario</label>
               </div>
 
               <div className="input-group">

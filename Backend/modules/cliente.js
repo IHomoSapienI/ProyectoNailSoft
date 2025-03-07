@@ -1,27 +1,28 @@
 const { Schema, model } = require('mongoose');
 
 const ClienteSchema = Schema({
-    documentocliente: {
-        type: String,
-        required: true,
-        unique: true // Asegura que no haya duplicados de documento de cliente
-    },
     nombrecliente: {
         type: String,
         required: true
     },
-    direccioncliente: {
+    apellidocliente: {  // Nuevo campo agregado
         type: String,
         required: true
+    },
+    correocliente: {  // Nuevo campo agregado
+        type: String,
+        required: true,
+        unique: true // Asegura que no haya duplicados de correo de cliente
     },
     celularcliente: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     estadocliente: {
-        type: String,
-        enum: ['Activo', 'Inactivo'], // Limita a estos dos valores
-        default: 'Activo'
+        type: Boolean,
+        default: true,
+        required: [true, 'El estado es obligatorio']
     }
 });
 

@@ -3,12 +3,24 @@ const Empleado = require('../modules/empleado');
 // Crear un nuevo empleado
 const crearEmpleado = async (req, res) => {
     try {
-        const { nombreempleado, apellidoempleado, telefonoempleado, estadoempleado } = req.body;
+        const { nombreempleado, apellidoempleado, correoempleado, telefonoempleado, estadoempleado } = req.body;
+
+        // Validar campos obligatorios
+        if (!nombreempleado || !apellidoempleado || !correoempleado || !telefonoempleado) {
+            return res.status(400).json({ message: 'Faltan campos obligatorios' });
+        }
+
+        // Verificar si el correo ya existe
+        const existeCorreo = await Empleado.findOne({ correoempleado });
+        if (existeCorreo) {
+            return res.status(400).json({ message: 'El correo ya está en uso' });
+        }
 
         // Crear una nueva instancia de Empleado
         const nuevoEmpleado = new Empleado({
             nombreempleado,
             apellidoempleado,
+            correoempleado,
             telefonoempleado,
             estadoempleado
         });
@@ -48,12 +60,28 @@ const obtenerEmpleadoPorId = async (req, res) => {
 const actualizarEmpleado = async (req, res) => {
     try {
         const { id } = req.params;
-        const datosActualizados = req.body;
+        const { nombreempleado, apellidoempleado, correoempleado, telefonoempleado, estadoempleado } = req.body;
 
-        const empleadoActualizado = await Empleado.findByIdAndUpdate(id, datosActualizados, { new: true });
-        if (!empleadoActualizado) {
+        // Verificar si el empleado existe
+        const empleadoExistente = await Empleado.findById(id);
+        if (!empleadoExistente) {
             return res.status(404).json({ message: 'Empleado no encontrado' });
         }
+
+        // Verificar si el correo ya está en uso por otro empleado
+        if (correoempleado && correoempleado !== empleadoExistente.correoempleado) {
+            const existeCorreo = await Empleado.findOne({ correoempleado });
+            if (existeCorreo) {
+                return res.status(400).json({ message: 'El correo ya está en uso' });
+            }
+        }
+
+        const empleadoActualizado = await Empleado.findByIdAndUpdate(
+            id,
+            { nombreempleado, apellidoempleado, correoempleado, telefonoempleado, estadoempleado },
+            { new: true }
+        );
+
         res.status(200).json({ message: 'Empleado actualizado con éxito', empleado: empleadoActualizado });
     } catch (error) {
         res.status(500).json({ message: 'Error al actualizar el empleado', error });
