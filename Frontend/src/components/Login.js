@@ -26,28 +26,35 @@ export default function Login() {
   }, [])
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+  
     try {
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/login", { email, password })
-      const { token, role, user } = response.data
-
+      const response = await axios.post("https://gitbf.onrender.com/api/auth/login", { email, password });
+      const { token, role, user } = response.data;
+  
       if (!token || !role || !user) {
-        throw new Error("Token, role, or user missing from response")
+        throw new Error("Token, role, or user missing from response");
       }
-
-      login({ token, role, name: user.name, email: user.email })
-      localStorage.setItem("token", token)
-      localStorage.setItem("userRole", role.toLowerCase())
-      navigate("/")
+  
+      login({ token, role, name: user.name, email: user.email });
+      localStorage.setItem("token", token);
+      localStorage.setItem("userRole", role.toLowerCase());
+  
+      // Redirigir según el rol del usuario
+      if (role.toLowerCase() === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Credenciales inválidas. Por favor, intente de nuevo.")
+      setError(error.response?.data?.message || "Credenciales inválidas. Por favor, intente de nuevo.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+  
 
   return (
     <div className="login-container">

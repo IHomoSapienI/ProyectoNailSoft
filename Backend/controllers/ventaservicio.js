@@ -249,10 +249,109 @@ const ventaserviciosDelete = async (req, res = response) => {
   }
 }
 
+// Añadir servicios a una venta existente
+const agregarServiciosVenta = async (req, res = response) => {
+  const { id } = req.params;
+  const { servicios } = req.body;
+  
+  if (!servicios || !Array.isArray(servicios) || servicios.length === 0) {
+      return res.status(400).json({
+          msg: "Debe proporcionar al menos un servicio para añadir."
+      });
+  }
+  
+  try {
+      // Cambiar VentaServicio a Ventaservicio
+      const venta = await Ventaservicio.findById(id);
+      if (!venta) {
+          return res.status(404).json({
+              msg: "Venta de servicio no encontrada"
+          });
+      }
+      
+      // Validar los servicios nuevos
+      const serviciosIds = servicios.map(s => s.servicio);
+      const serviciosValidos = await Servicio.find({ _id: { $in: serviciosIds } });
+      
+      if (serviciosValidos.length !== servicios.length) {
+          return res.status(400).json({
+              msg: "Uno o más servicios no existen en la base de datos."
+          });
+      }
+      
+      // Añadir los nuevos servicios a la venta
+      venta.servicios = [...venta.servicios, ...servicios];
+      
+      // Recalcular el precio total
+      venta.precioTotal = venta.servicios.reduce((total, s) => total + s.precio, 0);
+      
+      await venta.save();
+      
+      res.json({
+          msg: "Servicios añadidos correctamente",
+          venta
+      });
+  } catch (error) {
+      console.error("Error al añadir servicios a la venta:", error);
+      res.status(500).json({
+          msg: "Error al añadir servicios a la venta",
+          error: error.message
+      });
+  }
+};
+
+// Finalizar venta (completar la cita y marcar la venta como finalizada)
+// Finalizar venta (completar la cita y marcar la venta como finalizada)
+const finalizarVenta = async (req, res = response) => {
+  const { id } = req.params;
+  const { metodoPago } = req.body;
+  
+  try {
+      const venta = await Ventaservicio.findById(id);
+      if (!venta) {
+          return res.status(404).json({
+              msg: "Venta de servicio no encontrada"
+          });
+      }
+      
+      // Actualizar la cita a "Completada"
+      if (venta.cita) {
+          // Usar findByIdAndUpdate con runValidators: false para evitar la validación
+          await Cita.findByIdAndUpdate(
+              venta.cita,
+              { estadocita: 'Completada' },
+              { 
+                  new: true,
+                  runValidators: false // Esto evita la validación del esquema
+              }
+          );
+      }
+      
+      // Añadir información de pago a la venta
+      venta.metodoPago = metodoPago || 'Efectivo';
+      venta.fechaFinalizacion = new Date(); // Usar fechaFinalizacion en lugar de fecha
+      
+      await venta.save();
+      
+      res.json({
+          msg: "Venta finalizada correctamente",
+          venta
+      });
+  } catch (error) {
+      console.error("Error al finalizar la venta:", error);
+      res.status(500).json({
+          msg: "Error al finalizar la venta",
+          error: error.message
+      });
+  }
+};
+
 module.exports = {
   ventaserviciosGet,
   ventaserviciosPost,
   ventaserviciosPut,
   ventaserviciosDelete,
+  agregarServiciosVenta,
+  finalizarVenta
 }
 

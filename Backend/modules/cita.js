@@ -1,19 +1,27 @@
-const { Schema, model } = require('mongoose');
+const { Schema, model } = require("mongoose");
 
-// Esquema para Cita
+
 const CitaSchema = Schema({
     nombreempleado: {
         type: Schema.Types.ObjectId,
-        ref: 'Empleado', // Referencia al modelo Empleado
+        ref: 'Empleado',
         required: true
     },
     nombrecliente: {
         type: Schema.Types.ObjectId,
-        ref: 'Cliente', // Referencia al modelo Cliente
+        ref: 'Cliente',
         required: true
     },
     fechacita: {
         type: Date,
+        required: true
+    },
+    horacita: {  // Añadir hora específica
+        type: String,
+        required: true
+    },
+    duracionTotal: {  // Duración total en minutos
+        type: Number,
         required: true
     },
     montototal: {
@@ -22,12 +30,17 @@ const CitaSchema = Schema({
     },
     estadocita: {
         type: String,
-        enum: ['Pendiente', 'Confirmada', 'Cancelada'], // Enum para el estado de la cita
+        enum: ['Pendiente', 'Confirmada', 'En Progreso', 'Completada', 'Cancelada'],
         default: 'Pendiente'
     },
-    servicios: [{ // Nueva referencia a servicios
-        type: Schema.Types.ObjectId,
-        ref: 'Servicio' // Asegúrate de que este sea el nombre correcto del modelo Servicio
+    servicios: [{
+        servicio: {
+            type: Schema.Types.ObjectId,
+            ref: 'Servicio'
+        },
+        nombreServicio: String,
+        precio: Number,
+        tiempo: Number
     }]
 });
 

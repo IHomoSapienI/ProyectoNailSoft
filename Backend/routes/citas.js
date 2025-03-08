@@ -1,7 +1,7 @@
 const { Router } = require('express');
 
 
-const { crearCita, obtenerCitas, obtenerCitaPorId, actualizarCita, eliminarCita} = require('../controllers/cita');
+const { crearCita, obtenerCitas, obtenerCitaPorId, actualizarCita, eliminarCita, verificarDisponibilidad, iniciarCita} = require('../controllers/cita');
 //const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
 //const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
 const router = Router();
@@ -19,6 +19,7 @@ router.get('/', obtenerCitas);
 router.get('/:id',  obtenerCitaPorId);
 router.put('/:id',  actualizarCita);
 router.delete('/:id', eliminarCita);
-
+router.post('/verificar-disponibilidad', verificarDisponibilidad);
+router.put('/:id/iniciar', iniciarCita);
 
 module.exports = router;

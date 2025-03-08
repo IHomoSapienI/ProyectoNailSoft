@@ -7,7 +7,6 @@ import {
   FaUsers,
   FaUserShield,
   FaShoppingCart,
-  FaHome,
   FaCalendarAlt,
   FaClipboardList,
   FaUserCog,
@@ -21,6 +20,8 @@ import {
   FaSignOutAlt,
   FaChevronDown,
   FaBars,
+  FaCalendarCheck,
+  FaCalendarWeek,
 } from "react-icons/fa"
 import { MdOutlineSpa } from "react-icons/md"
 import "./sidebar.css"
@@ -153,6 +154,17 @@ const Sidebar = () => {
               </MenuItem>
               <MenuItem icon={FaCalendarAlt} to="/citas" isActive={location.pathname === "/citas"}>
                 Citas
+              </MenuItem>
+              <MenuItem
+                icon={FaCalendarCheck}
+                to="/citas-en-progreso"
+                isActive={location.pathname === "/citas-en-progreso"}
+              >
+                Citas en Progreso
+              </MenuItem>
+              {/* Nueva opción para Agenda de Empleados */}
+              <MenuItem icon={FaCalendarWeek} to="/agenda-empleado" isActive={location.pathname === "/agenda-empleado"}>
+                Agenda de Empleados
               </MenuItem>
             </MenuGroup>
 

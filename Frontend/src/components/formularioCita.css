@@ -1,0 +1,155 @@
+/* Estilos para el formulario de citas */
+.time-slot {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .time-slot:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .time-slot.selected {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+  
+  .time-slot.unavailable {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+  
+  .employee-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .employee-card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .employee-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+  }
+  
+  .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    position: relative;
+  }
+  
+  .step-indicator::before {
+    content: "";
+    position: absolute;
+    top: 16px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e5e7eb;
+    z-index: 0;
+  }
+  
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+  }
+  
+  .step.active .step-circle {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .step.completed .step-circle {
+    background-color: #10b981;
+    color: white;
+  }
+  
+  .step-text {
+    font-size: 14px;
+    color: #6b7280;
+  }
+  
+  .step.active .step-text {
+    color: #3b82f6;
+    font-weight: 500;
+  }
+  
+  .step.completed .step-text {
+    color: #10b981;
+    font-weight: 500;
+  }
+  
+  /* Estilos adicionales para mejorar la apariencia del formulario */
+  @media (min-width: 768px) {
+    .max-w-5xl {
+      max-width: 64rem;
+    }
+  }
+  
+  .bg-white {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  select,
+  input {
+    min-height: 42px;
+  }
+  
+  .step-line {
+    background: linear-gradient(90deg, #e5e7eb 0%, #3b82f6 100%);
+    opacity: 0.5;
+  }
+  
+  .step.active ~ .step-line {
+    background: #e5e7eb;
+  }
+  
+  /* Nuevos estilos para la selección de horarios */
+  [class*="grid-cols"] > div {
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  [class*="grid-cols"] > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  [class*="grid-cols"] > div.bg-blue-500 {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+  }
+  
+  /* Estilo para mostrar información de fecha y empleado */
+  .font-bold {
+    color: #1f2937;
+  }
+  
+  
