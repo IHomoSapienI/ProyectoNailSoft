@@ -16,7 +16,7 @@ import {
   FaClipboardList,
   FaChevronDown,
 } from "react-icons/fa"
-import "./navbar.css"
+import "../NavBars/navbar.css"
 
 export default function Navbar() {
   const navigate = useNavigate()

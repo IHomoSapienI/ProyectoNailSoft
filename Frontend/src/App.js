@@ -5,34 +5,35 @@ import "./output.css"
 import "./tailwind.css"
 import "./App.css"
 
-import Sidebar from "./components/Sidebar"
-import Navbar from "./components/Navbar"
-import NavbarAuth from "./components/NavbarAuth"
-import Footer from "./components/Footer"
-import Index from "./components/Index"
-import TablaRoles from "./components/TablaRoles"
-import TablaServicios from "./components/TablaServicios"
-import TablaUsuarios from "./components/TablaUsuarios"
-import UserProfile from "./components/UserProfile"
+import Sidebar from "./components/Sidebar/Sidebar"
+import Navbar from "./components/NavBars/Navbar"
+import NavbarAuth from "./components/NavBars/NavbarAuth"
+import Footer from "./components/Footer/Footer"
+import Index from "./components/LandingI/Index"
+import TablaRoles from "./components/Roles/TablaRoles"
+import TablaServicios from "./components/Servicios/TablaServicios"
+import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
+import UserProfile from "./components/PerfilUsuario/UserProfile"
 
-import TablaVentaServicios from "./components/TablaVentaServicios"
-import GestionVentaServicio from "./components/GestionVentaServicio" // Nuevo componente
-import CitasEnProgreso from "./components/CitasEnProgreso" // Nuevo componente
-import AgendaEmpleado from "./components/AgendaEmpleado" // Nuevo componente
-import ArticlesGrid from "./components/ArticlesGrid"
-import SeleccionarServicios from "./components/SeleccionarServicios"
-import TablaInsumos from "./components/TablaInsumos"
-import TablaEmpleados from "./components/TablaEmpleados"
-import TablaClientes from "./components/TablaClientes"
-import TablaCitas from "./components/TablaCitas"
-import TablaProveedores from "./components/TablaProveedores"
-import TablaCategorias from "./components/TablaCategorias"
-import TablaProductos from "./components/TablaProductos"
-import TablaVentaProductos from "./components/TablaVentaProductos"
-import TablaCompras from "./components/TablaCompras"
-import Dashboard from "./components/Dashboard"
-import Login from "./components/Login"
-import Register from "./components/Register"
+import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
+import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio" // Nuevo componente
+import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso" // Nuevo componente
+import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado" // Nuevo componente
+import ArticlesGrid from "./components/Galeria/ArticlesGrid"
+import SeleccionarServicios from "./components/Galeria/SeleccionarServicios"
+import TablaInsumos from "./components/Insumos/TablaInsumos"
+import TablaEmpleados from "./components/Empleados/TablaEmpleados"
+import TablaClientes from "./components/Clientes/TablaClientes"
+import TablaCitas from "./components/Citas_Agenda/TablaCitas"
+import TablaProveedores from "./components/Proveedores/TablaProveedores"
+import TablaCategorias from "./components/CategoriaProducto/TablaCategorias"
+import TablaProductos from "./components/Productos/TablaProductos"
+import TablaVentaProductos from "./components/VentaProductos/TablaVentaProductos"
+import TablaCompras from "./components/Compras/TablaCompras"
+import Dashboard from "./components/Dashboard/Dashboard"
+import Login from "./components/Login_Register/Login"
+import Register from "./components/Login_Register/Register"
+import TablaPermisos from "./components/Permisos/TablaPermisos"
 
 axios.interceptors.request.use(
   (config) => {
@@ -74,15 +75,17 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 const Layout = ({ children }) => {
   const userRole = localStorage.getItem("userRole")
   const isAdmin = userRole === "admin"
+  const isEmployee = userRole === "empleado"
+  const showSidebar = isAdmin || isEmployee
 
   return (
     <div className="min-h-screen bg-gray-10">
-      {isAdmin ? <Sidebar /> : <Navbar />}
-      <div className={`content min-h-screen ${isAdmin ? "md:ml-[250px]" : ""}`}>{children}</div>
+      {showSidebar ? <Sidebar /> : <Navbar />}
+      <div className={`content min-h-screen ${showSidebar ? "md:ml-[250px]" : ""}`}>{children}</div>
       <Footer />
 
       {/* Botones de redes sociales solo para la vista del cliente */}
-      {!isAdmin && (
+      {!showSidebar && (
         <>
           <a
             href="https://wa.me/3015789978?text=Quisiera realizar una reserva y poner magia en mis uñas"
@@ -154,7 +157,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute allowedRoles={["admin"]}>
+            <PrivateRoute allowedRoles={["admin","empleado"]}>
               <Layout>
                 <Dashboard />
               </Layout>
@@ -164,7 +167,7 @@ function App() {
         <Route
           path="/insumos"
           element={
-            <PrivateRoute allowedRoles={["admin"]}>
+            <PrivateRoute allowedRoles={["admin","empleado"]}>
               <Layout>
                 <TablaInsumos />
               </Layout>
@@ -174,7 +177,7 @@ function App() {
         <Route
           path="/usuarios"
           element={
-            <PrivateRoute allowedRoles={["admin"]}>
+            <PrivateRoute allowedRoles={["admin", "empleado"]}>
               <Layout>
                 <TablaUsuarios />
               </Layout>
@@ -202,6 +205,16 @@ function App() {
           }
         />
         <Route
+          path="/permisos"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <Layout>
+                <TablaPermisos />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/ventas"
           element={
             <PrivateRoute allowedRoles={["admin"]}>
@@ -214,7 +227,7 @@ function App() {
         <Route
           path="/servicios"
           element={
-            <PrivateRoute allowedRoles={["admin", "cliente", "usuario"]}>
+            <PrivateRoute allowedRoles={["admin", "cliente", "empleado"]}>
               <Layout>
                 <TablaServicios />
               </Layout>

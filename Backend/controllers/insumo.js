@@ -1,4 +1,5 @@
 const Insumo = require('../modules/insumo');
+const BajaProducto = require('../modules/bajaproducto');
 
 // Obtener todos los insumos
 const obtenerInsumos = async (req, res) => {
@@ -15,15 +16,8 @@ const crearInsumo = async (req, res) => {
     const { nombreInsumo, stock, precio, estado } = req.body;
 
     try {
-        const nuevoInsumo = new Insumo({
-            nombreInsumo,
-            stock,
-            precio,
-            estado
-        });
-
+        const nuevoInsumo = new Insumo({ nombreInsumo, stock, precio, estado });
         await nuevoInsumo.save();
-
         res.status(201).json({ message: 'Insumo creado con éxito', insumo: nuevoInsumo });
     } catch (error) {
         res.status(500).json({ message: 'Error al crear el insumo', error });
@@ -75,19 +69,50 @@ const cambiarEstadoInsumo = async (req, res) => {
     const { estado } = req.body;
 
     try {
-        const insumo = await Insumo.findByIdAndUpdate(
-            id,
-            { estado },
-            { new: true }
-        );
+        const insumo = await Insumo.findByIdAndUpdate(id, { estado }, { new: true });
+        if (!insumo) {
+            return res.status(404).json({ message: 'Insumo no encontrado' });
+        }
+        res.json({ message: 'Estado del insumo actualizado', insumo });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al cambiar el estado del insumo', error });
+    }
+};
 
+// Dar de baja un insumo y descontar del stock
+const darDeBajaInsumo = async (req, res) => {
+    try {
+        const { insumoId, fechaBaja, cantidad, observaciones } = req.body;
+
+        const insumo = await Insumo.findById(insumoId);
         if (!insumo) {
             return res.status(404).json({ message: 'Insumo no encontrado' });
         }
 
-        res.json({ message: 'Estado del insumo actualizado', insumo });
+        if (insumo.stock < cantidad) {
+            return res.status(400).json({ message: 'Stock insuficiente para dar de baja' });
+        }
+
+        const baja = new BajaProducto({
+            productoId: insumo._id,
+            producto: insumo.nombreInsumo,
+            fechaBaja,
+            cantidad,
+            observaciones
+        });
+
+        await baja.save();
+
+        insumo.stock -= cantidad;
+        if (insumo.stock === 0) {
+            insumo.estado = false;
+        }
+        await insumo.save();
+
+        res.json({ message: 'Insumo dado de baja correctamente', baja, stockActual: insumo.stock });
     } catch (error) {
-        res.status(500).json({ message: 'Error al cambiar el estado del insumo', error });
+        console.error(error);
+        res.status(500).json({ message: 'Error al dar de baja el insumo', error });
     }
 };
 
@@ -96,5 +121,6 @@ module.exports = {
     crearInsumo,
     actualizarInsumo,
     eliminarInsumo,
-    cambiarEstadoInsumo
+    cambiarEstadoInsumo,
+    darDeBajaInsumo
 };

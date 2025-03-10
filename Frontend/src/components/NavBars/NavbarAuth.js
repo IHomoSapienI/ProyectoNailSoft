@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import { FaSignInAlt, FaUserPlus } from "react-icons/fa"
-import "./navbarauth.css"
+import "../NavBars/navbarauth.css"
 
 const NavbarAuth = () => {
   const container = {

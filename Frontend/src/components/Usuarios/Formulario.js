@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import Swal from "sweetalert2"
-import "./Formulario.css"
+import "../Formulario.css"
 
 export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuarioEditando, roles }) {
   const [formData, setFormData] = useState({
@@ -19,6 +19,8 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [originalRolId, setOriginalRolId] = useState("")
+  const [fetchingCurrentUser, setFetchingCurrentUser] = useState(false)
 
   useEffect(() => {
     if (usuarioEditando) {
@@ -40,8 +42,11 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         celular: usuarioEditando.celular || "",
         rol: usuarioEditando.rol || "",
         tipoUsuario: tipoUsuario,
-        estado: usuarioEditando.estado || "Activo",
+        estado: usuarioEditando.estado ? "Activo" : "Inactivo",
       }))
+
+      // Guardar el ID del rol original para comparar si cambia
+      setOriginalRolId(typeof usuarioEditando.rol === "object" ? usuarioEditando.rol._id : usuarioEditando.rol)
     } else {
       // For new users, set default role if available
       const clienteRole = roles.find((r) => r.nombreRol.toLowerCase() === "cliente")
@@ -88,6 +93,26 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
     }
   }
 
+  // Función para obtener los datos actuales del usuario antes de actualizar
+  const fetchCurrentUserData = async (userId) => {
+    try {
+      setFetchingCurrentUser(true)
+      const token = localStorage.getItem("token")
+      const response = await axios.get(`https://gitbf.onrender.com/api/usuarios/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      return response.data
+    } catch (error) {
+      console.error("Error al obtener datos actuales del usuario:", error)
+      return null
+    } finally {
+      setFetchingCurrentUser(false)
+    }
+  }
+
+  // Función actualizada para manejar la actualización de usuarios
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -125,44 +150,125 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
     }
 
     try {
+      const token = localStorage.getItem("token")
+
+      // Determinar el tipo de usuario basado en el rol seleccionado
+      const selectedRole = roles.find((r) => r._id === formData.rol)
+      const isEmpleado = selectedRole && selectedRole.nombreRol.toLowerCase() === "empleado"
+      const isCliente = selectedRole && selectedRole.nombreRol.toLowerCase() === "cliente"
+
+      // Verificar si estamos cambiando de rol
+      const isRolChanging = usuarioEditando && originalRolId !== formData.rol
+
+      // Si estamos cambiando de rol, usar el endpoint específico para actualizar el rol
+      if (isRolChanging && usuarioEditando) {
+        // Primero actualizar los datos básicos sin cambiar el rol
+        const basicUpdateData = {
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          email: formData.email.trim(),
+          celular: formData.celular.trim(),
+          estado: formData.estado === "Activo",
+        }
+
+        // Si es empleado, agregar campos específicos
+        if (isEmpleado) {
+          basicUpdateData.especialidad = "General"
+          basicUpdateData.salario = 0
+        }
+
+        // Actualizar primero los datos básicos
+        await axios({
+          method: "PUT",
+          url: `https://gitbf.onrender.com/api/usuarios/${usuarioEditando._id}`,
+          data: basicUpdateData,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        // Luego, actualizar solo el rol usando el nuevo endpoint
+        const rolUpdateData = {
+          rol: formData.rol,
+          // Incluir campos adicionales necesarios para el nuevo rol
+          especialidad: isEmpleado ? "General" : undefined,
+          salario: isEmpleado ? 0 : undefined,
+        }
+
+        await axios({
+          method: "PUT",
+          url: `https://gitbf.onrender.com/api/usuarios/${usuarioEditando._id}/update-rol`,
+          data: rolUpdateData,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        Swal.fire({
+          icon: "success",
+          title: "Actualización Exitosa",
+          text: "Usuario actualizado exitosamente!",
+        })
+
+        onUsuarioActualizado()
+        onClose()
+        return
+      }
+
+      // Si no estamos cambiando de rol, o es un nuevo usuario, usar el endpoint normal
+      const userData = {
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        email: formData.email.trim(),
+        celular: formData.celular.trim(),
+        rol: formData.rol,
+        estado: formData.estado === "Activo",
+      }
+
+      // Si es un nuevo usuario, agregar contraseña
+      if (!usuarioEditando) {
+        userData.password = formData.password
+        userData.confirmPassword = formData.confirmPassword
+      }
+
+      // Agregar datos específicos para empleado según el modelo exacto
+      if (isEmpleado) {
+        userData.nombreempleado = formData.nombre.trim()
+        userData.apellidoempleado = formData.apellido.trim()
+        userData.correoempleado = formData.email.trim()
+        userData.telefonoempleado = formData.celular.trim()
+        userData.estadoempleado = formData.estado === "Activo"
+
+        // Asegurarse de que todos los campos requeridos para Empleado estén presentes
+        userData.especialidad = "General" // Valor por defecto
+        userData.salario = 0 // Valor por defecto
+      }
+
+      // Agregar datos específicos para cliente según el modelo exacto
+      if (isCliente) {
+        userData.nombrecliente = formData.nombre.trim()
+        userData.apellidocliente = formData.apellido.trim()
+        userData.correocliente = formData.email.trim()
+        userData.celularcliente = formData.celular.trim()
+        userData.estadocliente = formData.estado === "Activo"
+      }
+
+      console.log("Datos a enviar:", userData)
+
+      // Usar axios para la solicitud
       const url = usuarioEditando
         ? `https://gitbf.onrender.com/api/usuarios/${usuarioEditando._id}`
         : "https://gitbf.onrender.com/api/usuarios"
-      const method = usuarioEditando ? "PUT" : "POST"
-      const token = localStorage.getItem("token")
-
-      // Preparar los datos a enviar
-      const data = {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        email: formData.email,
-        celular: formData.celular,
-        rol: formData.rol,
-        tipoUsuario: formData.tipoUsuario,
-        estado: formData.estado === "Activo", // Booleano para estado general
-        estadocliente: formData.estado, // Enviar como string: 'Activo' o 'Inactivo'
-        ...(!usuarioEditando && {
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-        }),
-      }
-
-      // Agregar campos específicos para empleados
-      if (formData.tipoUsuario === "empleado") {
-        data.telefonoempleado = formData.celular // Usar el celular como teléfono del empleado
-        data.celularempleado = formData.celular
-        data.estadoempleado = formData.estado
-      }
-
-      console.log("Datos a enviar:", data)
 
       const response = await axios({
-        method,
+        method: usuarioEditando ? "PUT" : "POST",
         url,
-        data,
+        data: userData,
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       })
 
@@ -172,18 +278,34 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
           title: usuarioEditando ? "Actualización Exitosa" : "Registro Exitoso",
           text: usuarioEditando ? "Usuario actualizado exitosamente!" : "Usuario creado exitosamente!",
         })
+
         onUsuarioActualizado()
         onClose()
       }
     } catch (error) {
       console.error("Error completo:", error)
-      console.error("Respuesta del servidor:", error.response?.data)
-      console.error("Error:", error)
-      setError(error.response?.data?.msg || "Error al procesar la solicitud")
+
+      // Mostrar mensaje de error más específico y detallado
+      let errorMsg = "Error al procesar la solicitud"
+
+      if (error.response?.data?.error) {
+        errorMsg = error.response.data.error
+      } else if (error.response?.data?.msg) {
+        errorMsg = error.response.data.msg
+      } else if (error.message) {
+        errorMsg = error.message
+      }
+
+      // Mostrar detalles adicionales si están disponibles
+      const errorDetails = error.response?.data?.details || ""
+
+      setError(`${errorMsg} ${errorDetails}`)
+
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.response?.data?.msg || "Error al procesar la solicitud",
+        text: errorMsg,
+        footer: errorDetails || "Si el problema persiste, contacte al administrador del sistema",
       })
     } finally {
       setLoading(false)
@@ -341,10 +463,19 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         <div className="flex justify-between">
           <button
             type="submit"
-            disabled={loading}
-            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={loading || fetchingCurrentUser}
+            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading || fetchingCurrentUser ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {loading ? "Procesando..." : usuarioEditando ? "Actualizar" : "Guardar"}
+            {loading || fetchingCurrentUser ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-pink mr-2"></div>
+                <span>Procesando...</span>
+              </div>
+            ) : usuarioEditando ? (
+              "Actualizar"
+            ) : (
+              "Guardar"
+            )}
           </button>
           <button
             type="button"

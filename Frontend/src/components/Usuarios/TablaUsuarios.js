@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import Modal from "react-modal"
 import FormularioUsuario from "./Formulario"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faEdit, faTrash, faSync, faPowerOff } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
+import axios from "axios"
 
 // Configura el contenedor del modal
 Modal.setAppElement("#root")
@@ -81,8 +82,11 @@ const TablaUsuarios = () => {
 
       // Asignar nombres de roles a los usuarios para depuración
       const usuariosConRoles = usuariosArray.map((usuario) => {
-        const rolNombre = rolMapObj[usuario.rol] || "Desconocido"
-        console.log(`Usuario ${usuario.nombre}, ID de rol: ${usuario.rol}, Nombre de rol: ${rolNombre}`)
+        // Verificar si el rol es un objeto o un ID
+        const rolId = typeof usuario.rol === "object" ? usuario.rol._id : usuario.rol
+        const rolNombre = typeof usuario.rol === "object" ? usuario.rol.nombreRol : rolMapObj[rolId] || "Desconocido"
+
+        console.log(`Usuario ${usuario.nombre}, ID de rol: ${rolId}, Nombre de rol: ${rolNombre}`)
         return {
           ...usuario,
           rolNombre,
@@ -154,6 +158,62 @@ const TablaUsuarios = () => {
     }
   }
 
+  // Añadir esta función después de manejarEliminar
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
+
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} este usuario?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        // Mostrar indicador de carga
+        const loadingToast = Swal.fire({
+          title: "Procesando...",
+          html: '<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mx-auto"></div><p class="mt-4">Por favor espere</p>',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+        })
+
+        const token = localStorage.getItem("token")
+        const response = await axios.patch(
+          `https://gitbf.onrender.com/api/usuarios/${id}/toggle-estado`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        )
+
+        // Cerrar indicador de carga
+        loadingToast.close()
+
+        // Actualizar el estado local
+        setUsuarios(usuarios.map((usuario) => (usuario._id === id ? { ...usuario, estado: nuevoEstado } : usuario)))
+
+        Swal.fire(
+          `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+          `El usuario ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          "success",
+        )
+      } catch (error) {
+        console.error(`Error al ${accion} el usuario:`, error)
+        Swal.fire("Error", `No se pudo ${accion} el usuario`, "error")
+      }
+    }
+  }
+
   const filtrarUsuarios = () => {
     return usuarios.filter(
       (usuario) =>
@@ -172,7 +232,32 @@ const TablaUsuarios = () => {
   const paginaSiguiente = () => paginaActual < paginasTotales && setPaginaActual(paginaActual + 1)
 
   if (cargando) {
-    return <div className="text-center">Cargando...</div>
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando usuarios...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+        <button
+          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => obtenerUsuariosYRoles()}
+        >
+          <FontAwesomeIcon icon={faSync} className="mr-2" />
+          Reintentar
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -222,34 +307,57 @@ const TablaUsuarios = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {usuariosActuales.map((usuario) => (
-              <tr key={usuario._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{usuario.nombre}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.apellido}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.celular}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {usuario.rol.nombreRol || "Desconocido"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {usuario.estado ? "Activo" : "Inactivo"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                    onClick={() => manejarEditar(usuario)}
-                  >
-                    <FontAwesomeIcon icon={faEdit} />
-                  </button>
-                  <button
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                    onClick={() => manejarEliminar(usuario._id)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
+            {usuariosActuales.length > 0 ? (
+              usuariosActuales.map((usuario) => (
+                <tr key={usuario._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{usuario.nombre}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.apellido}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.celular}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {typeof usuario.rol === "object" ? usuario.rol.nombreRol : usuario.rolNombre || "Desconocido"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        usuario.estado ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {usuario.estado ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
+                      onClick={() => manejarEditar(usuario)}
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    <button
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
+                      onClick={() => manejarEliminar(usuario._id)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                    <button
+                      className={`${
+                        usuario.estado ? "bg-orange-500 hover:bg-orange-600" : "bg-green-500 hover:bg-green-600"
+                      } text-white font-bold py-1 px-2 rounded transition duration-300`}
+                      onClick={() => manejarToggleEstado(usuario._id, usuario.estado)}
+                      title={usuario.estado ? "Desactivar usuario" : "Activar usuario"}
+                    >
+                      <FontAwesomeIcon icon={faPowerOff} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                  No se encontraron usuarios con ese criterio de búsqueda
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

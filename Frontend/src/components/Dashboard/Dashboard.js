@@ -6,8 +6,8 @@ import { FaChartLine, FaShoppingCart, FaUsers, FaCalendar } from "react-icons/fa
 import AppointmentsChart from "./Charts/AppointmentsChart"
 import SalesChart from "./Charts/SalesChart"
 import ServicesChart from "./Charts/ServicesChart"
-import AppointmentsTable from "./AppointmentsTable"
-import "./Dashboard.css"
+import AppointmentsTable from "../Dashboard/Charts/AppointmentsChart"
+import "../Dashboard/Dashboard.css"
 
 const Dashboard = () => {
   const [appointmentsData, setAppointmentsData] = useState([])

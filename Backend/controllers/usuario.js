@@ -24,6 +24,61 @@ const usuariosGet = async (req, res = response) => {
   }
 }
 
+// NUEVO: Obtener un usuario específico por ID
+const usuarioGetById = async (req, res = response) => {
+  const { id } = req.params
+
+  try {
+    const usuario = await Usuario.findById(id).select("-password").populate("rol", "nombreRol")
+
+    if (!usuario) {
+      return res.status(404).json({
+        msg: "Usuario no encontrado",
+      })
+    }
+
+    // Obtener información adicional según el rol
+    let infoAdicional = {}
+
+    if (usuario.rol.nombreRol === "Cliente") {
+      const cliente = await Cliente.findOne({ usuario: id })
+      if (cliente) {
+        infoAdicional = {
+          nombrecliente: cliente.nombrecliente,
+          apellidocliente: cliente.apellidocliente,
+          correocliente: cliente.correocliente,
+          celularcliente: cliente.celularcliente,
+          estadocliente: cliente.estadocliente,
+        }
+      }
+    } else if (usuario.rol.nombreRol === "Empleado") {
+      const empleado = await Empleado.findOne({ usuario: id })
+      if (empleado) {
+        infoAdicional = {
+          nombreempleado: empleado.nombreempleado,
+          apellidoempleado: empleado.apellidoempleado,
+          correoempleado: empleado.correoempleado,
+          telefonoempleado: empleado.telefonoempleado,
+          especialidad: empleado.especialidad,
+          salario: empleado.salario,
+          estadoempleado: empleado.estadoempleado,
+        }
+      }
+    }
+
+    res.json({
+      usuario,
+      infoAdicional,
+    })
+  } catch (error) {
+    console.error("Error al obtener usuario por ID:", error)
+    res.status(500).json({
+      msg: "Error al obtener usuario por ID",
+      error: error.message,
+    })
+  }
+}
+
 // Crear un nuevo usuario
 const usuariosPost = async (req, res = response) => {
   console.log("usuariosPost - Datos recibidos:", JSON.stringify(req.body, null, 2))
@@ -162,6 +217,8 @@ const usuariosPost = async (req, res = response) => {
           celularempleado: celular || "",
           telefonoempleado: celular || "", // Añadir el campo telefonoempleado
           estadoempleado: true,
+          especialidad: req.body.especialidad || "General",
+          salario: req.body.salario || 0,
           usuario: nuevoUsuario._id, // Vincular con el usuario
         })
 
@@ -250,7 +307,10 @@ const usuariosPut = async (req, res = response) => {
           apellidoempleado: usuario.apellido || resto.apellido || "",
           correoempleado: usuario.email || usuario.correo,
           celularempleado: usuario.celular || resto.celular || "",
+          telefonoempleado: usuario.celular || resto.celular || "",
           estadoempleado: true,
+          especialidad: req.body.especialidad || "General",
+          salario: req.body.salario || 0,
           usuario: usuario._id,
         })
         await empleado.save()
@@ -298,6 +358,106 @@ const usuariosPut = async (req, res = response) => {
     console.error("Error al actualizar usuario:", error)
     res.status(500).json({
       msg: "Error al actualizar usuario",
+      error: error.message,
+    })
+  }
+}
+
+// NUEVO: Actualizar solo el rol de un usuario
+const usuariosUpdateRol = async (req, res = response) => {
+  const { id } = req.params
+  const { rol } = req.body
+
+  if (!rol) {
+    return res.status(400).json({
+      msg: "El rol es obligatorio",
+    })
+  }
+
+  try {
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findById(id).populate("rol")
+    if (!usuario) {
+      return res.status(404).json({
+        msg: "Usuario no encontrado",
+      })
+    }
+
+    // Verificar que el nuevo rol exista
+    const nuevoRol = await Rol.findById(rol)
+    if (!nuevoRol) {
+      return res.status(400).json({
+        msg: "El rol especificado no existe",
+      })
+    }
+
+    // Si el rol no ha cambiado, no hacer nada
+    if (rol === usuario.rol._id.toString()) {
+      return res.json({
+        msg: "El rol no ha cambiado",
+        usuario,
+      })
+    }
+
+    // Determinar si está cambiando de cliente a empleado o viceversa
+    const eraCliente = usuario.rol.nombreRol === "Cliente"
+    const eraEmpleado = usuario.rol.nombreRol === "Empleado"
+    const seraCliente = nuevoRol.nombreRol === "Cliente"
+    const seraEmpleado = nuevoRol.nombreRol === "Empleado"
+
+    // Si cambia de cliente a empleado
+    if (eraCliente && seraEmpleado) {
+      // Eliminar de la tabla de clientes
+      await Cliente.findOneAndDelete({
+        $or: [{ correocliente: usuario.email || usuario.correo }, { usuario: id }],
+      })
+
+      // Crear en la tabla de empleados
+      const empleado = new Empleado({
+        nombreempleado: usuario.nombre,
+        apellidoempleado: usuario.apellido || "",
+        correoempleado: usuario.email || usuario.correo,
+        celularempleado: usuario.celular || "",
+        telefonoempleado: usuario.celular || "",
+        estadoempleado: true,
+        especialidad: req.body.especialidad || "General",
+        salario: req.body.salario || 0,
+        usuario: usuario._id,
+      })
+      await empleado.save()
+    }
+    // Si cambia de empleado a cliente
+    else if (eraEmpleado && seraCliente) {
+      // Eliminar de la tabla de empleados
+      await Empleado.findOneAndDelete({
+        $or: [{ correoempleado: usuario.email || usuario.correo }, { usuario: id }],
+      })
+
+      // Crear en la tabla de clientes
+      const cliente = new Cliente({
+        nombrecliente: usuario.nombre,
+        apellidocliente: usuario.apellido || "",
+        correocliente: usuario.email || usuario.correo,
+        celularcliente: usuario.celular || "",
+        estadocliente: true,
+        usuario: usuario._id,
+      })
+      await cliente.save()
+    }
+
+    // Actualizar el rol del usuario
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(id, { rol: nuevoRol._id }, { new: true })
+      .select("-password")
+      .populate("rol")
+
+    res.json({
+      msg: "Rol actualizado correctamente",
+      usuario: usuarioActualizado,
+    })
+  } catch (error) {
+    console.error("Error al actualizar rol:", error)
+    res.status(500).json({
+      msg: "Error al actualizar rol",
       error: error.message,
     })
   }
@@ -386,11 +546,100 @@ const PromGet = async (req, res = response) => {
   }
 }
 
+// Activar cuenta de usuario
+const activateAccount = async (req, res = response) => {
+  const { email } = req.body
+
+  try {
+    // Verificar si el email existe
+    const usuario = await Usuario.findOne({ correo: email })
+
+    if (!usuario) {
+      return res.status(404).json({
+        msg: "No se encontró ninguna cuenta con ese correo electrónico",
+      })
+    }
+
+    // Verificar si la cuenta ya está activa
+    if (usuario.estado) {
+      return res.status(400).json({
+        msg: "Esta cuenta ya está activa",
+      })
+    }
+
+    // Activar la cuenta
+    usuario.estado = true
+    await usuario.save()
+
+    res.json({
+      msg: "Cuenta activada correctamente",
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      msg: "Error al activar la cuenta",
+    })
+  }
+}
+
+// Añadir esta nueva función al final del archivo, antes del module.exports
+// Activar/Desactivar un usuario
+const usuariosToggleEstado = async (req, res = response) => {
+  const { id } = req.params
+
+  try {
+    // Verificar si el usuario existe
+    const usuario = await Usuario.findById(id)
+    if (!usuario) {
+      return res.status(404).json({
+        msg: "Usuario no encontrado",
+      })
+    }
+
+    // Cambiar el estado sin modificar otros campos
+    const nuevoEstado = !usuario.estado
+
+    // Actualizar solo el campo estado
+    await Usuario.findByIdAndUpdate(id, { estado: nuevoEstado })
+
+    // Obtener el rol para actualizar las colecciones relacionadas
+    const rol = await Rol.findById(usuario.rol)
+
+    // Si el usuario es un cliente o empleado, actualizar también su estado en esas colecciones
+    if (rol) {
+      if (rol.nombreRol === "Cliente") {
+        await Cliente.findOneAndUpdate({ usuario: id }, { estadocliente: nuevoEstado })
+      } else if (rol.nombreRol === "Empleado") {
+        await Empleado.findOneAndUpdate({ usuario: id }, { estadoempleado: nuevoEstado })
+      }
+    }
+
+    // Obtener el usuario actualizado para la respuesta
+    const usuarioActualizado = await Usuario.findById(id).select("-password")
+
+    res.json({
+      msg: `Usuario ${nuevoEstado ? "activado" : "desactivado"} correctamente`,
+      usuario: usuarioActualizado,
+    })
+  } catch (error) {
+    console.error("Error al cambiar estado del usuario:", error)
+    res.status(500).json({
+      msg: "Error al cambiar estado del usuario",
+      error: error.message,
+    })
+  }
+}
+
+// Asegúrate de exportar la nueva función
 module.exports = {
   usuariosGet,
+  usuarioGetById,
   usuariosPost,
   usuariosPut,
+  usuariosUpdateRol,
   usuariosDelete,
   PromGet,
+  activateAccount,
+  usuariosToggleEstado,
 }
 

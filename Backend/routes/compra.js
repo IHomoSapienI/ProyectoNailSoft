@@ -7,12 +7,12 @@ const {
     eliminarCompra
 } = require('../controllers/compra'); // Asegúrate de que la ruta sea correcta
 
-//const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
-//const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
+const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
+const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
 
 const router = express.Router();
 
-//router.use(validarJWT);
+router.use(validarJWT);
 
 // // Ruta para crear una nueva compra
 // router.post('/', verificarPermisos(['crearCompras']), crearCompra);
@@ -26,8 +26,8 @@ const router = express.Router();
 // // Ruta para actualizar una compra
 // router.put('/:id', verificarPermisos(['actualizarCompras']), actualizarCompra);
 
-// // Ruta para eliminar una compra
-// router.delete('/:id', verificarPermisos(['eliminarCompras']), eliminarCompra);
+// Ruta para eliminar una compra
+router.delete('/:id', verificarPermisos(['eliminarCompras']), eliminarCompra);
 
 
 // Ruta para crear una nueva compra
@@ -43,7 +43,7 @@ router.get('/:id',  obtenerCompraPorId);
 router.put('/:id',  actualizarCompra);
 
 // Ruta para eliminar una compra
-router.delete('/:id',  eliminarCompra);
+// router.delete('/:id',  eliminarCompra);
 
 
 module.exports = router;

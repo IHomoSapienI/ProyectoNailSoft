@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faTrash, faSave, faArrowLeft, faCheck, faSpinner } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faTrash, faSave, faArrowLeft, faCheck } from "@fortawesome/free-solid-svg-icons"
 
 const GestionVentaServicio = () => {
   const { id, citaId } = useParams()
@@ -774,6 +774,35 @@ const GestionVentaServicio = () => {
     }
   }
 
+  // Update the loading state display
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando datos...</p>
+        </div>
+      </div>
+    )
+
+  // Update the error state display
+  if (error)
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+        <button
+          onClick={() => navigate("/citas-en-progreso")}
+          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+          Volver a citas
+        </button>
+      </div>
+    )
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -947,10 +976,20 @@ const GestionVentaServicio = () => {
           </div>
           <button
             onClick={agregarServicio}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            disabled={isSaving}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-70"
           >
-            <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Agregar Servicio
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
+                Agregando...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                Agregar Servicio
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -980,7 +1019,7 @@ const GestionVentaServicio = () => {
           >
             {isSaving ? (
               <>
-                <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
                 Guardando...
               </>
             ) : (
@@ -997,7 +1036,7 @@ const GestionVentaServicio = () => {
           >
             {isSaving ? (
               <>
-                <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
                 Procesando...
               </>
             ) : (

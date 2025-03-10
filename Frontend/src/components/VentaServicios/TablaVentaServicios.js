@@ -20,9 +20,12 @@ const TablaVentaServicios = () => {
   const [paginaActual, setPaginaActual] = useState(1)
   const ventasPorPagina = 5
   const [busqueda, setBusqueda] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
   const location = useLocation()
 
   const fetchVentas = async () => {
+    setIsLoading(true)
     try {
       const token = localStorage.getItem("token")
       const response = await axios.get("https://gitbf.onrender.com/api/ventaservicios", {
@@ -34,6 +37,8 @@ const TablaVentaServicios = () => {
     } catch (error) {
       console.error("Error al obtener las ventas:", error)
       Swal.fire("Error", "No tienes permiso para estar aqui :) post: tu token no es válido", "error")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -58,6 +63,7 @@ const TablaVentaServicios = () => {
   }
 
   const manejarAgregarOActualizar = async (ventaData, ventaId) => {
+    setIsProcessing(true)
     try {
       const token = localStorage.getItem("token")
       let response
@@ -77,11 +83,13 @@ const TablaVentaServicios = () => {
         await Swal.fire("Agregado!", "La venta ha sido agregada.", "success")
       }
 
-      fetchVentas()
+      await fetchVentas()
       setModalAbierto(false)
     } catch (error) {
       console.error("Error al agregar o actualizar la venta:", error)
       await Swal.fire("Error!", "Hubo un problema al guardar la venta.", "error")
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -98,6 +106,7 @@ const TablaVentaServicios = () => {
     })
 
     if (result.isConfirmed) {
+      setIsProcessing(true)
       try {
         const token = localStorage.getItem("token")
         await axios.delete(`https://gitbf.onrender.com/api/ventaservicios/${idVenta}`, {
@@ -105,11 +114,13 @@ const TablaVentaServicios = () => {
             Authorization: `Bearer ${token}`,
           },
         })
-        fetchVentas()
+        await fetchVentas()
         Swal.fire("Eliminado!", "La venta ha sido eliminada.", "success")
       } catch (error) {
         console.error("Error al eliminar la venta:", error)
         Swal.fire("Error!", "Hubo un problema al eliminar la venta.", "error")
+      } finally {
+        setIsProcessing(false)
       }
     }
   }
@@ -143,19 +154,35 @@ const TablaVentaServicios = () => {
       venta.cliente?.correocliente.toLowerCase().includes(busqueda.toLowerCase()),
   )
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando ventas...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 flex flex-col items-center">
+    <div className=" p-2 flex flex-col items-center">
       <h2 className="text-3xl font-semibold mb-8">Gestión de Ventas de Servicio</h2>
 
       <div className="flex justify-between mb-5 w-full h-7 ">
         <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300 disabled:opacity-70"
           onClick={() => {
             setVentaSeleccionada(null)
             setModalAbierto(true)
           }}
+          disabled={isProcessing}
         >
-          <FontAwesomeIcon icon={faPlus} />
+          {isProcessing ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+          ) : (
+            <FontAwesomeIcon icon={faPlus} />
+          )}
         </button>
 
         <input
@@ -164,6 +191,7 @@ const TablaVentaServicios = () => {
           onChange={(e) => setBusqueda(e.target.value)}
           className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
           placeholder="Buscar por cliente (nombre, apellido o correo)"
+          disabled={isProcessing}
         />
       </div>
 

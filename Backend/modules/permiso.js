@@ -22,7 +22,7 @@ const PermisoSchema = Schema({
 
     categoria: { // Campo opcional para categorizar permisos
         type: String,
-        enum: ['usuarios', 'roles', 'configuración', 'reportes', 'compras', 'servicios', 'ventaServicios', 'productos', 'ventaProductos','citas','empleados','clientes','insumos','proveedores', 'categoriaProductos'], // Ejemplo de categorías
+        enum: ['usuarios', 'roles', 'permisos','configuración', 'reportes', 'compras', 'servicios', 'ventaServicios', 'productos', 'ventaProductos','citas','empleados','clientes','insumos','proveedores', 'categoriaProductos'], // Ejemplo de categorías
     },
 
     nivel: { // Campo opcional para el nivel de permiso

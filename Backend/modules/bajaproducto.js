@@ -1,4 +1,6 @@
-const BajaProductoSchema = Schema({
+const { Schema, model } = require('mongoose'); // ← Agrega esta línea
+
+const BajaProductoSchema = new Schema({ // ← Asegúrate de que tenga "new"
     productoId: {
         type: Schema.Types.ObjectId,
         ref: 'Insumo', // Referencia al modelo Insumo
@@ -22,3 +24,5 @@ const BajaProductoSchema = Schema({
         default: ''
     }
 });
+
+module.exports = model('BajaProducto', BajaProductoSchema); // ← Exporta correctamente

@@ -1,6 +1,6 @@
 const { Router } = require('express');
 
-const { obtenerInsumos, crearInsumo, actualizarInsumo, eliminarInsumo, cambiarEstadoInsumo } = require('../controllers/insumo');
+const { obtenerInsumos, crearInsumo, actualizarInsumo, eliminarInsumo, cambiarEstadoInsumo, darDeBajaInsumo } = require('../controllers/insumo');
 //const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
 //const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
 const router = Router();
@@ -34,6 +34,9 @@ router.delete('/:id', eliminarInsumo);
 
 // Cambiar el estado de un insumo por ID
 router.patch('/:id/estado', cambiarEstadoInsumo);
+
+// Nueva ruta para dar de baja un insumo
+router.post('/dar-de-baja', darDeBajaInsumo);
 
 
 

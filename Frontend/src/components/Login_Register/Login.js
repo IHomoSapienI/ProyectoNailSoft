@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from "../../context/AuthContext"
 import "./Login.css"
+import Swal from "sweetalert2" // Asegúrate de tener sweetalert2 instalado
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -26,35 +27,56 @@ export default function Login() {
   }, [])
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-  
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
     try {
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/login", { email, password });
-      const { token, role, user } = response.data;
-  
+      const response = await axios.post("https://gitbf.onrender.com/api/auth/login", { email, password })
+      const { token, role, user } = response.data
+
       if (!token || !role || !user) {
-        throw new Error("Token, role, or user missing from response");
+        throw new Error("Token, role, or user missing from response")
       }
-  
-      login({ token, role, name: user.name, email: user.email });
-      localStorage.setItem("token", token);
-      localStorage.setItem("userRole", role.toLowerCase());
-  
+
+      login({ token, role, name: user.name, email: user.email })
+      localStorage.setItem("token", token)
+      localStorage.setItem("userRole", role.toLowerCase())
+      localStorage.setItem("userId", user.id)
+
       // Redirigir según el rol del usuario
       if (role.toLowerCase() === "admin") {
-        navigate("/dashboard");
+        navigate("/dashboard")
       } else {
-        navigate("/");
+        navigate("/")
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Credenciales inválidas. Por favor, intente de nuevo.");
+      console.error("Error de login:", error)
+
+      // Verificar si el error es por cuenta inactiva
+      if (error.response?.data?.cuentaInactiva) {
+        Swal.fire({
+          icon: "error",
+          title: "Cuenta inactiva",
+          text: "Tu cuenta ha sido desactivada. Por favor, contacta al administrador para reactivarla.",
+          confirmButtonText: "Entendido",
+        })
+      }
+      // Verificar si el error es por rol desactivado
+      else if (error.response?.data?.rolDesactivado) {
+        Swal.fire({
+          icon: "error",
+          title: "Acceso denegado",
+          text: "Tu rol ha sido desactivado. Contacta al administrador.",
+          confirmButtonText: "Entendido",
+        })
+      } else {
+        setError(error.response?.data?.message || "Credenciales inválidas. Por favor, intente de nuevo.")
+      }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-  
+  }
 
   return (
     <div className="login-container">

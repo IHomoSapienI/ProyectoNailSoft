@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import "./Formulario.css"
+import "../Formulario.css"
 
 const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
   const [clientes, setClientes] = useState([])
@@ -167,15 +167,26 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
       estado,
     }
 
+    setIsLoading(true)
     try {
       await onGuardar(ventaData, ventaId)
     } catch (error) {
       console.error("Error al guardar la venta:", error)
       alert(`Error al guardar la venta: ${error.message}`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  if (isLoading) return <div>Cargando datos...</div>
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando datos...</p>
+        </div>
+      </div>
+    )
   if (error) return <div>Error: {error}</div>
 
   return (
@@ -383,10 +394,21 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
         </div>
 
         <div className="flex justify-between">
-          <button type="submit" className="p-2 bg-green-500 text-white rounded">
-            Guardar Venta
+          <button
+            type="submit"
+            className="p-2 bg-green-500 text-white rounded flex items-center justify-center disabled:opacity-70"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              "Guardar Venta"
+            )}
           </button>
-          <button type="button" onClick={onCancelar} className="p-2 bg-gray-300 rounded">
+          <button type="button" onClick={onCancelar} className="p-2 bg-gray-300 rounded" disabled={isLoading}>
             Cancelar
           </button>
         </div>
