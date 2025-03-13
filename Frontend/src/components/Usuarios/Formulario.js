@@ -3,9 +3,17 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import Swal from "sweetalert2"
-import "../Formulario.css"
+import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaLock, FaUserTag } from "react-icons/fa"
+
+import "./formularioUsuarios.css"
+
+// Importar el hook useSidebar
+import { useSidebar } from "../Sidebar/Sidebar"
 
 export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuarioEditando, roles }) {
+  // Añadir el hook useSidebar al inicio del componente
+  const { isCollapsed } = useSidebar()
+
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -133,6 +141,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         icon: "error",
         title: "Error",
         text: "Todos los campos son obligatorios",
+        confirmButtonColor: "#db2777",
       })
       return
     }
@@ -145,6 +154,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         icon: "error",
         title: "Error",
         text: "Las contraseñas no coinciden",
+        confirmButtonColor: "#db2777",
       })
       return
     }
@@ -210,6 +220,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
           icon: "success",
           title: "Actualización Exitosa",
           text: "Usuario actualizado exitosamente!",
+          confirmButtonColor: "#db2777",
         })
 
         onUsuarioActualizado()
@@ -277,6 +288,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
           icon: "success",
           title: usuarioEditando ? "Actualización Exitosa" : "Registro Exitoso",
           text: usuarioEditando ? "Usuario actualizado exitosamente!" : "Usuario creado exitosamente!",
+          confirmButtonColor: "#db2777",
         })
 
         onUsuarioActualizado()
@@ -306,6 +318,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         title: "Error",
         text: errorMsg,
         footer: errorDetails || "Si el problema persiste, contacte al administrador del sistema",
+        confirmButtonColor: "#db2777",
       })
     } finally {
       setLoading(false)
@@ -313,136 +326,175 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
   }
 
   return (
-    <div className="formulario bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <h2 className="text-2xl font-semibold mb-6 text-center">
+    <div className="formulario-moderno max-h-[80vh] overflow-y-auto bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
+      <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: "#db2777" }}>
         {usuarioEditando ? "Editar Usuario" : "Agregar Usuario"}
       </h2>
-      {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+
+      {error && <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200 mb-6">{error}</div>}
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-            Nombre <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="nombre" className="form-label">
+            Nombre <span className="text-pink-500">*</span>
           </label>
-          <input
-            type="text"
-            id="nombre"
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Ingrese su nombre"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaUser className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              id="nombre"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleChange}
+              required
+              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              placeholder="Ingrese su nombre"
+            />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="apellido" className="block text-sm font-medium text-gray-700">
-            Apellido <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="apellido" className="form-label">
+            Apellido <span className="text-pink-500">*</span>
           </label>
-          <input
-            type="text"
-            id="apellido"
-            name="apellido"
-            value={formData.apellido}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Ingrese su apellido"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaUser className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              id="apellido"
+              name="apellido"
+              value={formData.apellido}
+              onChange={handleChange}
+              required
+              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              placeholder="Ingrese su apellido"
+            />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="email" className="form-label">
+            Email <span className="text-pink-500">*</span>
           </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="ejemplo@dominio.com"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaEnvelope className="text-gray-400" />
+            </div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              placeholder="ejemplo@dominio.com"
+            />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="celular" className="block text-sm font-medium text-gray-700">
-            Celular <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="celular" className="form-label">
+            Celular <span className="text-pink-500">*</span>
           </label>
-          <input
-            type="text"
-            id="celular"
-            name="celular"
-            value={formData.celular}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Ingrese su número de celular"
-          />
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaPhone className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              id="celular"
+              name="celular"
+              value={formData.celular}
+              onChange={handleChange}
+              required
+              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              placeholder="Ingrese su número de celular"
+            />
+          </div>
         </div>
 
         {!usuarioEditando && (
           <>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contraseña <span className="text-red-500">*</span>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Contraseña <span className="text-pink-500">*</span>
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={7}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                placeholder="Ingrese su contraseña"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaLock className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={7}
+                  className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+                  placeholder="Ingrese su contraseña"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Mínimo 7 caracteres</p>
             </div>
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmar Contraseña <span className="text-red-500">*</span>
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirmar Contraseña <span className="text-pink-500">*</span>
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                minLength={7}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                placeholder="Confirme su contraseña"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FaLock className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  minLength={7}
+                  className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+                  placeholder="Confirme su contraseña"
+                />
+              </div>
             </div>
           </>
         )}
 
-        <div>
-          <label htmlFor="rol" className="block text-sm font-medium text-gray-700">
-            Rol <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="rol" className="form-label">
+            Rol <span className="text-pink-500">*</span>
           </label>
-          <select
-            id="rol"
-            name="rol"
-            value={formData.rol}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          >
-            <option value="">Seleccionar rol</option>
-            {roles.map((r) => (
-              <option key={r._id} value={r._id}>
-                {r.nombreRol}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaUserTag className="text-gray-400" />
+            </div>
+            <select
+              id="rol"
+              name="rol"
+              value={formData.rol}
+              onChange={handleChange}
+              required
+              className="form-select pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+            >
+              <option value="">Seleccionar rol</option>
+              {roles.map((r) => (
+                <option key={r._id} value={r._id}>
+                  {r.nombreRol}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="estado" className="block text-sm font-medium text-gray-700">
+        <div className="form-group">
+          <label htmlFor="estado" className="form-label">
             Estado
           </label>
           <select
@@ -450,7 +502,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
             name="estado"
             value={formData.estado}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            className="form-select focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
           >
             <option value="Activo">Activo</option>
             <option value="Inactivo">Inactivo</option>
@@ -460,28 +512,20 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         {/* Campo oculto para asegurar que tipoUsuario siempre se envíe */}
         <input type="hidden" name="tipoUsuario" value={formData.tipoUsuario} />
 
-        <div className="flex justify-between">
-          <button
-            type="submit"
-            disabled={loading || fetchingCurrentUser}
-            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading || fetchingCurrentUser ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
+        <div className="flex justify-between mt-6">
+          <button type="submit" disabled={loading || fetchingCurrentUser} className="btn-primary">
             {loading || fetchingCurrentUser ? (
               <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-pink mr-2"></div>
+                <FaSpinner className="animate-spin mr-2" />
                 <span>Procesando...</span>
               </div>
             ) : usuarioEditando ? (
-              "Actualizar"
+              "Actualizar Usuario"
             ) : (
-              "Guardar"
+              "Guardar Usuario"
             )}
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
+          <button type="button" onClick={onClose} disabled={loading || fetchingCurrentUser} className="btn-secondary">
             Cancelar
           </button>
         </div>

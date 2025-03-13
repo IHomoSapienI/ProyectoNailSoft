@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
 import "./App.css"
+import MainLayout from "./components/Sidebar/MainLayout"
 
 import Sidebar from "./components/Sidebar/Sidebar"
 import Navbar from "./components/NavBars/Navbar"
@@ -16,9 +17,9 @@ import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
 import UserProfile from "./components/PerfilUsuario/UserProfile"
 
 import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
-import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio" // Nuevo componente
-import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso" // Nuevo componente
-import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado" // Nuevo componente
+import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
+import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
+import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado"
 import ArticlesGrid from "./components/Galeria/ArticlesGrid"
 import SeleccionarServicios from "./components/Galeria/SeleccionarServicios"
 import TablaInsumos from "./components/Insumos/TablaInsumos"
@@ -72,6 +73,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   return children
 }
 
+// Layout modificado para usar MainLayout para admin y empleado
 const Layout = ({ children }) => {
   const userRole = localStorage.getItem("userRole")
   const isAdmin = userRole === "admin"
@@ -80,9 +82,18 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-10">
-      {showSidebar ? <Sidebar /> : <Navbar />}
-      <div className={`content min-h-screen ${showSidebar ? "md:ml-[250px]" : ""}`}>{children}</div>
-      <Footer />
+      {showSidebar ? (
+        <>
+          <Sidebar />
+          <MainLayout>{children}</MainLayout>
+        </>
+      ) : (
+        <>
+          <Navbar />
+          <div className="content min-h-screen">{children}</div>
+          <Footer />
+        </>
+      )}
 
       {/* Botones de redes sociales solo para la vista del cliente */}
       {!showSidebar && (
@@ -157,7 +168,7 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute allowedRoles={["admin","empleado"]}>
+            <PrivateRoute allowedRoles={["admin", "empleado"]}>
               <Layout>
                 <Dashboard />
               </Layout>
@@ -167,7 +178,7 @@ function App() {
         <Route
           path="/insumos"
           element={
-            <PrivateRoute allowedRoles={["admin","empleado"]}>
+            <PrivateRoute allowedRoles={["admin", "empleado"]}>
               <Layout>
                 <TablaInsumos />
               </Layout>

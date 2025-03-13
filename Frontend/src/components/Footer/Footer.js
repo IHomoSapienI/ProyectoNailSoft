@@ -2,15 +2,19 @@
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { FaInstagram, FaFacebookF, FaTwitter, FaPhone, FaEnvelope, FaMapMarkerAlt, FaHeart } from "react-icons/fa"
+import { useSidebar } from "../Sidebar/Sidebar" // Importamos el contexto del sidebar
 import "./footer.css"
 
 const Footer = () => {
   const userRole = localStorage.getItem("userRole")?.toLowerCase()
   const isAdmin = userRole === "admin"
+  const isEmployee = userRole === "empleado"
+  const { isCollapsed } = useSidebar() // Obtenemos el estado del sidebar
 
-  if (isAdmin) {
+  // Mostrar el footer de admin tanto para administradores como para empleados
+  if (isAdmin || isEmployee) {
     return (
-      <div className="admin-footer">
+      <div className={`admin-footer ${isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
         <p>
           Desarrollado con <FaHeart className="inline-block text-pink-500 animate-pulse" /> por NailsSoft
         </p>

@@ -4,6 +4,7 @@ import React from "react"
 
 import { useState, useEffect, useRef, createContext, useContext } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FaUsers,
@@ -166,9 +167,11 @@ const Sidebar = () => {
         if (isCollapsed) {
           mainContent.style.marginLeft = "70px"
           mainContent.style.width = "calc(100% - 70px)"
+          mainContent.style.transition = "all 0.3s ease-in-out" // Transición más suave
         } else {
           mainContent.style.marginLeft = "280px"
           mainContent.style.width = "calc(100% - 280px)"
+          mainContent.style.transition = "all 0.3s ease-in-out" // Transición más suave
         }
       } else {
         mainContent.style.marginLeft = "0"
@@ -209,13 +212,22 @@ const Sidebar = () => {
 
       {/* Botón de toggle para colapsar (visible solo en desktop) */}
       {!isMobile && isOpen && (
-        <button
+        <motion.button
           className="sidebar-toggle"
           onClick={toggleCollapse}
+          initial={false}
+          animate={{
+            left: isCollapsed ? "60px" : "260px",
+            opacity: 1,
+          }}
+          transition={{
+            duration: 0.3,
+            delay: 0.05, // Pequeño retraso para que el botón se mueva después del sidebar
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
           style={{
             position: "fixed",
             top: "50%",
-            left: isCollapsed ? "60px" : "260px",
             zIndex: 1002,
             transform: "translateY(-50%)",
             background: "white",
@@ -228,11 +240,10 @@ const Sidebar = () => {
             boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
             border: "1px solid #f0f0f0",
             cursor: "pointer",
-            transition: "left 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
           {isCollapsed ? <FaChevronRight size={12} /> : <FaChevronLeft size={12} />}
-        </button>
+        </motion.button>
       )}
 
       <motion.div
@@ -243,20 +254,25 @@ const Sidebar = () => {
           opacity: isOpen ? 1 : 0,
         }}
         transition={{
-          duration: 0.5,
-          ease: [0.4, 0, 0.2, 1], // Curva de bezier para una transición más suave
-          opacity: { duration: 0.3 },
+          duration: 0.3, // Reducir la duración para que sea más suave
+          ease: [0.25, 0.1, 0.25, 1], // Curva de bezier más suave
+          opacity: { duration: 0.2 },
         }}
         className={`sidebar-container ${isCollapsed ? "collapsed" : ""}`}
       >
         <div className="sidebar-content">
           <div className="sidebar-header">
+
             <Link to={userRole === "admin" ? "/dashboard" : "/agenda-empleado"} className="logo-container">
-              <img src="http://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
+            
+              {/* <div className="logo-wrapper">
+                <img src="http://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
+              </div> */}
               {!isCollapsed && (
                 <motion.h1
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="logo-text"
                 >
@@ -264,6 +280,7 @@ const Sidebar = () => {
                 </motion.h1>
               )}
             </Link>
+            
           </div>
 
           <div className="menu-container">
@@ -524,10 +541,7 @@ const Sidebar = () => {
             )}
           </div>
 
-          <button onClick={handleLogout} className={`logout-button ${isCollapsed ? "collapsed" : ""}`}>
-            <FaSignOutAlt />
-            {!isCollapsed && <span>Cerrar sesión</span>}
-          </button>
+         
         </div>
       </motion.div>
     </SidebarContext.Provider>

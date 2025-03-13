@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import "../Formulario.css"
+import "./formularioVentaServicio.css"
 
 const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
   const [clientes, setClientes] = useState([])
@@ -190,51 +190,47 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
   if (error) return <div>Error: {error}</div>
 
   return (
-    <div className="formulario max-h-96 overflow-y-auto">
-      <form onSubmit={manejarSubmit} className="formulario space-y-4">
+    <div className="formulario-moderno">
+      <form onSubmit={manejarSubmit} className="space-y-4">
         <h2 className="text-xl font-semibold mb-4">
           {venta ? "Editar Venta de Servicio" : "Agregar Venta de Servicio"}
         </h2>
 
         {ventaId && (
-          <div>
-            <label htmlFor="ventaId" className="block mb-1">
+          <div className="form-group">
+            <label htmlFor="ventaId" className="form-label">
               ID de la Venta
             </label>
-            <input id="ventaId" value={ventaId} readOnly className="w-full p-2 border rounded bg-gray-100" />
+            <input id="ventaId" value={ventaId} readOnly className="form-input bg-gray-100" />
           </div>
         )}
 
         {venta && venta.codigoVenta && (
-          <div>
-            <label htmlFor="codigoVenta" className="block mb-1">
+          <div className="form-group">
+            <label htmlFor="codigoVenta" className="form-label">
               Código de Venta
             </label>
-            <input
-              id="codigoVenta"
-              value={venta.codigoVenta}
-              readOnly
-              className="w-full p-2 border rounded bg-gray-100"
-            />
+            <input id="codigoVenta" value={venta.codigoVenta} readOnly className="form-input bg-gray-100" />
           </div>
         )}
 
-        <div>
-          <label htmlFor="fecha" className="block mb-1">
+        <div className="form-group">
+          <label htmlFor="fecha" className="form-label">
             Fecha de Venta
           </label>
-          <input id="fecha" value={fecha} readOnly className="w-full p-2 border rounded bg-gray-100" />
+          <input id="fecha" value={fecha} readOnly className="form-input bg-gray-100" />
         </div>
 
-        <div>
-          <label htmlFor="cliente" className="block mb-1">
-            Cliente
+        <div className="form-group">
+          <label htmlFor="cliente" className="form-label">
+            Cliente <span className="text-pink-500">*</span>
           </label>
           <select
             id="cliente"
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="form-select"
+            required
           >
             <option value="">Selecciona un cliente</option>
             {clientes.map((cliente) => (
@@ -245,37 +241,32 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="email" className="block mb-1">
+        <div className="form-group">
+          <label htmlFor="email" className="form-label">
             Email del Cliente
           </label>
-          <input id="email" value={clienteEmail} readOnly className="w-full p-2 border rounded bg-gray-100" />
+          <input id="email" value={clienteEmail} readOnly className="form-input bg-gray-100" />
         </div>
 
-        <div>
-          <label htmlFor="apellido" className="block mb-1">
+        <div className="form-group">
+          <label htmlFor="apellido" className="form-label">
             Apellido del Cliente
           </label>
-          <input id="apellido" value={clienteApellido} readOnly className="w-full p-2 border rounded bg-gray-100" />
+          <input id="apellido" value={clienteApellido} readOnly className="form-input bg-gray-100" />
         </div>
 
-        <div>
-          <label htmlFor="celular" className="block mb-1">
+        <div className="form-group">
+          <label htmlFor="celular" className="form-label">
             Celular del Cliente
           </label>
-          <input id="celular" value={clienteCelular} readOnly className="w-full p-2 border rounded bg-gray-100" />
+          <input id="celular" value={clienteCelular} readOnly className="form-input bg-gray-100" />
         </div>
 
-        <div>
-          <label htmlFor="cita" className="block mb-1">
-            Cita
+        <div className="form-group">
+          <label htmlFor="cita" className="form-label">
+            Cita <span className="text-pink-500">*</span>
           </label>
-          <select
-            id="cita"
-            value={citaId}
-            onChange={(e) => setCitaId(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
+          <select id="cita" value={citaId} onChange={(e) => setCitaId(e.target.value)} className="form-select" required>
             <option value="">Selecciona una cita</option>
             {citas.map((cita) => (
               <option key={cita._id} value={cita._id}>
@@ -285,15 +276,16 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="empleado" className="block mb-1">
-            Empleado
+        <div className="form-group">
+          <label htmlFor="empleado" className="form-label">
+            Empleado <span className="text-pink-500">*</span>
           </label>
           <select
             id="empleado"
             value={empleadoId}
             onChange={(e) => setEmpleadoId(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="form-select"
+            required
           >
             <option value="">Selecciona un empleado</option>
             {empleados.map((empleado) => (
@@ -304,58 +296,56 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
           </select>
         </div>
 
-        <div>
-          <label htmlFor="servicio" className="block mb-1">
-            Servicios
+        <div className="form-group">
+          <label htmlFor="servicio" className="form-label">
+            Servicios <span className="text-pink-500">*</span>
           </label>
-          <select
-            id="servicio"
-            value={nuevoServicio.id}
-            onChange={(e) =>
-              setNuevoServicio({
-                id: e.target.value,
-                nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
-              })
-            }
-            className="w-full p-2 border rounded"
-          >
-            <option value="">Selecciona un servicio</option>
-            {servicios.map((servicio) => (
-              <option key={servicio._id} value={servicio._id}>
-                {servicio.nombreServicio}
-              </option>
-            ))}
-          </select>
-          <button type="button" onClick={agregarServicio} className="mt-2 p-2 bg-blue-500 text-white rounded">
-            Agregar Servicio
-          </button>
+          <div className="flex flex-col md:flex-row gap-2">
+            <select
+              id="servicio"
+              value={nuevoServicio.id}
+              onChange={(e) =>
+                setNuevoServicio({
+                  id: e.target.value,
+                  nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
+                })
+              }
+              className="form-select md:flex-grow"
+            >
+              <option value="">Selecciona un servicio</option>
+              {servicios.map((servicio) => (
+                <option key={servicio._id} value={servicio._id}>
+                  {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={agregarServicio} className="btn-add">
+              Agregar Servicio
+            </button>
+          </div>
         </div>
 
-        <div>
+        <div className="form-group">
           <h3 className="text-lg font-semibold mb-2">Servicios Agregados</h3>
           {serviciosSeleccionados.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-300">
+              <table className="tabla-servicios">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-2 px-4 border-b">Nombre del Servicio</th>
-                    <th className="py-2 px-4 border-b">Precio</th>
-                    <th className="py-2 px-4 border-b">Tiempo (mins)</th>
-                    <th className="py-2 px-4 border-b">Acciones</th>
+                  <tr>
+                    <th>Nombre del Servicio</th>
+                    <th className="text-right">Precio</th>
+                    <th className="text-right">Tiempo (mins)</th>
+                    <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {serviciosSeleccionados.map((servicio) => (
-                    <tr key={servicio._id} className="hover:bg-gray-50">
-                      <td className="py-2 px-4 border-b">{servicio.nombreServicio}</td>
-                      <td className="py-2 px-4 border-b text-right">${servicio.precio.toFixed(2)}</td>
-                      <td className="py-2 px-4 border-b text-right">{servicio.tiempo}</td>
-                      <td className="py-2 px-4 border-b text-center">
-                        <button
-                          type="button"
-                          onClick={() => eliminarServicio(servicio._id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
+                    <tr key={servicio._id}>
+                      <td>{servicio.nombreServicio}</td>
+                      <td className="text-right">${servicio.precio.toFixed(2)}</td>
+                      <td className="text-right">{servicio.tiempo}</td>
+                      <td className="text-center">
+                        <button type="button" onClick={() => eliminarServicio(servicio._id)} className="btn-danger">
                           Eliminar
                         </button>
                       </td>
@@ -363,11 +353,11 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-gray-100 font-bold">
-                    <td className="py-2 px-4 border-t">Total</td>
-                    <td className="py-2 px-4 border-t text-right">${precioTotal.toFixed(2)}</td>
-                    <td className="py-2 px-4 border-t text-right">{totalTiempo} mins</td>
-                    <td className="py-2 px-4 border-t"></td>
+                  <tr>
+                    <td>Total</td>
+                    <td className="text-right">${precioTotal.toFixed(2)}</td>
+                    <td className="text-right">{totalTiempo} mins</td>
+                    <td></td>
                   </tr>
                 </tfoot>
               </table>
@@ -377,38 +367,32 @@ const FormularioVentaServicio = ({ venta, onGuardar, onCancelar }) => {
           )}
         </div>
 
-        <div>
+        <div className="resumen-venta">
           <h3 className="text-lg font-semibold">Resumen de la Venta</h3>
-          <p>Total Precio: ${precioTotal.toFixed(2)}</p>
-          <p>Total Tiempo: {totalTiempo} mins</p>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="estado"
-              checked={estado}
-              onChange={(e) => setEstado(e.target.checked)}
-              className="mr-2"
-            />
+          <p>
+            <strong>Total Precio:</strong> ${precioTotal.toFixed(2)}
+          </p>
+          <p>
+            <strong>Total Tiempo:</strong> {totalTiempo} mins
+          </p>
+          <div className="checkbox-container">
+            <input type="checkbox" id="estado" checked={estado} onChange={(e) => setEstado(e.target.checked)} />
             <label htmlFor="estado">Estado</label>
           </div>
         </div>
 
-        <div className="flex justify-between">
-          <button
-            type="submit"
-            className="p-2 bg-green-500 text-white rounded flex items-center justify-center disabled:opacity-70"
-            disabled={isLoading}
-          >
+        <div className="btn-container">
+          <button type="submit" className="btn-primary" disabled={isLoading}>
             {isLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                <span className="spinner"></span>
                 <span>Guardando...</span>
               </>
             ) : (
               "Guardar Venta"
             )}
           </button>
-          <button type="button" onClick={onCancelar} className="p-2 bg-gray-300 rounded" disabled={isLoading}>
+          <button type="button" onClick={onCancelar} className="btn-secondary" disabled={isLoading}>
             Cancelar
           </button>
         </div>

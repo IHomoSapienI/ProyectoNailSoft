@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
-import "../Formulario.css"
+import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa"
+// import "../Formulario.css"
+import "./formularioRol.css"
 
 const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
   const [nombreRol, setNombreRol] = useState("")
@@ -13,6 +15,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
   const [modoEdicion, setModoEdicion] = useState(false)
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("")
   const [cargando, setCargando] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
   const categorias = [
     "categoriaProductos",
@@ -31,8 +34,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     "usuarios",
     "ventaProductos",
     "ventaServicios",
-];
-
+  ]
 
   useEffect(() => {
     const cargarPermisos = async () => {
@@ -76,6 +78,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
             title: "Error de autenticación",
             text: "Tu sesión ha expirado o no tienes permiso para acceder a esta información.",
             confirmButtonText: "Entendido",
+            confirmButtonColor: "#db2777",
           })
         }
       } finally {
@@ -112,6 +115,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
 
   const manejarEnvio = async (e) => {
     e.preventDefault()
+    setEnviando(true)
 
     if (permisosSeleccionados.length === 0) {
       Swal.fire({
@@ -119,7 +123,9 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
         title: "Advertencia",
         text: "Debes seleccionar al menos un permiso para el rol",
         confirmButtonText: "Entendido",
+        confirmButtonColor: "#db2777",
       })
+      setEnviando(false)
       return
     }
 
@@ -150,6 +156,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
           icon: "success",
           title: modoEdicion ? "Rol actualizado exitosamente" : "Rol creado exitosamente",
           confirmButtonText: "Ok",
+          confirmButtonColor: "#db2777",
         })
 
         if (onRolActualizado) onRolActualizado()
@@ -163,6 +170,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
           icon: "error",
           title: "Error",
           text: errorData.msg || errorData.message || response.statusText,
+          confirmButtonColor: "#db2777",
         })
       }
     } catch (error) {
@@ -170,34 +178,45 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
         icon: "error",
         title: "Error en la solicitud",
         text: error.message,
+        confirmButtonColor: "#db2777",
       })
+    } finally {
+      setEnviando(false)
     }
   }
 
   return (
-    <div className="formulario max-h-96 overflow-y-auto">
+    <div className="formulario-moderno max-h-[70vh] overflow-y-auto bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+        {modoEdicion ? "Editar Rol" : "Agregar Rol"}
+      </h2>
+
       <form onSubmit={manejarEnvio} className="space-y-4">
-        <div>
-          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-            Nombre del Rol: <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="nombre" className="form-label">
+            Nombre del Rol <span className="text-pink-500">*</span>
           </label>
           <input
             type="text"
+            id="nombre"
             value={nombreRol}
             onChange={(e) => setNombreRol(e.target.value)}
             required
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            className="form-input"
             placeholder="Ingrese nombre del rol"
           />
-          <p className="mt-1 text-xs text-gray-500">Ejemplo: Administrador, Usuario, Empleado.</p>
+          <p className="text-xs text-gray-500 mt-1">Ejemplo: Administrador, Usuario, Empleado.</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Categoría de Permisos:</label>
+        <div className="form-group">
+          <label htmlFor="categoria" className="form-label">
+            Categoría de Permisos
+          </label>
           <select
+            id="categoria"
             value={categoriaSeleccionada}
             onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            className="form-select"
           >
             <option value="">Todas las categorías</option>
             {categorias.map((categoria) => (
@@ -208,22 +227,23 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Permisos:</label>
+        <div className="form-group">
+          <label className="form-label">Permisos</label>
           {cargando ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 center" role="status">
-                <span className="sr-only">Cargando...</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">Cargando permisos...</p>
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+              <p className="ml-4 text-gray-600">Cargando permisos...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
               {permisos.length > 0 ? (
                 permisos
                   .filter((permiso) => !categoriaSeleccionada || permiso.categoria === categoriaSeleccionada)
                   .map((permiso) => (
-                    <div key={permiso._id} className="flex items-center space-x-2">
+                    <div
+                      key={permiso._id}
+                      className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                    >
                       <input
                         type="checkbox"
                         id={permiso._id}
@@ -231,50 +251,72 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
                         checked={permisosSeleccionados.includes(permiso._id)}
                         onChange={() => manejarCambioCheckbox(permiso._id)}
                         disabled={!permiso.activo}
-                        className="form-checkbox h-4 w-4 text-blue-600"
+                        className="form-checkbox h-4 w-4 text-pink-600 rounded focus:ring-pink-500"
                       />
                       <label
                         htmlFor={permiso._id}
-                        className={`text-sm ${!permiso.activo ? "text-gray-400" : "text-gray-700"}`}
+                        className={`text-sm ${!permiso.activo ? "text-gray-400" : "text-gray-700"} cursor-pointer`}
                       >
                         {permiso.nombrePermiso} {permiso.activo ? "" : "(Inactivo)"}
                       </label>
                     </div>
                   ))
               ) : (
-                <p className="text-gray-500">{mensaje || "No hay permisos disponibles"}</p>
+                <p className="text-gray-500 col-span-2 text-center py-4">{mensaje || "No hay permisos disponibles"}</p>
               )}
             </div>
           )}
         </div>
 
-        <div className="flex items-center">
-          <label className="block text-sm font-medium text-gray-700 mr-2">Activo:</label>
-          <input
-            type="checkbox"
-            checked={activo}
-            onChange={(e) => setActivo(e.target.checked)}
-            className="form-checkbox h-4 w-4 text-blue-600"
-          />
+        <div className="form-group flex items-center">
+          <label htmlFor="activo" className="form-label mr-4 mb-0">
+            Estado del Rol
+          </label>
+          <div className="relative inline-block w-12 align-middle select-none">
+            <input
+              type="checkbox"
+              id="activo"
+              checked={activo}
+              onChange={(e) => setActivo(e.target.checked)}
+              className="sr-only"
+            />
+            <div className="block h-6 bg-gray-300 rounded-full w-12"></div>
+            <div
+              className={`absolute left-0 top-0 h-6 w-6 rounded-full transition-transform duration-200 ease-in-out transform ${
+                activo ? "translate-x-6 bg-pink-600" : "bg-white"
+              }`}
+            >
+              {activo ? (
+                <FaCheck className="h-3 w-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              ) : (
+                <FaTimes className="h-3 w-3 text-gray-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              )}
+            </div>
+          </div>
+          <span className="ml-2 text-sm text-gray-700">{activo ? "Activo" : "Inactivo"}</span>
         </div>
 
-        <div className="flex justify-between mt-4">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            {modoEdicion ? "Actualizar Rol" : "Agregar Rol"}
+        <div className="flex justify-between mt-6">
+          <button type="submit" disabled={enviando} className="btn-primary">
+            {enviando ? (
+              <div className="flex items-center">
+                <FaSpinner className="animate-spin mr-2" />
+                <span>{modoEdicion ? "Actualizando..." : "Agregando..."}</span>
+              </div>
+            ) : modoEdicion ? (
+              "Actualizar Rol"
+            ) : (
+              "Agregar Rol"
+            )}
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-300"
-          >
-            Cerrar
+          <button type="button" onClick={onClose} disabled={enviando} className="btn-secondary">
+            Cancelar
           </button>
         </div>
 
-        {mensaje && !cargando && <div className="mt-4 p-2 text-red-600 text-sm bg-red-100 rounded">{mensaje}</div>}
+        {mensaje && !cargando && (
+          <div className="mt-4 p-3 text-red-600 text-sm bg-red-50 rounded-md border border-red-200">{mensaje}</div>
+        )}
       </form>
     </div>
   )

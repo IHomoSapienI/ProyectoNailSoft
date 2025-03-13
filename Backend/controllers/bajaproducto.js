@@ -68,7 +68,17 @@ const eliminarBajaProducto = async (req, res) => {
     }
 };
 
+const obtenerBajasProductos = async (req, res) => {
+    try {
+        const bajas = await BajaProducto.find().populate('productoId'); // Cargar datos del insumo
+        res.json(bajas);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener las bajas de productos', error });
+    }
+};
+
 module.exports = {
+    obtenerBajasProductos,
     crearBajaProducto,
     eliminarBajaProducto
 };

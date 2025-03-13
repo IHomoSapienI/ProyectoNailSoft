@@ -1,6 +1,3 @@
-
-
-
 /* Estilos previos del App.css */
 .App {
   text-align: center;
@@ -48,6 +45,14 @@
   display: block;
   flex: 1;
   align-items: center;
+  transition: all 0.3s ease-in-out; /* Añadir transición suave */
+}
+
+/* Asegurarse de que estos estilos no interfieran con el sidebar */
+body.sidebar-collapsed .content,
+body.sidebar-expanded .content {
+  transition: all 0.3s ease-in-out;
+  margin: 8vh 5vh 0vh 2vh;
   
 }
 
@@ -76,27 +81,22 @@ footer {
 
 select {
   color: black;
-  
 }
-
-
 
 .prueba {
   background-image: linear-gradient(to bottom, #d6c6e1, #ddd1e7, #e5dcec, #ede8f2, #f5f3f7);
 }
 
-.table{
+.table {
   text-align: center;
-  
 }
 
-
 /* Estilos del modal */
-.register1{
+.register1 {
   background-image: linear-gradient(to bottom, #eaeaeb, #ddd1e7, #e5dcec, #ede8f2, #f5f3f7);
-
 }
 
 .center {
   margin: auto;
 }
+

@@ -4,14 +4,17 @@ import { useState, useEffect } from "react"
 import Modal from "react-modal"
 import FormularioUsuario from "./Formulario"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faSync, faPowerOff } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faEdit, faTrash, faSync, faPowerOff, faSearch } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import axios from "axios"
+import { useSidebar } from "../Sidebar/Sidebar" // Importamos el hook del sidebar
+import "./tablaUsuarios.css" // Importamos los estilos específicos para usuarios
 
 // Configura el contenedor del modal
 Modal.setAppElement("#root")
 
 const TablaUsuarios = () => {
+  const { isCollapsed } = useSidebar() // Usamos el hook del sidebar
   const [usuarios, setUsuarios] = useState([])
   const [roles, setRoles] = useState([])
   const [rolMap, setRolMap] = useState({})
@@ -261,99 +264,86 @@ const TablaUsuarios = () => {
   }
 
   return (
-    <div className="p-6 flex flex-col items-center">
-      <h2 className="text-3xl font-semibold mb-8">Gestión de Usuarios</h2>
-      <div className="flex justify-between mb-5 w-full h-7 max-w-4xl">
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-          onClick={manejarAgregarNuevo}
-          disabled={modalIsOpen}
-        >
-          <FontAwesomeIcon icon={faPlus} />
+    <div className="content">
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Usuarios</h2>
+
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <button className="usuario-btn-add" onClick={manejarAgregarNuevo}>
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+          Nuevo Usuario
         </button>
-        <input
-          type="text"
-          id="searchInput"
-          className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="Buscar en la tabla"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+
+        <div className="usuario-search-container">
+          <FontAwesomeIcon icon={faSearch} className="usuario-search-icon" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="usuario-search-input"
+            placeholder="Buscar usuarios..."
+          />
+        </div>
       </div>
 
-      <div className="w-full max-w-4xl" inert={modalIsOpen ? true : undefined}>
-        <table className="table min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+        <table className="usuario-tabla-moderna w-full">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Apellido
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Celular
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
+              <th style={{ width: "14%" }}>Nombre</th>
+              <th style={{ width: "14%" }}>Apellido</th>
+              <th style={{ width: "18%" }}>Email</th>
+              <th style={{ width: "12%" }}>Celular</th>
+              <th style={{ width: "12%" }}>Rol</th>
+              <th style={{ width: "12%" }}>Estado</th>
+              <th style={{ width: "12%" }}>Acciones</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {usuariosActuales.length > 0 ? (
               usuariosActuales.map((usuario) => (
                 <tr key={usuario._id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{usuario.nombre}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.apellido}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usuario.celular}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="font-medium">{usuario.nombre}</td>
+                  <td>{usuario.apellido}</td>
+                  <td>{usuario.email}</td>
+                  <td>{usuario.celular}</td>
+                  <td>
                     {typeof usuario.rol === "object" ? usuario.rol.nombreRol : usuario.rolNombre || "Desconocido"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        usuario.estado ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                      }`}
-                    >
+                  <td>
+                    <span className={`usuario-estado-badge ${usuario.estado ? "activo" : "inactivo"}`}>
                       {usuario.estado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                      onClick={() => manejarEditar(usuario)}
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                      onClick={() => manejarEliminar(usuario._id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                    <button
-                      className={`${
-                        usuario.estado ? "bg-orange-500 hover:bg-orange-600" : "bg-green-500 hover:bg-green-600"
-                      } text-white font-bold py-1 px-2 rounded transition duration-300`}
-                      onClick={() => manejarToggleEstado(usuario._id, usuario.estado)}
-                      title={usuario.estado ? "Desactivar usuario" : "Activar usuario"}
-                    >
-                      <FontAwesomeIcon icon={faPowerOff} />
-                    </button>
+                  <td>
+                    <div className="flex space-x-2">
+                      <button
+                        className="usuario-btn-edit"
+                        onClick={() => manejarEditar(usuario)}
+                        title="Editar usuario"
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button
+                        className="usuario-btn-delete"
+                        onClick={() => manejarEliminar(usuario._id)}
+                        title="Eliminar usuario"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        className={`usuario-btn-toggle ${usuario.estado ? "active" : "inactive"}`}
+                        onClick={() => manejarToggleEstado(usuario._id, usuario.estado)}
+                        title={usuario.estado ? "Desactivar usuario" : "Activar usuario"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="7" className="text-center py-4 text-gray-500">
                   No se encontraron usuarios con ese criterio de búsqueda
                 </td>
               </tr>
@@ -362,53 +352,53 @@ const TablaUsuarios = () => {
         </table>
       </div>
 
-      <div className="mt-4">
-        <nav className="flex justify-center">
-          <ul className="inline-flex items-center">
-            <li>
-              <button
-                onClick={paginaAnterior}
-                disabled={paginaActual === 1}
-                className={`px-3 py-1 mx-1 rounded ${paginaActual === 1 ? "bg-gray-200 text-gray-500" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-              >
-                &lt;
-              </button>
-            </li>
-            {Array.from({ length: paginasTotales }, (_, index) => (
-              <li key={index}>
-                <button
-                  onClick={() => cambiarPagina(index + 1)}
-                  className={`px-3 py-1 mx-1 rounded ${paginaActual === index + 1 ? "bg-gray-300 text-gray-500" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                >
-                  {index + 1}
-                </button>
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={paginaSiguiente}
-                disabled={paginaActual === paginasTotales}
-                className={`px-3 py-1 mx-1 rounded ${paginaActual === paginasTotales ? "bg-gray-200 text-gray-500" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-              >
-                &gt;
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
+      {/* Paginación */}
+      {filtrarUsuarios().length > 0 && (
+        <div className="usuario-pagination-container mt-6">
+          <button
+            onClick={paginaAnterior}
+            disabled={paginaActual === 1}
+            className={`usuario-pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+          >
+            &lt;
+          </button>
 
+          <div className="usuario-pagination-pages">
+            {Array.from({ length: paginasTotales }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => cambiarPagina(index + 1)}
+                className={`usuario-pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={paginaSiguiente}
+            disabled={paginaActual === paginasTotales}
+            className={`usuario-pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+          >
+            &gt;
+          </button>
+        </div>
+      )}
+
+      {/* Modal */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={manejarCerrarModal}
-        contentLabel="Formulario Usuario"
-        className="fixed inset-0 flex items-center justify-center p-4"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        className="usuario-modal-content"
+        overlayClassName="usuario-modal-overlay"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
-          <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={manejarCerrarModal}>
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={manejarCerrarModal}
+          >
             &times;
           </button>
-          <h2 className="text-lg font-semibold mb-4">{usuarioEditando ? "Editar Usuario" : "Agregar Nuevo Usuario"}</h2>
           <FormularioUsuario
             onClose={manejarCerrarModal}
             onUsuarioActualizado={manejarUsuarioActualizado}

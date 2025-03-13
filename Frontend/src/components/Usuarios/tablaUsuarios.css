@@ -1,15 +1,15 @@
-/* Estilos modernos para tablas */
-.tabla-container {
+/* Estilos específicos para la tabla de usuarios */
+.usuario-tabla-container {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
     "Helvetica Neue", sans-serif;
-  transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1), width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   max-width: 100%;
   margin: 0;
   padding: 0;
 }
 
-.tabla-moderna {
+.usuario-tabla-moderna {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -18,11 +18,11 @@
   table-layout: fixed;
 }
 
-.tabla-moderna thead {
+.usuario-tabla-moderna thead {
   background-color: #f9fafb;
 }
 
-.tabla-moderna th {
+.usuario-tabla-moderna th {
   padding: 1rem;
   text-align: left;
   font-size: 0.75rem;
@@ -32,13 +32,16 @@
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tabla-moderna th:hover {
+.usuario-tabla-moderna th:hover {
   background-color: #f3f4f6;
 }
 
-.tabla-moderna td {
+.usuario-tabla-moderna td {
   padding: 1rem;
   font-size: 0.875rem;
   color: #374151;
@@ -48,41 +51,16 @@
   text-overflow: ellipsis;
 }
 
-.tabla-moderna tbody tr:hover {
+.usuario-tabla-moderna tbody tr:hover {
   background-color: #f9fafb;
 }
 
-.tabla-moderna tbody tr:last-child td {
+.usuario-tabla-moderna tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Ajustar anchos de columnas */
-.tabla-moderna th:nth-child(1),
-.tabla-moderna td:nth-child(1) {
-  width: 25%;
-}
-
-.tabla-moderna th:nth-child(2),
-.tabla-moderna td:nth-child(2) {
-  width: 20%;
-}
-
-.tabla-moderna th:nth-child(3),
-.tabla-moderna td:nth-child(3),
-.tabla-moderna th:nth-child(4),
-.tabla-moderna td:nth-child(4),
-.tabla-moderna th:nth-child(5),
-.tabla-moderna td:nth-child(5) {
-  width: 15%;
-}
-
-.tabla-moderna th:nth-child(6),
-.tabla-moderna td:nth-child(6) {
-  width: 10%;
-}
-
 /* Botones de acción */
-.btn-add {
+.usuario-btn-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -96,12 +74,29 @@
   cursor: pointer;
 }
 
-.btn-add:hover {
+.usuario-btn-add:hover {
   background-color: #be185d;
 }
 
-/* Agregar estilo para el botón de exportar a Excel después del estilo btn-add:hover */
-.btn-export {
+.usuario-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #6b7280;
+  color: white;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.usuario-btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+.usuario-btn-export {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -115,11 +110,11 @@
   cursor: pointer;
 }
 
-.btn-export:hover {
+.usuario-btn-export:hover {
   background-color: #059669;
 }
 
-.btn-edit {
+.usuario-btn-edit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -133,11 +128,11 @@
   cursor: pointer;
 }
 
-.btn-edit:hover {
+.usuario-btn-edit:hover {
   background-color: #2563eb;
 }
 
-.btn-delete {
+.usuario-btn-delete {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -151,18 +146,66 @@
   cursor: pointer;
 }
 
-.btn-delete:hover {
+.usuario-btn-delete:hover {
   background-color: #dc2626;
 }
 
+.usuario-btn-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background-color: #6b7280;
+  color: white;
+  border-radius: 0.375rem;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.usuario-btn-info:hover {
+  background-color: #4b5563;
+}
+
+.usuario-btn-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.usuario-btn-toggle.active {
+  background-color: #f97316;
+  color: white;
+}
+
+.usuario-btn-toggle.active:hover {
+  background-color: #ea580c;
+}
+
+.usuario-btn-toggle.inactive {
+  background-color: #10b981;
+  color: white;
+}
+
+.usuario-btn-toggle.inactive:hover {
+  background-color: #059669;
+}
+
 /* Buscador */
-.search-container {
+.usuario-search-container {
   position: relative;
   width: 100%;
   max-width: 24rem;
 }
 
-.search-icon {
+.usuario-search-icon {
   position: absolute;
   left: 1rem;
   top: 50%;
@@ -170,7 +213,7 @@
   color: #9ca3af;
 }
 
-.search-input {
+.usuario-search-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border: 1px solid #e5e7eb;
@@ -181,7 +224,7 @@
   transition: all 0.2s ease;
 }
 
-.search-input:focus {
+.usuario-search-input:focus {
   outline: none;
   border-color: #db2777;
   box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.1);
@@ -189,7 +232,7 @@
 }
 
 /* Paginación */
-.pagination-container {
+.usuario-pagination-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -198,12 +241,12 @@
   padding: 0 1rem;
 }
 
-.pagination-pages {
+.usuario-pagination-pages {
   display: flex;
   gap: 0.25rem;
 }
 
-.pagination-number {
+.usuario-pagination-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -217,16 +260,16 @@
   cursor: pointer;
 }
 
-.pagination-number:hover {
+.usuario-pagination-number:hover {
   background-color: #e5e7eb;
 }
 
-.pagination-number.active {
+.usuario-pagination-number.active {
   background-color: #db2777;
   color: white;
 }
 
-.pagination-btn {
+.usuario-pagination-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -240,17 +283,17 @@
   cursor: pointer;
 }
 
-.pagination-btn:hover:not(.disabled) {
+.usuario-pagination-btn:hover:not(.disabled) {
   background-color: #e5e7eb;
 }
 
-.pagination-btn.disabled {
+.usuario-pagination-btn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* Estado badge */
-.estado-badge {
+.usuario-estado-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -258,24 +301,25 @@
   font-weight: 500;
 }
 
-.estado-badge.activo {
+.usuario-estado-badge.activo {
   background-color: #dcfce7;
   color: #16a34a;
 }
 
-.estado-badge.inactivo {
+.usuario-estado-badge.inactivo {
   background-color: #fee2e2;
   color: #dc2626;
 }
 
 /* Modal */
-.modal-overlay {
+.usuario-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,7 +327,7 @@
   padding: 1rem;
 }
 
-.modal-content {
+.usuario-modal-content {
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -297,39 +341,36 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .tabla-moderna {
+  .usuario-tabla-moderna {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
     table-layout: auto;
   }
 
-  .tabla-moderna th,
-  .tabla-moderna td {
+  .usuario-tabla-moderna th,
+  .usuario-tabla-moderna td {
     white-space: nowrap;
   }
 
-  .tabla-container {
+  .usuario-tabla-container {
     padding: 0.5rem;
   }
 }
 
-/* Ajuste para el sidebar */
-body.sidebar-collapsed .tabla-container {
-  margin: 0;
+/* Ajuste para el sidebar - Usando la clase main-content que ya está configurada */
+.usuario-tabla-container {
   width: 100%;
-}
-
-body.sidebar-expanded .tabla-container {
-  margin: 0;
-  width: 100%;
+  padding: 1rem;
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
-  body.sidebar-collapsed .tabla-container,
-  body.sidebar-expanded .tabla-container {
-    margin-left: 0;
-    width: 100%;
+  .usuario-tabla-moderna {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    table-layout: auto;
   }
 }
 

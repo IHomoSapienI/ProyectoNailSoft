@@ -4,7 +4,17 @@ import { useReducer, useEffect, useCallback } from "react"
 import Modal from "react-modal"
 import FormularioServicio from "./FormularioServicio"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faSearch, faSort, faSortUp, faSortDown } from "@fortawesome/free-solid-svg-icons"
+// Importar el icono de exportación en la sección de importaciones
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faSearch,
+  faSort,
+  faSortUp,
+  faSortDown,
+  faFileExcel,
+} from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
 import "./tablaServ.css"
@@ -193,6 +203,68 @@ const TablaServicios = () => {
     }
   }
 
+  // Agregar la función para manejar la exportación a Excel después de la función manejarEliminar
+  const manejarExportarExcel = async () => {
+    try {
+      const token = localStorage.getItem("token")
+
+      // Mostrar indicador de carga
+      Swal.fire({
+        title: "Generando Excel",
+        text: "Por favor espere...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
+
+      // Realizar la solicitud para exportar a Excel
+      const response = await fetch("https://gitbf.onrender.com/api/servicios/export-excel", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      })
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+      // Convertir la respuesta a blob
+      const blob = await response.blob()
+
+      // Crear un objeto URL para el blob
+      const url = window.URL.createObjectURL(blob)
+
+      // Crear un enlace temporal para descargar el archivo
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "servicios.xlsx"
+      document.body.appendChild(a)
+      a.click()
+
+      // Limpiar
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      Swal.close()
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado correctamente.",
+        confirmButtonColor: "#db2777",
+      })
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+        confirmButtonColor: "#db2777",
+      })
+    }
+  }
+
   const handleSort = (field) => {
     const direction = state.sortField === field && state.sortDirection === "asc" ? "desc" : "asc"
     dispatch({
@@ -271,14 +343,20 @@ const TablaServicios = () => {
   if (state.error) return <div className="alert alert-error">{state.error}</div>
 
   return (
-    <div className="tabla-container transition-all duration-500">
+    <div className="tabla-container transition-all duration-100">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Servicios</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
-        <button className="btn-add" onClick={manejarAgregarNuevo}>
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          Nuevo Servicio
-        </button>
+        <div className="flex gap-2">
+          <button className="btn-add" onClick={manejarAgregarNuevo}>
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Nuevo Servicio
+          </button>
+          <button className="btn-export" onClick={manejarExportarExcel}>
+            <FontAwesomeIcon icon={faFileExcel} className="mr-2" />
+            Exportar Excel
+          </button>
+        </div>
 
         <div className="search-container">
           <FontAwesomeIcon icon={faSearch} className="search-icon" />

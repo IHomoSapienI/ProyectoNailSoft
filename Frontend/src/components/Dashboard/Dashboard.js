@@ -1,123 +1,163 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { FaChartLine, FaShoppingCart, FaUsers, FaCalendar } from "react-icons/fa"
+import { Heart, Download } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../ui/card"
+import { Button } from "../ui/button"
+import { Badge } from "../ui/badge"
+
+import DashboardStats from "./Charts/DashboardStats"
 import AppointmentsChart from "./Charts/AppointmentsChart"
 import SalesChart from "./Charts/SalesChart"
 import ServicesChart from "./Charts/ServicesChart"
-import AppointmentsTable from "../Dashboard/Charts/AppointmentsChart"
-import "../Dashboard/Dashboard.css"
+import AppointmentsTable from "./AppointmentsTable"
 
 const Dashboard = () => {
-  const [appointmentsData, setAppointmentsData] = useState([])
-  const [salesData, setSalesData] = useState([])
-  const [servicesData, setServicesData] = useState([])
-  const [todayAppointments, setTodayAppointments] = useState([])
-
-  useEffect(() => {
-    // Fetch data for appointments, sales, services, and today's appointments
-    const fetchDashboardData = async () => {
-      try {
-        // Replace with your actual API endpoints or data fetching logic
-        const appointmentsResponse = await fetch("/api/appointments")
-        const appointments = await appointmentsResponse.json()
-        setAppointmentsData(appointments)
-
-        const salesResponse = await fetch("/api/sales")
-        const sales = await salesResponse.json()
-        setSalesData(sales)
-
-        const servicesResponse = await fetch("/api/services")
-        const services = await servicesResponse.json()
-        setServicesData(services)
-
-        const todayAppointmentsResponse = await fetch("/api/todayAppointments")
-        const todayAppointments = await todayAppointmentsResponse.json()
-        setTodayAppointments(todayAppointments)
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error)
-      }
-    }
-
-    fetchDashboardData()
-  }, [])
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
-  }
+  const [activeTab, setActiveTab] = useState("charts")
 
   return (
-    <div className="dashboard-container">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p className="dashboard-subtitle">Resumen general del negocio</p>
+    <div className="space-y-6">
+      {/* Welcome section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col gap-2"
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">¡Bienvenida de nuevo!</h2>
+          <motion.div animate={{ rotate: [0, 10, 0] }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}>
+            <Heart className="h-6 w-6 text-pink-600" />
+          </motion.div>
+        </div>
+        <p className="text-muted-foreground">Aquí tienes un resumen del rendimiento de tu spa de uñas.</p>
       </motion.div>
 
-      <motion.div variants={container} initial="hidden" animate="show" className="dashboard-grid">
-        {/* Tarjeta de Citas */}
-        <motion.div variants={item} className="dashboard-card appointments-card">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaChartLine />
-            </div>
-            <h2>Comportamiento de Citas</h2>
-          </div>
-          <div className="card-content">
-            <AppointmentsChart data={appointmentsData} />
-          </div>
-        </motion.div>
+      {/* Stats cards */}
+      <DashboardStats />
 
-        {/* Tarjeta de Ventas */}
-        <motion.div variants={item} className="dashboard-card sales-card">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaShoppingCart />
-            </div>
-            <h2>Ventas Mensuales</h2>
+      {/* Tabs */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex space-x-1 rounded-lg bg-muted/50 p-1">
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeTab === "charts" ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+              }`}
+              onClick={() => setActiveTab("charts")}
+            >
+              Gráficos
+            </button>
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeTab === "appointments" ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+              }`}
+              onClick={() => setActiveTab("appointments")}
+            >
+              Citas del Día
+            </button>
           </div>
-          <div className="card-content">
-            <SalesChart data={salesData} />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="h-8 gap-1 border-fancy">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </Button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Tarjeta de Servicios */}
-        <motion.div variants={item} className="dashboard-card services-card">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaUsers />
-            </div>
-            <h2>Servicios por Empleado</h2>
-          </div>
-          <div className="card-content">
-            <ServicesChart data={servicesData} />
-          </div>
-        </motion.div>
+        {/* Charts content */}
+        {activeTab === "charts" && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <motion.div
+              className="col-span-1 md:col-span-2 lg:col-span-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="overflow-hidden border-none shadow-lg card-gradient-1 hover-glow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="flex flex-col space-y-1">
+                    <CardTitle>Comportamiento de Citas</CardTitle>
+                    <CardDescription>Tendencia de citas agendadas</CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline" className="rounded-lg border-fancy">
+                      Datos en tiempo real
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="h-[300px]">
+                    <AppointmentsChart />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-        {/* Tarjeta de Citas del Día */}
-        <motion.div variants={item} className="dashboard-card today-card">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaCalendar />
-            </div>
-            <h2>Citas del Día</h2>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <Card className="overflow-hidden border-none shadow-lg card-gradient-2 hover-glow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="flex flex-col space-y-1">
+                    <CardTitle>Servicios por Empleado</CardTitle>
+                    <CardDescription>Distribución de servicios realizados</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="h-[300px]">
+                    <ServicesChart />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              className="col-span-1 md:col-span-2 lg:col-span-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="overflow-hidden border-none shadow-lg card-gradient-3 hover-glow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div className="flex flex-col space-y-1">
+                    <CardTitle>Ventas Mensuales</CardTitle>
+                    <CardDescription>Ingresos del negocio</CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline" className="rounded-lg border-fancy">
+                      Datos en tiempo real
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="h-[300px]">
+                    <SalesChart />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
-          <div className="card-content">
-            <AppointmentsTable data={todayAppointments} />
-          </div>
-        </motion.div>
-      </motion.div>
+        )}
+
+        {/* Appointments content */}
+        {activeTab === "appointments" && (
+          <Card className="overflow-hidden border-none shadow-lg card-gradient-1 hover-glow">
+            <CardHeader>
+              <CardTitle>Citas del Día</CardTitle>
+              <CardDescription>Listado de citas programadas para hoy</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AppointmentsTable />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" className="border-fancy">
+                Citas anteriores
+              </Button>
+              <Button className="bg-primary hover:bg-primary/90">Ver todas las citas</Button>
+            </CardFooter>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

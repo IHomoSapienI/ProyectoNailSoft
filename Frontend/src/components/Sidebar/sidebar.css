@@ -11,7 +11,7 @@
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: #db2777 #fff;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .sidebar-container::-webkit-scrollbar {
@@ -40,6 +40,11 @@
   padding: 1rem 0;
   margin-bottom: 1rem;
   border-bottom: 1px solid rgba(219, 39, 119, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar-container.collapsed .sidebar-header {
+  justify-content: center;
 }
 
 .logo-container {
@@ -49,19 +54,35 @@
   text-decoration: none;
   padding: 0.5rem;
   border-radius: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease-in-out;
   width: 100%;
+  justify-content: center; /* Centrar el logo cuando está colapsado */
 }
 
 .logo-container:hover {
   background: rgba(219, 39, 119, 0.05);
 }
 
-.logo-image {
+/* Mejorar los estilos del logo */
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%; /* Cambiar a 50% para hacerlo completamente circular */
+  overflow: hidden;
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  min-width: 40px;
+  min-height: 40px;
+  background-color: white;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  border-radius: 50%; /* Hacer la imagen circular */
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .logo-text {
@@ -140,7 +161,7 @@
   width: 12px;
   height: 12px;
   color: #6b7280;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .menu-group-icon.expanded {
@@ -242,7 +263,8 @@
 }
 
 .sidebar-toggle {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  will-change: left, opacity;
 }
 
 .sidebar-toggle:hover {
@@ -348,14 +370,14 @@
 body.sidebar-collapsed .main-content {
   margin-left: 70px !important;
   width: calc(100% - 70px) !important;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
   padding: 0 !important;
 }
 
 body.sidebar-expanded .main-content {
   margin-left: 280px !important;
   width: calc(100% - 280px) !important;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
   padding: 0 !important;
 }
 
@@ -365,5 +387,15 @@ body.sidebar-expanded .main-content {
     margin-left: 0 !important;
     width: 100% !important;
   }
+}
+
+.sidebar-container.collapsed .logo-wrapper {
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar-container.collapsed .logo-container {
+  justify-content: center;
+  padding: 0.5rem;
 }
 

@@ -13,13 +13,14 @@ import {
   faFileExcel,
   faDownload,
   faFilter,
+  faSearch,
+  faSort,
+  faSortUp,
+  faSortDown,
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
-// Reemplazar la línea de importación de axiosInstance
-//import axiosInstance from "../utils/axiosConfig" // Importar la instancia configurada de axios
-
-// Con la importación de axios normal y eliminar la referencia a axiosInstance
 import axios from "axios"
+import "./tablaPermisos.css"
 
 Modal.setAppElement("#root")
 
@@ -36,6 +37,8 @@ export default function TablaPermisos() {
   const [exportando, setExportando] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [error, setError] = useState(null)
+  const [sortField, setSortField] = useState("nombrePermiso")
+  const [sortDirection, setSortDirection] = useState("asc")
 
   const categorias = [
     { value: "", label: "Todas las categorías" },
@@ -57,16 +60,11 @@ export default function TablaPermisos() {
     { value: "ventaProductos", label: "Venta de Productos" },
   ]
 
-  // Reemplazar la función obtenerPermisos que usa axiosInstance
   const obtenerPermisos = async () => {
     try {
       setCargando(true)
       setError(null)
 
-      // Usar axiosInstance en lugar de axios directamente
-      //const response = await axiosInstance.get("/permisos")
-
-      //setPermisos(response.data.permisos || [])
       const token = localStorage.getItem("token")
       const response = await axios.get("https://gitbf.onrender.com/api/permisos", {
         headers: {
@@ -78,11 +76,6 @@ export default function TablaPermisos() {
     } catch (error) {
       console.error("Error al obtener los permisos:", error)
       setError("No se pudieron cargar los permisos. " + (error.response?.data?.msg || error.message))
-
-      // Solo mostrar alerta si no es un error de permiso desactivado (ya manejado por el interceptor)
-      //if (!error.response?.data?.permisoDesactivado) {
-      //  Swal.fire("Error", "No se pudieron cargar los permisos", "error")
-      //}
       Swal.fire("Error", "No se pudieron cargar los permisos", "error")
     } finally {
       setCargando(false)
@@ -123,6 +116,21 @@ export default function TablaPermisos() {
     setModalDetallesIsOpen(true)
   }
 
+  const handleSort = (field) => {
+    const direction = sortField === field && sortDirection === "asc" ? "desc" : "asc"
+    setSortField(field)
+    setSortDirection(direction)
+  }
+
+  const getSortIcon = (field) => {
+    if (sortField !== field) return <FontAwesomeIcon icon={faSort} className="text-gray-400 ml-1" />
+    return sortDirection === "asc" ? (
+      <FontAwesomeIcon icon={faSortUp} className="text-pink-500 ml-1" />
+    ) : (
+      <FontAwesomeIcon icon={faSortDown} className="text-pink-500 ml-1" />
+    )
+  }
+
   const manejarToggleEstado = async (id, estadoActual) => {
     const nuevoEstado = !estadoActual
     const accion = nuevoEstado ? "activar" : "desactivar"
@@ -148,10 +156,6 @@ export default function TablaPermisos() {
           allowOutsideClick: false,
         })
 
-        // También reemplazar las otras instancias donde se usa axiosInstance con axios directo
-        // Por ejemplo, en manejarToggleEstado:
-        // Usar axiosInstance en lugar de axios directamente
-        //const response = await axiosInstance.put(`/permisos/${id}`, { activo: nuevoEstado })
         const token = localStorage.getItem("token")
         const response = await axios.put(
           `https://gitbf.onrender.com/api/permisos/${id}`,
@@ -177,11 +181,6 @@ export default function TablaPermisos() {
         )
       } catch (error) {
         console.error(`Error al ${accion} el permiso:`, error)
-
-        // Solo mostrar alerta si no es un error de permiso desactivado (ya manejado por el interceptor)
-        //if (!error.response?.data?.permisoDesactivado) {
-        //  Swal.fire("Error", `No se pudo ${accion} el permiso`, "error")
-        //}
         Swal.fire("Error", `No se pudo ${accion} el permiso`, "error")
       }
     }
@@ -209,8 +208,6 @@ export default function TablaPermisos() {
           allowOutsideClick: false,
         })
 
-        // Usar axiosInstance en lugar de axios directamente
-        //const response = await axiosInstance.delete(`/permisos/${id}`)
         const token = localStorage.getItem("token")
         const response = await axios.delete(`https://gitbf.onrender.com/api/permisos/${id}`, {
           headers: {
@@ -225,11 +222,6 @@ export default function TablaPermisos() {
         Swal.fire("Eliminado!", "El permiso ha sido eliminado.", "success")
       } catch (error) {
         console.error("Error al eliminar el permiso:", error)
-
-        // Solo mostrar alerta si no es un error de permiso desactivado (ya manejado por el interceptor)
-        //if (!error.response?.data?.permisoDesactivado) {
-        //  Swal.fire("Error", "No se pudo eliminar el permiso", "error")
-        //}
         Swal.fire("Error", "No se pudo eliminar el permiso", "error")
       }
     }
@@ -303,12 +295,24 @@ export default function TablaPermisos() {
     }
   }
 
-  // Filtrar permisos
-  const permisosFiltrados = permisos.filter(
-    (permiso) =>
-      permiso.nombrePermiso.toLowerCase().includes(busqueda.toLowerCase()) &&
-      (categoriaFiltro === "" || permiso.categoria === categoriaFiltro),
-  )
+  // Filtrar y ordenar permisos
+  const permisosFiltrados = permisos
+    .filter(
+      (permiso) =>
+        permiso.nombrePermiso.toLowerCase().includes(busqueda.toLowerCase()) &&
+        (categoriaFiltro === "" || permiso.categoria === categoriaFiltro),
+    )
+    .sort((a, b) => {
+      const direction = sortDirection === "asc" ? 1 : -1
+
+      // Manejar campos numéricos o booleanos
+      if (sortField === "activo") {
+        return direction * (a.activo === b.activo ? 0 : a.activo ? -1 : 1)
+      }
+
+      // Campos de texto
+      return direction * a[sortField].toString().localeCompare(b[sortField].toString())
+    })
 
   // Paginación
   const indiceUltimoPermiso = paginaActual * permisosPorPagina
@@ -367,7 +371,7 @@ export default function TablaPermisos() {
           <p className="text-gray-600 max-w-md">{error}</p>
           <button
             onClick={obtenerPermisos}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+            className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded transition duration-300"
           >
             Intentar nuevamente
           </button>
@@ -377,26 +381,21 @@ export default function TablaPermisos() {
   }
 
   return (
-    <div className="p-6 flex flex-col items-center">
-      <h2 className="text-3xl font-semibold mb-8">Gestión de Permisos</h2>
+    <div className="tabla-container">
+      <h2 className="text-3xl font-semibold mb-8 text-gray-800 px-4 pt-4">Gestión de Permisos</h2>
 
-      <div className="flex justify-between mb-5 w-full max-w-6xl">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
-          <button
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-            onClick={manejarAgregarNuevo}
-            title="Agregar nuevo permiso"
-          >
-            <FontAwesomeIcon icon={faPlus} />
+          <button className="btn-add" onClick={manejarAgregarNuevo} title="Agregar nuevo permiso">
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Nuevo Permiso
           </button>
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition duration-300 flex items-center"
-            onClick={exportarExcel}
-            disabled={exportando}
-            title="Exportar a Excel"
-          >
+          <button className="btn-export" onClick={exportarExcel} disabled={exportando} title="Exportar a Excel">
             {exportando ? (
-              <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-pink rounded-full mr-1"></div>
+              <div className="flex items-center">
+                <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+                <span>Exportando...</span>
+              </div>
             ) : (
               <>
                 <FontAwesomeIcon icon={faFileExcel} className="mr-1" />
@@ -406,15 +405,15 @@ export default function TablaPermisos() {
           </button>
         </div>
 
-        <div className="flex space-x-2 w-2/3">
-          <div className="relative w-1/3">
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-2/3">
+          <div className="relative w-full md:w-1/3">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <FontAwesomeIcon icon={faFilter} className="text-gray-400" />
             </div>
             <select
               value={categoriaFiltro}
               onChange={(e) => setCategoriaFiltro(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="form-select pl-10"
             >
               {categorias.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -423,92 +422,83 @@ export default function TablaPermisos() {
               ))}
             </select>
           </div>
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="border border-gray-300 rounded-md py-2 px-4 w-2/3 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Buscar permiso"
-          />
+          <div className="search-container w-full md:w-2/3">
+            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="search-input"
+              placeholder="Buscar permiso"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="w-full max-w-6xl overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+        <table className="tabla-moderna w-full">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descripción
+              <th onClick={() => handleSort("nombrePermiso")} className="cursor-pointer">
+                Nombre {getSortIcon("nombrePermiso")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoría
+              <th onClick={() => handleSort("descripcion")} className="cursor-pointer">
+                Descripción {getSortIcon("descripcion")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
+              <th onClick={() => handleSort("categoria")} className="cursor-pointer">
+                Categoría {getSortIcon("categoria")}
               </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
+              <th onClick={() => handleSort("nivel")} className="cursor-pointer">
+                Nivel {getSortIcon("nivel")}
               </th>
+              <th onClick={() => handleSort("activo")} className="cursor-pointer text-center">
+                Estado {getSortIcon("activo")}
+              </th>
+              <th className="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {permisosActuales.length > 0 ? (
               permisosActuales.map((permiso) => (
                 <tr key={permiso._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {permiso.nombrePermiso}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{permiso.descripcion}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{permiso.categoria}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{traducirNivel(permiso.nivel)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        permiso.activo ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                      }`}
-                    >
+                  <td className="font-medium">{permiso.nombrePermiso}</td>
+                  <td className="max-w-xs truncate">{permiso.descripcion}</td>
+                  <td>{permiso.categoria}</td>
+                  <td>{traducirNivel(permiso.nivel)}</td>
+                  <td className="text-center">
+                    <span className={`estado-badge ${permiso.activo ? "activo" : "inactivo"}`}>
                       {permiso.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                    <button
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                      onClick={() => manejarEditar(permiso)}
-                      title="Editar permiso"
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                      onClick={() => manejarEliminar(permiso._id)}
-                      title="Eliminar permiso"
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                    <button
-                      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                      onClick={() => manejarVerDetalles(permiso)}
-                      title="Ver detalles"
-                    >
-                      <FontAwesomeIcon icon={faInfoCircle} />
-                    </button>
-                    <button
-                      className={`${
-                        permiso.activo ? "bg-orange-500 hover:bg-orange-600" : "bg-green-500 hover:bg-green-600"
-                      } text-white font-bold py-1 px-2 rounded transition duration-300`}
-                      onClick={() => manejarToggleEstado(permiso._id, permiso.activo)}
-                      title={permiso.activo ? "Desactivar permiso" : "Activar permiso"}
-                    >
-                      <FontAwesomeIcon icon={faPowerOff} />
-                    </button>
+                  <td>
+                    <div className="flex justify-center space-x-2">
+                      <button className="btn-edit" onClick={() => manejarEditar(permiso)} title="Editar permiso">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button
+                        className="btn-delete"
+                        onClick={() => manejarEliminar(permiso._id)}
+                        title="Eliminar permiso"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button className="btn-info" onClick={() => manejarVerDetalles(permiso)} title="Ver detalles">
+                        <FontAwesomeIcon icon={faInfoCircle} />
+                      </button>
+                      <button
+                        className={`btn-toggle ${permiso.activo ? "active" : "inactive"}`}
+                        onClick={() => manejarToggleEstado(permiso._id, permiso.activo)}
+                        title={permiso.activo ? "Desactivar permiso" : "Activar permiso"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan="6" className="text-center py-4 text-gray-500">
                   No se encontraron permisos
                 </td>
               </tr>
@@ -518,63 +508,53 @@ export default function TablaPermisos() {
       </div>
 
       {paginasTotales > 1 && (
-        <div className="mt-4">
-          <nav className="flex justify-center">
-            <ul className="inline-flex items-center">
-              <li>
-                <button
-                  onClick={paginaAnterior}
-                  disabled={paginaActual === 1}
-                  className={`px-3 py-1 mx-1 rounded ${
-                    paginaActual === 1 ? "bg-gray-200 text-gray-500" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  &lt;
-                </button>
-              </li>
-              {Array.from({ length: paginasTotales }, (_, index) => (
-                <li key={index}>
-                  <button
-                    onClick={() => cambiarPagina(index + 1)}
-                    className={`px-3 py-1 mx-1 rounded ${
-                      paginaActual === index + 1
-                        ? "bg-gray-300 text-gray-700"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                </li>
-              ))}
-              <li>
-                <button
-                  onClick={paginaSiguiente}
-                  disabled={paginaActual === paginasTotales}
-                  className={`px-3 py-1 mx-1 rounded ${
-                    paginaActual === paginasTotales
-                      ? "bg-gray-200 text-gray-500"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  &gt;
-                </button>
-              </li>
-            </ul>
-          </nav>
+        <div className="pagination-container mt-6">
+          <button
+            onClick={paginaAnterior}
+            disabled={paginaActual === 1}
+            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+          >
+            &lt;
+          </button>
+
+          <div className="pagination-pages">
+            {Array.from({ length: paginasTotales }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => cambiarPagina(index + 1)}
+                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={paginaSiguiente}
+            disabled={paginaActual === paginasTotales}
+            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+          >
+            &gt;
+          </button>
         </div>
       )}
 
       <Modal
         isOpen={modalPermisoIsOpen}
         onRequestClose={manejarCerrarModal}
-        className="fixed inset-0 flex items-center justify-center p-4"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        className="modal-content"
+        overlayClassName="modal-overlay"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
-          <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={manejarCerrarModal}>
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={manejarCerrarModal}
+          >
             &times;
           </button>
-          <h2 className="text-lg font-semibold mb-4">{editMode ? "Editar Permiso" : "Agregar Nuevo Permiso"}</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+            {editMode ? "Editar Permiso" : "Agregar Nuevo Permiso"}
+          </h2>
           <FormularioPermiso
             permisoSeleccionado={permisoSeleccionado}
             editMode={editMode}
@@ -587,47 +567,43 @@ export default function TablaPermisos() {
       <Modal
         isOpen={modalDetallesIsOpen}
         onRequestClose={manejarCerrarModalDetalles}
-        className="fixed inset-0 flex items-center justify-center p-12"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        className="modal-content"
+        overlayClassName="modal-overlay"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
+        <div className="relative">
           <button
-            className="absolute top-2 right-4 text-gray-900 hover:text-gray-700"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
             onClick={manejarCerrarModalDetalles}
           >
             &times;
           </button>
-          <h2 className="text-xl font-semibold mb-3 text-center">Detalles del Permiso</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">Detalles del Permiso</h2>
           {permisoSeleccionado ? (
-            <div className="space-y-4">
-              <div>
+            <div className="space-y-4 p-4">
+              <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Nombre:</p>
                 <p className="text-lg font-semibold">{permisoSeleccionado.nombrePermiso}</p>
               </div>
-              <div>
+              <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Descripción:</p>
                 <p className="text-base">{permisoSeleccionado.descripcion}</p>
               </div>
-              <div>
+              <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Categoría:</p>
                 <p className="text-base">{permisoSeleccionado.categoria}</p>
               </div>
-              <div>
+              <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Nivel:</p>
                 <p className="text-base">{traducirNivel(permisoSeleccionado.nivel)}</p>
               </div>
-              <div>
+              <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Estado:</p>
-                <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    permisoSeleccionado.activo ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}
-                >
+                <span className={`estado-badge ${permisoSeleccionado.activo ? "activo" : "inactivo"}`}>
                   {permisoSeleccionado.activo ? "Activo" : "Inactivo"}
                 </span>
               </div>
               {permisoSeleccionado.createdAt && (
-                <div>
+                <div className="form-group">
                   <p className="text-sm font-medium text-gray-500">Creado:</p>
                   <p className="text-base">
                     {new Date(permisoSeleccionado.createdAt).toLocaleDateString("es-ES", {
@@ -641,7 +617,7 @@ export default function TablaPermisos() {
                 </div>
               )}
               {permisoSeleccionado.updatedAt && (
-                <div>
+                <div className="form-group">
                   <p className="text-sm font-medium text-gray-500">Última actualización:</p>
                   <p className="text-base">
                     {new Date(permisoSeleccionado.updatedAt).toLocaleDateString("es-ES", {

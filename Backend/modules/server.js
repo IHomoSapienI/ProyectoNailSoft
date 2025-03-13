@@ -25,6 +25,7 @@ class Server {
         this.ventaproductosPath = '/api/ventaproductos'; 
         this.comprasPath = '/api/compras';
         this.authPath = '/api/auth';
+        this.bajasProductos= '/api/baja-productos'
         this.middlewares();
         this.routes();
         this.connectDb();
@@ -39,7 +40,9 @@ class Server {
     middlewares() {
         // CORS
         this.app.use(cors({
-            origin: 'http://localhost:3000',
+            // origin: 'http://localhost:3000',
+            origin: "*", // Permite el dominio de ngrok
+            credentials: true, // Permite cookies en las peticiones
         }));
 
         this.app.use(bodyParser.json()); // for parsing application/json
@@ -68,6 +71,7 @@ class Server {
         this.app.use(this.ventaproductosPath, require('../routes/ventaproductos'));
         this.app.use(this.comprasPath, require('../routes/compra'));
         this.app.use(this.authPath, require('../routes/auth'));
+        this.app.use(this.bajasProductos, require('../routes/bajaproducto'));
     }
 
     async connectDb() {

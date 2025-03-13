@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 import {
   FaUsers,
   FaUserShield,
@@ -10,30 +9,21 @@ import {
   FaCalendarAlt,
   FaTachometerAlt,
   FaCashRegister,
-  FaSignOutAlt,
   FaCamera,
   FaUserCircle,
   FaClipboardList,
-  FaChevronDown,
 } from "react-icons/fa"
-import "../NavBars/navbar.css"
 
-export default function Navbar() {
+// Actualizamos la importación para usar una ruta relativa
+import { Navbar, NavbarLogo, NavbarDropdownMenu, NavbarLogoutButton } from "../ui/navbar"
+
+export default function MainNavbar() {
   const navigate = useNavigate()
-  const [activeDropdown, setActiveDropdown] = useState(null)
   const [userRole, setUserRole] = useState(null)
-  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     const role = localStorage.getItem("userRole")
     setUserRole(role ? role.toLowerCase() : null)
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const handleLogout = () => {
@@ -41,74 +31,6 @@ export default function Navbar() {
     localStorage.removeItem("userRole")
     navigate("/login")
   }
-
-  const MenuItem = ({ icon: Icon, label, items }) => (
-    <motion.div
-      className="menu-item"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      onHoverStart={() => setActiveDropdown(label)}
-      onHoverEnd={() => setActiveDropdown(null)}
-    >
-      <motion.button className="menu-trigger" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Icon className="menu-icon" />
-        <span>{label}</span>
-        <motion.div
-          className="menu-arrow"
-          animate={{ rotate: activeDropdown === label ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FaChevronDown />
-        </motion.div>
-      </motion.button>
-
-      <AnimatePresence>
-        {activeDropdown === label && (
-          <motion.div
-            className="menu-dropdown"
-            initial={{ opacity: 0, y: 0, scale: 0.95 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: {
-                duration: 0.2,
-                ease: "easeOut",
-              },
-            }}
-            exit={{
-              opacity: 0,
-              y: 15,
-              scale: 0.95,
-              transition: {
-                duration: 0.15,
-                ease: "easeIn",
-              },
-            }}
-          >
-            {items.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  transition: {
-                    delay: index * 0.05,
-                  },
-                }}
-              >
-                <Link to={item.path} className="menu-link" onClick={() => setActiveDropdown(null)}>
-                  <item.icon className="menu-link-icon" />
-                  <span>{item.label}</span>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  )
 
   const renderMenuItems = () => {
     const menuConfig = {
@@ -220,54 +142,18 @@ export default function Navbar() {
       ],
     }
 
-    return menuConfig[userRole]?.map((item, index) => <MenuItem key={index} {...item} />)
+    return menuConfig[userRole]?.map((item, index) => <NavbarDropdownMenu key={index} {...item} />)
   }
 
   return (
-    <motion.nav
-      className={`navbar ${isScrolled ? "scrolled" : ""}`}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 100 }}
-    >
-      <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
-          <motion.img
-            whileHover={{ scale: 1.1 }}
-            src="https://gitbf.onrender.com/uploads/logo1.png"
-            alt="NailsSoft Logo"
-          />
-          <motion.span
-            className="brand-name"
-            whileHover={{ scale: 1.1 }}
-            initial={{ opacity: 1, x: -20 }}
-            animate={{ opacity: 1.5, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            NailsSoft
-          </motion.span>
-        </Link>
+    <Navbar variant="main">
+      <NavbarLogo />
 
-        <motion.div
-          className="navbar-menu"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {renderMenuItems()}
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="logout-button"
-            onClick={handleLogout}
-          >
-            <FaSignOutAlt />
-            <span>Cerrar sesión</span>
-          </motion.button>
-        </motion.div>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">{renderMenuItems()}</div>
+        <NavbarLogoutButton onClick={handleLogout} />
       </div>
-    </motion.nav>
+    </Navbar>
   )
 }
 

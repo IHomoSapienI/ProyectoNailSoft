@@ -6,6 +6,7 @@ import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPlus, faTrash, faSave, faArrowLeft, faCheck } from "@fortawesome/free-solid-svg-icons"
+import "./gestionVentaServicio.css"
 
 const GestionVentaServicio = () => {
   const { id, citaId } = useParams()
@@ -789,14 +790,11 @@ const GestionVentaServicio = () => {
   if (error)
     return (
       <div className="p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
+        <div className="error-container" role="alert">
+          <strong className="error-title">Error: </strong>
+          <span className="error-message">{error}</span>
         </div>
-        <button
-          onClick={() => navigate("/citas-en-progreso")}
-          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
-        >
+        <button onClick={() => navigate("/citas-en-progreso")} className="btn-back mt-4">
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Volver a citas
         </button>
@@ -804,11 +802,9 @@ const GestionVentaServicio = () => {
     )
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-semibold">
-          {id && id !== "new" ? "Gestionar Venta de Servicio" : "Nueva Venta de Servicio"}
-        </h1>
+    <div className="gestion-container">
+      <div className="header-container">
+        <h1>{id && id !== "new" ? "Gestionar Venta de Servicio" : "Nueva Venta de Servicio"}</h1>
         <button
           onClick={async () => {
             // Si hay cambios sin guardar, preguntar al usuario
@@ -863,6 +859,7 @@ const GestionVentaServicio = () => {
 
             navigate("/citas-en-progreso")
           }}
+          className="btn-back"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Volver
@@ -870,24 +867,24 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Información de la cita */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Información de la Cita</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-gray-600">Cliente:</p>
-            <p className="font-medium">
+      <div className="card">
+        <h2 className="card-title">Información de la Cita</h2>
+        <div className="info-grid">
+          <div className="info-item">
+            <p className="info-label">Cliente:</p>
+            <p className="info-value">
               {cita?.nombrecliente?.nombrecliente
                 ? `${cita.nombrecliente.nombrecliente} ${cita.nombrecliente.apellidocliente || ""}`
                 : "Cliente no disponible"}
             </p>
           </div>
-          <div>
-            <p className="text-gray-600">Empleado:</p>
-            <p className="font-medium">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
+          <div className="info-item">
+            <p className="info-label">Empleado:</p>
+            <p className="info-value">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
           </div>
-          <div>
-            <p className="text-gray-600">Fecha:</p>
-            <p className="font-medium">
+          <div className="info-item">
+            <p className="info-label">Fecha:</p>
+            <p className="info-value">
               {cita?.fechacita
                 ? new Date(cita.fechacita).toLocaleDateString("es-ES", {
                     year: "numeric",
@@ -899,51 +896,54 @@ const GestionVentaServicio = () => {
                 : "Fecha no disponible"}
             </p>
           </div>
-          <div>
-            <p className="text-gray-600">Estado:</p>
-            <p className="font-medium">{cita?.estadocita || "Estado no disponible"}</p>
+          <div className="info-item">
+            <p className="info-label">Estado:</p>
+            <p className="info-value">{cita?.estadocita || "Estado no disponible"}</p>
           </div>
         </div>
       </div>
 
       {/* Servicios seleccionados */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Servicios Seleccionados</h2>
+      <div className="card">
+        <h2 className="card-title">Servicios Seleccionados</h2>
 
         {serviciosSeleccionados.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white">
-              <thead className="bg-gray-100">
+            <table className="tabla-servicios">
+              <thead>
                 <tr>
-                  <th className="py-2 px-4 border-b text-left">Servicio</th>
-                  <th className="py-2 px-4 border-b text-right">Precio</th>
-                  <th className="py-2 px-4 border-b text-right">Tiempo (min)</th>
-                  <th className="py-2 px-4 border-b text-center">Acciones</th>
+                  <th>Servicio</th>
+                  <th className="text-right">Precio</th>
+                  <th className="text-right">Tiempo (min)</th>
+                  <th className="text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {serviciosSeleccionados.map((servicio, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="py-2 px-4 border-b">{servicio.nombreServicio}</td>
-                    <td className="py-2 px-4 border-b text-right">${Number.parseFloat(servicio.precio).toFixed(2)}</td>
-                    <td className="py-2 px-4 border-b text-right">{servicio.tiempo}</td>
-                    <td className="py-2 px-4 border-b text-center">
+                  <tr key={index}>
+                    <td>{servicio.nombreServicio}</td>
+                    <td className="text-right">${Number.parseFloat(servicio.precio).toFixed(2)}</td>
+                    <td className="text-right">{servicio.tiempo}</td>
+                    <td className="text-center">
                       <button
                         onClick={() => eliminarServicio(servicio.servicio)}
-                        className="text-red-500 hover:text-red-700"
+                        className="btn-icon delete"
+                        title="Eliminar servicio"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                     </td>
                   </tr>
                 ))}
-                <tr className="bg-gray-100 font-bold">
-                  <td className="py-2 px-4 border-t">Total</td>
-                  <td className="py-2 px-4 border-t text-right">${precioTotal.toFixed(2)}</td>
-                  <td className="py-2 px-4 border-t text-right">{tiempoTotal} min</td>
-                  <td className="py-2 px-4 border-t"></td>
-                </tr>
               </tbody>
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td className="text-right">${precioTotal.toFixed(2)}</td>
+                  <td className="text-right">{tiempoTotal} min</td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ) : (
@@ -952,8 +952,8 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Agregar servicios */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Agregar Servicios</h2>
+      <div className="card">
+        <h2 className="card-title">Agregar Servicios</h2>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-grow">
             <select
@@ -964,7 +964,7 @@ const GestionVentaServicio = () => {
                   nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
                 })
               }
-              className="w-full p-2 border rounded"
+              className="form-select"
             >
               <option value="">Selecciona un servicio</option>
               {servicios.map((servicio) => (
@@ -974,15 +974,11 @@ const GestionVentaServicio = () => {
               ))}
             </select>
           </div>
-          <button
-            onClick={agregarServicio}
-            disabled={isSaving}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-70"
-          >
+          <button onClick={agregarServicio} disabled={isSaving} className="btn-secondary">
             {isSaving ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
-                Agregando...
+                <span className="spinner"></span>
+                <span>Agregando...</span>
               </>
             ) : (
               <>
@@ -995,15 +991,11 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Finalizar venta */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Finalizar Venta</h2>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Método de Pago:</label>
-          <select
-            value={metodoPago}
-            onChange={(e) => setMetodoPago(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
+      <div className="card">
+        <h2 className="card-title">Finalizar Venta</h2>
+        <div className="form-group">
+          <label className="form-label">Método de Pago:</label>
+          <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} className="form-select">
             <option value="Efectivo">Efectivo</option>
             <option value="Tarjeta">Tarjeta</option>
             <option value="Transferencia">Transferencia</option>
@@ -1011,16 +1003,12 @@ const GestionVentaServicio = () => {
           </select>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 justify-end">
-          <button
-            onClick={guardarCambios}
-            disabled={isSaving}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          >
+        <div className="btn-container">
+          <button onClick={guardarCambios} disabled={isSaving} className="btn-secondary">
             {isSaving ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
-                Guardando...
+                <span className="spinner"></span>
+                <span>Guardando...</span>
               </>
             ) : (
               <>
@@ -1029,15 +1017,11 @@ const GestionVentaServicio = () => {
               </>
             )}
           </button>
-          <button
-            onClick={finalizarVenta}
-            disabled={isSaving}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          >
+          <button onClick={finalizarVenta} disabled={isSaving} className="btn-success">
             {isSaving ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2 inline-block"></div>
-                Procesando...
+                <span className="spinner"></span>
+                <span>Procesando...</span>
               </>
             ) : (
               <>
