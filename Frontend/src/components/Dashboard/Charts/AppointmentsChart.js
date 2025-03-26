@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { motion } from "framer-motion"
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -180,6 +180,15 @@ const AppointmentsChart = () => {
     )
   }
 
+  console.log("Chart data:", data)
+  if (data.length === 0 || data.every((item) => item.appointments === 0)) {
+    return (
+      <div className="h-[300px] flex items-center justify-center">
+        <div className="text-muted-foreground">No hay citas en este período</div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full w-full">
       <div className="flex justify-end mb-4">
@@ -221,14 +230,15 @@ const AppointmentsChart = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="h-[250px] w-full"
+        className="h-[300px] w-full"
+        style={{ minHeight: "300px" }}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+          <AreaChart data={data} margin={{ top: 20, right: 50, left: 20, bottom: 40 }}>
             <defs>
               <linearGradient id="appointmentGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                <stop offset="5%" stopColor="#F75EEFFF" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#F40DA3FF" stopOpacity={0.2} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" vertical={false} />
@@ -239,6 +249,7 @@ const AppointmentsChart = () => {
               tickLine={{ stroke: "hsl(var(--border))" }}
             />
             <YAxis
+              domain={[0, "dataMax + 5"]}
               tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
               axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={{ stroke: "hsl(var(--border))" }}
@@ -252,28 +263,27 @@ const AppointmentsChart = () => {
                 fontSize: "12px",
               }}
             />
-            <Line
+            <Area
               type="monotone"
               dataKey="appointments"
               name="Citas"
-              stroke="hsl(var(--primary))"
-              strokeWidth={3}
+              stroke="#27252AFF"
+              strokeWidth={2}
+              fill="url(#appointmentGradient)"
               dot={{
-                stroke: "hsl(var(--primary))",
+                stroke: "#F500C4FF",
                 strokeWidth: 2,
                 r: 4,
-                fill: "hsl(var(--background))",
+                fill: "white",
               }}
               activeDot={{
-                stroke: "hsl(var(--primary))",
+                stroke: "#F500C4FF",
                 strokeWidth: 2,
                 r: 6,
-                fill: "hsl(var(--background))",
+                fill: "white",
               }}
-              fillOpacity={1}
-              fill="url(#appointmentGradient)"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </motion.div>
     </div>

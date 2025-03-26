@@ -60,7 +60,9 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
   if (collapsed) {
     return (
       <div className="menu-group collapsed">
+        
         <div className="menu-group-header-collapsed">
+        
           <h5 className="truncate">{title}</h5>
         </div>
         <div className="menu-group-content-collapsed">
@@ -72,6 +74,7 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
 
   return (
     <div className="menu-group">
+      
       <button className="menu-group-header" onClick={() => setIsExpanded(!isExpanded)}>
         <h5>{title}</h5>
         <FaChevronDown className={`menu-group-icon ${isExpanded ? "expanded" : ""}`} />
@@ -265,9 +268,9 @@ const Sidebar = () => {
 
             <Link to={userRole === "admin" ? "/dashboard" : "/agenda-empleado"} className="logo-container">
             
-              {/* <div className="logo-wrapper">
+              <div className="logo-wrapper">
                 <img src="http://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
-              </div> */}
+              </div>
               {!isCollapsed && (
                 <motion.h1
                   initial={{ opacity: 0 }}
@@ -299,22 +302,30 @@ const Sidebar = () => {
                 </MenuGroup>
 
                 <MenuGroup title="Gestión de Ventas" collapsed={isCollapsed}>
-                  <MenuItem
+                  {/* <MenuItem
                     icon={FaShoppingCart}
                     to="/ventas"
                     isActive={location.pathname === "/ventas"}
                     collapsed={isCollapsed}
                   >
                     Ventas de servicios
-                  </MenuItem>
+                  </MenuItem> */}
                   <MenuItem
+                  icon={FaShoppingCart}
+                  to="/ventas-unificadas"
+                  isActive={location.pathname === "/ventas"}
+                  collapsed={isCollapsed}
+                >
+                  Ventas Unificadas
+                </MenuItem>
+                  {/* <MenuItem
                     icon={FaCashRegister}
                     to="/ventasproductos"
                     isActive={location.pathname === "/ventasproductos"}
                     collapsed={isCollapsed}
                   >
                     Ventas de Productos
-                  </MenuItem>
+                  </MenuItem> */}
                 </MenuGroup>
 
                 <MenuGroup title="Gestión de Servicios" collapsed={isCollapsed}>
@@ -417,7 +428,12 @@ const Sidebar = () => {
                   >
                     Categoría Productos
                   </MenuItem>
+                  <MenuItem icon={FaClipboardList} to="/baja-producto" isActive={location.pathname === "/baja-producto"}>
+                      Baja de Productos
+                    </MenuItem>
+
                 </MenuGroup>
+                
 
                 <MenuGroup title="Configuración" collapsed={isCollapsed}>
                   <MenuItem

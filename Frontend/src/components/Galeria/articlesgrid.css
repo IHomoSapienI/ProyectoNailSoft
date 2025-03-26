@@ -173,7 +173,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    /* gap: 0.5rem; */
     padding: 1rem 2rem;
     border-radius: 999px;
     font-weight: 600;
@@ -185,11 +185,19 @@
   }
   
   .schedule-button.primary {
+    display: flex;
     background: linear-gradient(135deg, #ff69b4, #da70d6);
     color: black;
     box-shadow: 0 4px 15px rgba(219, 39, 119, 0.3);
-    width: 40vh;
+    width: 50vh;
+    height: 7vh;
     margin: auto;
+    align-items: center;
+    text-align: center;
+  }
+
+  .span {
+    margin: 6vh;
   }
   
   .schedule-button.secondary {
@@ -201,7 +209,8 @@
   }
   
   .button-icon {
-    font-size: 1.25rem;
+    font-size: large;
+    
   }
   
   /* CTA Section */

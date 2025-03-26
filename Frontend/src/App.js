@@ -1,10 +1,15 @@
+"use client"
+
+// src/App.js
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
+import { useEffect } from "react"
 import axios from "axios"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
 import "./App.css"
 import MainLayout from "./components/Sidebar/MainLayout"
+import { getTheme, setTheme } from "./util/theme-util" // Importar funciones de tema
 
 import Sidebar from "./components/Sidebar/Sidebar"
 import Navbar from "./components/NavBars/Navbar"
@@ -15,7 +20,7 @@ import TablaRoles from "./components/Roles/TablaRoles"
 import TablaServicios from "./components/Servicios/TablaServicios"
 import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
 import UserProfile from "./components/PerfilUsuario/UserProfile"
-
+import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo"
 import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
 import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
 import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
@@ -35,6 +40,8 @@ import Dashboard from "./components/Dashboard/Dashboard"
 import Login from "./components/Login_Register/Login"
 import Register from "./components/Login_Register/Register"
 import TablaPermisos from "./components/Permisos/TablaPermisos"
+import TablaVentas from "./components/Venta/TablaVentas"
+import ClientDashboard from "./components/Clientes/client-dashboard" // Importar el nuevo componente
 
 axios.interceptors.request.use(
   (config) => {
@@ -81,7 +88,7 @@ const Layout = ({ children }) => {
   const showSidebar = isAdmin || isEmployee
 
   return (
-    <div className="min-h-screen bg-gray-10">
+    <div className="min-h-screen bg-gray-10 dark:bg-gray-900">
       {showSidebar ? (
         <>
           <Sidebar />
@@ -131,13 +138,19 @@ const Layout = ({ children }) => {
 }
 
 const AuthLayout = ({ children }) => (
-  <div className="App">
+  <div className="App dark:bg-gray-900 dark:text-white">
     <NavbarAuth />
     <div className="content">{children}</div>
   </div>
 )
 
 function App() {
+  useEffect(() => {
+    // Inicializar el tema cuando carga la aplicación
+    const currentTheme = getTheme()
+    setTheme(currentTheme)
+  }, [])
+
   return (
     <Router>
       <Routes>
@@ -171,6 +184,17 @@ function App() {
             <PrivateRoute allowedRoles={["admin", "empleado"]}>
               <Layout>
                 <Dashboard />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        {/* Nueva ruta para el dashboard del cliente */}
+        <Route
+          path="/mi-cuenta"
+          element={
+            <PrivateRoute allowedRoles={["cliente"]}>
+              <Layout>
+                <ClientDashboard />
               </Layout>
             </PrivateRoute>
           }
@@ -228,13 +252,25 @@ function App() {
         <Route
           path="/ventas"
           element={
-            <PrivateRoute allowedRoles={["admin"]}>
+            <PrivateRoute allowedRoles={["admin", "empleado", "cliente"]}>
               <Layout>
                 <TablaVentaServicios />
               </Layout>
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/ventas-unificadas"
+          element={
+            <PrivateRoute allowedRoles={["admin", "empleado", "cliente"]}>
+              <Layout>
+                <TablaVentas />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/servicios"
           element={
@@ -336,6 +372,17 @@ function App() {
           }
         />
         <Route
+          path="/baja-producto"
+          element={
+            <PrivateRoute allowedRoles={["admin", "empleado"]}>
+              <Layout>
+                <TablaBajaInsumo />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
           path="/ventasProductos"
           element={
             <PrivateRoute allowedRoles={["admin"]}>
@@ -387,12 +434,11 @@ function App() {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/unauthorized"
           element={
             <Layout>
-              <h1>No tienes permiso para acceder a esta página :3</h1>
+              <h1 className="dark:text-white">No tienes permiso para acceder a esta página :3</h1>
             </Layout>
           }
         />

@@ -330,20 +330,21 @@ export default function TablaRoles() {
   }
 
   return (
-    
-    <div className="tabla-container transition-all duration-500">
+    <div className="tabla-container transition-all duration-500 w-full max-w-full">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Roles</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
-          <button className="btn-add" onClick={manejarAgregarNuevo} title="Agregar nuevo rol">
+          <button className="btn-add" onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
             Nuevo Rol
           </button>
+
           <button className="btn-secondary" onClick={manejarAgregarPermiso} title="Agregar nuevo permiso">
             <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
             Nuevo Permiso
           </button>
+
           <button className="btn-export" onClick={exportarExcel} disabled={exportando} title="Exportar a Excel">
             {exportando ? (
               <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
@@ -366,8 +367,8 @@ export default function TablaRoles() {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 w-full">
+        <table className="tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
           <thead>
             <tr>
               <th>Nombre del Rol</th>
@@ -390,12 +391,15 @@ export default function TablaRoles() {
                       <button className="btn-edit" onClick={() => manejarEditar(rol)} title="Editar rol">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
+
                       <button className="btn-delete" onClick={() => manejarEliminar(rol._id)} title="Eliminar rol">
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
+
                       <button className="btn-info" onClick={() => manejarVerDetalles(rol)} title="Ver detalles">
                         <FontAwesomeIcon icon={faInfoCircle} />
                       </button>
+
                       <button
                         className={`btn-toggle ${rol.estadoRol ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(rol._id, rol.estadoRol)}

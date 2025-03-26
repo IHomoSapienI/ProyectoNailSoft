@@ -359,7 +359,11 @@ const TablaVentaServicios = () => {
               </div>
               <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Fecha y Hora de Cita:</p>
-                <p className="text-base">{formatearFechaHora(detallesCita.cita.fechacita)}</p>
+                <p className="text-base">
+                  {detallesCita.cita && detallesCita.cita.fechacita
+                    ? formatearFechaHora(detallesCita.cita.fechacita)
+                    : "Fecha de cita no disponible"}
+                </p>
               </div>
               <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Empleado:</p>

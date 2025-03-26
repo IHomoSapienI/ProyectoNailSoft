@@ -15,54 +15,77 @@ const CitasEnProgreso = () => {
   const location = useLocation()
   const API_URL = "https://gitbf.onrender.com/api"
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      setError(null)
+  // Modificar la función fetchData para manejar mejor las respuestas vacías
+  const fetchData = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      const headers = { Authorization: `Bearer ${token}` }
+
+      // Obtener citas confirmadas y en progreso
       try {
-        const token = localStorage.getItem("token")
-        const headers = { Authorization: `Bearer ${token}` }
+        const citasResponse = await axios.get(`${API_URL}/citas`, { headers })
+        const citasData = citasResponse.data.citas || []
 
-        // Obtener citas confirmadas y en progreso
-        try {
-          const citasResponse = await axios.get(`${API_URL}/citas`, { headers })
-          const citasData = citasResponse.data.citas || []
+        // Filtrar citas válidas (con estado adecuado)
+        const citasFiltradas = citasData.filter(
+          (cita) =>
+            cita.estadocita === "Confirmada" || cita.estadocita === "En Progreso" || cita.estadocita === "Pendiente",
+        )
 
-          // Filtrar citas válidas (con estado adecuado)
-          const citasFiltradas = citasData.filter(
-            (cita) =>
-              cita.estadocita === "Confirmada" || cita.estadocita === "En Progreso" || cita.estadocita === "Pendiente",
-          )
+        // Verificar que las citas tengan la información necesaria
+        const citasValidas = citasFiltradas.filter((cita) => cita._id && cita.nombrecliente && cita.nombreempleado)
 
-          // Verificar que las citas tengan la información necesaria
-          const citasValidas = citasFiltradas.filter((cita) => cita._id && cita.nombrecliente && cita.nombreempleado)
-
-          setCitas(citasValidas)
-        } catch (citasError) {
-          console.error("Error al cargar citas:", citasError)
-          setError("No se pudieron cargar las citas")
-        }
-
-        // Obtener ventas activas
-        try {
-          const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
-          const ventasData = ventasResponse.data.ventaservicios || []
-
-          // Filtrar ventas activas (no finalizadas)
-          const ventasActivas = ventasData.filter((venta) => venta.estado === true)
-          setVentas(ventasActivas)
-        } catch (ventasError) {
-          console.error("Error al cargar ventas:", ventasError)
-          // No interrumpimos el flujo si no se pueden cargar las ventas
-        }
-      } catch (error) {
-        console.error("Error general al cargar datos:", error)
-        setError("No se pudieron cargar los datos necesarios")
-      } finally {
-        setIsLoading(false)
+        setCitas(citasValidas)
+      } catch (citasError) {
+        console.error("Error al cargar citas:", citasError)
+        setError("No se pudieron cargar las citas")
       }
-    }
 
+      // Obtener ventas activas - MEJORADO para manejar respuestas vacías
+      try {
+        const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
+
+        // Verificar si la respuesta tiene la estructura esperada
+        let ventasData = []
+
+        if (ventasResponse.data) {
+          if (Array.isArray(ventasResponse.data)) {
+            // Si la respuesta es directamente un array
+            ventasData = ventasResponse.data
+          } else if (ventasResponse.data.ventaservicios && Array.isArray(ventasResponse.data.ventaservicios)) {
+            // Si la respuesta tiene la estructura esperada
+            ventasData = ventasResponse.data.ventaservicios
+          } else if (typeof ventasResponse.data === "object") {
+            // Si la respuesta es un objeto pero no tiene la estructura esperada
+            // Intentamos extraer cualquier array que pueda contener
+            const posiblesArrays = Object.values(ventasResponse.data).filter((val) => Array.isArray(val))
+            if (posiblesArrays.length > 0) {
+              ventasData = posiblesArrays[0]
+            }
+          }
+        }
+
+        // Filtrar ventas activas (no finalizadas)
+        const ventasActivas = ventasData.filter((venta) => venta && venta.estado === true)
+        setVentas(ventasActivas)
+
+        console.log("Ventas cargadas correctamente:", ventasActivas.length)
+      } catch (ventasError) {
+        console.error("Error al cargar ventas:", ventasError)
+        // No interrumpimos el flujo si no se pueden cargar las ventas
+        setVentas([]) // Establecer un array vacío para evitar errores
+      }
+    } catch (error) {
+      console.error("Error general al cargar datos:", error)
+      setError("No se pudieron cargar los datos necesarios")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchData()
 
     // Configurar un intervalo para actualizar los datos cada 30 segundos
@@ -112,9 +135,10 @@ const CitasEnProgreso = () => {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
-      // Verificar primero si la venta existe
+      // Verificar primero si la venta existe - CORREGIDO: Usar la ruta correcta
       try {
-        const ventaResponse = await axios.get(`${API_URL}/ventaservicios/${ventaId}`, { headers })
+        // Cambiado de /ventaservicios/ a /ventaservicio/ (singular) si es necesario según la API
+        const ventaResponse = await axios.get(`${API_URL}/ventaservicio/${ventaId}`, { headers })
 
         if (ventaResponse.data) {
           Swal.close()
@@ -186,22 +210,30 @@ const CitasEnProgreso = () => {
       const citaResponse = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
 
       if (citaResponse.data && citaResponse.data.cita) {
-        // Verificar si ya existe una venta para esta cita
-        const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
-        const ventasData = ventasResponse.data.ventaservicios || []
+        // Verificar si ya existe una venta para esta cita - CORREGIDO: Usar la ruta correcta
+        try {
+          // Cambiado de /ventas a /ventaservicios
+          const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
+          const ventasData = ventasResponse.data.ventaservicios || []
 
-        // Buscar si ya existe una venta para esta cita
-        const ventaExistente = ventasData.find((v) => {
-          const ventaCitaId = v.cita?._id || v.cita
-          return ventaCitaId === citaId && v.estado === true
-        })
+          // Buscar si ya existe una venta para esta cita
+          const ventaExistente = ventasData.find((v) => {
+            const ventaCitaId = v.cita?._id || v.cita
+            return ventaCitaId === citaId && v.estado === true
+          })
 
-        if (ventaExistente) {
-          // Si ya existe una venta, ir a esa venta
-          Swal.close()
-          navigate(`/gestion-venta/${ventaExistente._id}`)
-        } else {
-          // Si no existe una venta, ir a crear una nueva
+          if (ventaExistente) {
+            // Si ya existe una venta, ir a esa venta
+            Swal.close()
+            navigate(`/gestion-venta/${ventaExistente._id}`)
+          } else {
+            // Si no existe una venta, ir a crear una nueva
+            Swal.close()
+            navigate(`/gestion-venta/new/${citaId}`)
+          }
+        } catch (error) {
+          console.error("Error al verificar ventas existentes:", error)
+          // Si hay error al verificar ventas, asumimos que no hay y creamos una nueva
           Swal.close()
           navigate(`/gestion-venta/new/${citaId}`)
         }
@@ -224,7 +256,7 @@ const CitasEnProgreso = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
       </div>
     )
   }
@@ -240,7 +272,7 @@ const CitasEnProgreso = () => {
           className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => window.location.reload()}
         >
-          <FaSpinner className="inline mr-2" />
+          <FaSpinner className="inline mr-2 text-pink-600" />
           Reintentar
         </button>
       </div>
@@ -253,7 +285,7 @@ const CitasEnProgreso = () => {
       <div className="flex justify-end mb-4">
         <button
           onClick={() => window.location.reload()}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+          className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded flex items-center"
         >
           <FaSpinner className="mr-2" />
           Actualizar lista

@@ -103,5 +103,73 @@ axiosInstance.interceptors.response.use(
   },
 )
 
-export default axiosInstance
+// Servicio para datos del cliente
+export const clienteService = {
+  // Obtener perfil del cliente actual
+  getPerfilCliente: async () => {
+    try {
+      const response = await axiosInstance.get('/clientes/perfil');
+      return response.data.cliente;
+    } catch (error) {
+      console.error('Error al obtener perfil del cliente:', error);
+      throw error;
+    }
+  },
+  
+  // Obtener datos de un cliente específico (solo admin/empleado o el propio cliente)
+  getClienteById: async (id) => {
+    try {
+      const response = await axiosInstance.get(`/clientes/${id}`);
+      return response.data.cliente;
+    } catch (error) {
+      console.error(`Error al obtener cliente ${id}:`, error);
+      throw error;
+    }
+  },
+  
+  // Obtener compras del cliente
+  getComprasCliente: async (id, page = 1, limit = 10) => {
+    try {
+      const response = await axiosInstance.get(`/clientes/${id}/compras?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener compras del cliente:', error);
+      throw error;
+    }
+  },
+  
+  // Obtener servicios contratados por el cliente
+  getServiciosCliente: async (id, page = 1, limit = 10) => {
+    try {
+      const response = await axiosInstance.get(`/clientes/${id}/servicios?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener servicios del cliente:', error);
+      throw error;
+    }
+  },
+  
+  // Obtener facturas del cliente
+  getFacturasCliente: async (id, page = 1, limit = 10) => {
+    try {
+      const response = await axiosInstance.get(`/clientes/${id}/facturas?page=${page}&limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener facturas del cliente:', error);
+      throw error;
+    }
+  },
+  
+  // Actualizar datos del cliente
+  updateCliente: async (id, clienteData) => {
+    try {
+      const response = await axiosInstance.put(`/clientes/${id}`, clienteData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar cliente ${id}:`, error);
+      throw error;
+    }
+  }
+};
 
+export default axiosInstance;

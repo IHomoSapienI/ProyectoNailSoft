@@ -25,7 +25,8 @@ class Server {
         this.ventaproductosPath = '/api/ventaproductos'; 
         this.comprasPath = '/api/compras';
         this.authPath = '/api/auth';
-        this.bajasProductos= '/api/baja-productos'
+        this.bajasProductos= '/api/baja-productos';
+        this.ventasPath = "/api/ventas";
         this.middlewares();
         this.routes();
         this.connectDb();
@@ -72,6 +73,7 @@ class Server {
         this.app.use(this.comprasPath, require('../routes/compra'));
         this.app.use(this.authPath, require('../routes/auth'));
         this.app.use(this.bajasProductos, require('../routes/bajaproducto'));
+        this.app.use(this.ventasPath, require("../routes/venta"));
     }
 
     async connectDb() {

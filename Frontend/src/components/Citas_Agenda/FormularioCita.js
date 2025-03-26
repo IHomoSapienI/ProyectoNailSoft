@@ -10,6 +10,8 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
   const location = useLocation()
   const totalDesdeSeleccionarServicios = location.state?.total || 0
   const empleadoIdPredeterminado = location.state?.empleadoId || ""
+  const serviciosDesdeSeleccionarServicios = location.state?.serviciosSeleccionados || []
+  const vieneDePaginaServicios = location.state?.fromSeleccionarServicios || false
 
   const [formData, setFormData] = useState({
     nombreempleado: empleadoIdPredeterminado,
@@ -229,6 +231,25 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
     }
   }, [empleadoIdPredeterminado, totalDesdeSeleccionarServicios, fechaSeleccionada, cita, formData.fechacita])
 
+  // NUEVO: Manejar servicios preseleccionados desde SeleccionarServicios
+  useEffect(() => {
+    if (vieneDePaginaServicios && serviciosDesdeSeleccionarServicios.length > 0 && !cita) {
+      // Usar los servicios que vienen de la página de selección
+      setServiciosSeleccionados(serviciosDesdeSeleccionarServicios)
+
+      // Actualizar el monto total
+      setFormData((prevData) => ({
+        ...prevData,
+        montototal: totalDesdeSeleccionarServicios,
+      }))
+
+      // Opcional: Avanzar automáticamente al paso 2 si estamos en el paso 1
+      if (paso === 1) {
+        setPaso(2)
+      }
+    }
+  }, [vieneDePaginaServicios, serviciosDesdeSeleccionarServicios, totalDesdeSeleccionarServicios, cita, paso])
+
   // Agregar servicio seleccionado
   useEffect(() => {
     if (servicioSeleccionado && servicios.length > 0 && !cita) {
@@ -346,12 +367,6 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
   const eliminarServicio = (id) => {
     setServiciosSeleccionados((prev) => prev.filter((servicio) => servicio._id !== id))
   }
-
-  // Eliminar las funciones relacionadas con el calendario que ya no se usarán
-  // Buscar y eliminar estas funciones:
-
-  // Eliminar la función seleccionarDia
-  // Eliminar la función cambiarMes
 
   // Reemplazar la función manejarSubmit con esta versión
   const manejarSubmit = async (e) => {
@@ -578,37 +593,70 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Selecciona los servicios</h2>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Servicios disponibles:</label>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select
-                  value={nuevoServicio.id}
-                  onChange={(e) =>
-                    setNuevoServicio({
-                      id: e.target.value,
-                      nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">Selecciona un servicio</option>
-                  {servicios.map((servicio) => (
-                    <option key={servicio._id} value={servicio._id}>
-                      {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
-                    </option>
+            {/* NUEVO: Mostrar mensaje cuando los servicios ya están seleccionados */}
+            {vieneDePaginaServicios && serviciosSeleccionados.length > 0 ? (
+              <div className="bg-green-50 p-4 rounded-lg mb-4">
+                <p className="text-green-700 font-medium">
+                  Ya has seleccionado {serviciosSeleccionados.length} servicios desde la página anterior.
+                </p>
+                <div className="mt-3 bg-white p-3 rounded border">
+                  {serviciosSeleccionados.map((servicio, index) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                      <span>{servicio.nombreServicio}</span>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-4">${servicio.precio}</span>
+                        <button
+                          type="button"
+                          onClick={() => eliminarServicio(servicio._id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </select>
+                </div>
                 <button
                   type="button"
-                  onClick={agregarServicio}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded whitespace-nowrap"
+                  onClick={avanzarPaso}
+                  className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
                 >
-                  Agregar
+                  Continuar con estos servicios
                 </button>
               </div>
-            </div>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Servicios disponibles:</label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <select
+                    value={nuevoServicio.id}
+                    onChange={(e) =>
+                      setNuevoServicio({
+                        id: e.target.value,
+                        nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
+                      })
+                    }
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Selecciona un servicio</option>
+                    {servicios.map((servicio) => (
+                      <option key={servicio._id} value={servicio._id}>
+                        {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={agregarServicio}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded whitespace-nowrap"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {serviciosSeleccionados.length > 0 ? (
+            {serviciosSeleccionados.length > 0 && !vieneDePaginaServicios ? (
               <div className="mt-6">
                 <h3 className="font-medium mb-2">Servicios seleccionados:</h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -640,7 +688,9 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">No has seleccionado ningún servicio</div>
+              !vieneDePaginaServicios && (
+                <div className="text-center py-8 text-gray-500">No has seleccionado ningún servicio</div>
+              )
             )}
 
             <div className="flex justify-end mt-6">

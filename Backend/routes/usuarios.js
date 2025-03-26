@@ -22,28 +22,28 @@ router.use(verificarRolActivo)
 router.use(validarJWT)
 
 // Ruta para obtener todos los usuarios
-router.get("/", usuariosGet)
+router.get("/", verificarPermisos (['verUsuarios']), usuariosGet)
 
 // NUEVA RUTA: Obtener un usuario específico por ID
 router.get("/:id", usuarioGetById)
 
 // Ruta para crear un nuevo usuario
-router.post("/", usuariosPost)
+router.post("/", verificarPermisos (['crearUsuarios']), usuariosPost)
 
 // Ruta para actualizar un usuario
-router.put("/:id", usuariosPut)
+router.put("/:id", verificarPermisos (['actualizarUsuarios']), usuariosPut)
 
 // NUEVA RUTA: Actualizar solo el rol de un usuario
 router.put("/:id/update-rol", usuariosUpdateRol)
 
 // Ruta para eliminar un usuario
-router.delete("/:id", usuariosDelete)
+router.delete("/:id", verificarPermisos (['eliminarUsuarios']), usuariosDelete)
 
 // Ruta para consultar usuarios con parámetros
 router.get("/buscar/prom", PromGet)
 
 // Ruta para activar/desactivar un usuario
-router.patch("/:id/toggle-estado", usuariosToggleEstado)
+router.patch("/:id/toggle-estado",  usuariosToggleEstado)
 
 module.exports = router
 

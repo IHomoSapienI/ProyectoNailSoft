@@ -3,7 +3,8 @@ class TipoServicio {
   final String nombreTs;
   bool estado;
 
-  TipoServicio({required this.id, 
+  TipoServicio({
+  required this.id, 
   required this.nombreTs,
   required this.estado
   });

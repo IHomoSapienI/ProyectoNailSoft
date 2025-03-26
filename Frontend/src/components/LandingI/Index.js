@@ -778,7 +778,7 @@ const Index = () => {
       {/* NUEVA SECCIÓN: Membresías */}
       <section className="w-full py-20 bg-pink-50">
         <div className="container mx-auto px-4">
-          <motion.div
+          {/* <motion.div
             initial={{ y: 50, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -789,13 +789,13 @@ const Index = () => {
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Únete a nuestro exclusivo club de belleza y disfruta de beneficios especiales cada mes.
             </p>
-          </motion.div>
+          </motion.div> */}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {memberships.map((membership, index) => (
               <MembershipCard key={index} {...membership} onClick={handleAddAppointment} />
             ))}
-          </div>
+          </div> */}
         </div>
       </section>
 

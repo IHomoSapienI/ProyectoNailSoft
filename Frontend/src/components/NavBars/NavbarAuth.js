@@ -92,7 +92,7 @@ const NavbarAuth = () => {
       </div>
 
       {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(5)].map((_, i) => (
           <motion.div
             key={i}
@@ -113,7 +113,7 @@ const NavbarAuth = () => {
             }}
           />
         ))}
-      </div>
+      </div> */}
     </motion.nav>
   )
 }

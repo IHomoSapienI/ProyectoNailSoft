@@ -1,248 +1,675 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Modal from 'react-modal';
-import FormularioInsumo from './FormularioInsumo';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Swal from 'sweetalert2'; // Importa SweetAlert2
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Modal from "react-modal"
+import FormularioInsumo from "./FormularioInsumo"
+import FormularioBajaInsumo from "./FormularioBajaInsumo"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faArrowDown,
+  faFileExcel,
+  faSearch,
+  faSync,
+  faPrint,
+  faPowerOff,
+} from "@fortawesome/free-solid-svg-icons"
+import Swal from "sweetalert2"
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
+import "./tablaInsumos.css"
 
 // Configura el contenedor del modal
-Modal.setAppElement('#root');
+Modal.setAppElement("#root")
 
 const TablaInsumos = () => {
-    const [insumos, setInsumos] = useState([]);
-    const [insumoSeleccionado, setInsumoSeleccionado] = useState(null);
-    const [formModalIsOpen, setFormModalIsOpen] = useState(false);
+  const [insumos, setInsumos] = useState([])
+  const [insumoSeleccionado, setInsumoSeleccionado] = useState(null)
+  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [bajaModalIsOpen, setBajaModalIsOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState("")
+  const [paginaActual, setPaginaActual] = useState(1)
+  const insumosPorPagina = 5
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [exportando, setExportando] = useState(false)
 
-    // Estado para paginación
-    const [paginaActual, setPaginaActual] = useState(1);
-    const insumosPorPagina = 5; // Cantidad de insumos a mostrar por página
+  useEffect(() => {
+    obtenerInsumos()
+  }, [])
 
-    useEffect(() => {
-        obtenerInsumos();
-    }, []);
+  const obtenerInsumos = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        await Swal.fire({
+          title: "Error",
+          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+        return
+      }
 
-    const obtenerInsumos = async () => {
-        try {
-            const token = localStorage.getItem('token'); // Obtener el token del localStorage
-            if (!token) {
-                await Swal.fire('Error', 'No se encontró el token de autenticación. Por favor, inicia sesión.', 'error');
-                return;
-            }
+      const respuesta = await axios.get("https://gitbf.onrender.com/api/insumos", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setInsumos(respuesta.data || [])
+    } catch (error) {
+      console.error("Error al obtener los insumos:", error)
+      setError("No se pudieron cargar los insumos. Por favor, intenta de nuevo.")
+      Swal.fire({
+        title: "Error",
+        text: "No tienes permiso para estar aquí. Tu token no es válido.",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-            const respuesta = await axios.get('https://gitbf.onrender.com/api/insumos', {
-                headers: {
-                    'Authorization': `Bearer ${token}` // Incluir el token en el encabezado
-                }
-            });
-            setInsumos(respuesta.data || []);
-        } catch (error) {
-            console.error('Error al obtener los insumos:', error);
-            Swal.fire('Error', 'No tienes permiso para estar aqui :) post: tu token no es válido', 'error');
+  const abrirFormulario = (insumo) => {
+    setInsumoSeleccionado(insumo)
+    setFormModalIsOpen(true)
+  }
+
+  const cerrarFormulario = () => {
+    setFormModalIsOpen(false)
+    setInsumoSeleccionado(null)
+  }
+
+  const abrirModalBaja = (insumo) => {
+    setInsumoSeleccionado(insumo)
+    setBajaModalIsOpen(true)
+  }
+
+  const cerrarModalBaja = () => {
+    setBajaModalIsOpen(false)
+    setInsumoSeleccionado(null)
+  }
+
+  const manejarBajaInsumo = async (datos) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        await Swal.fire({
+          title: "Error",
+          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+        return
+      }
+
+      // Crear la baja de producto
+      await axios.post("https://gitbf.onrender.com/api/baja-productos", datos, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      // Actualizar el stock del insumo
+      const insumoActualizado = {
+        ...insumoSeleccionado,
+        stock: insumoSeleccionado.stock - datos.cantidad,
+      }
+
+      await axios.put(`https://gitbf.onrender.com/api/insumos/${insumoSeleccionado._id}`, insumoActualizado, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      // Actualizar la lista de insumos
+      obtenerInsumos()
+      cerrarModalBaja()
+      Swal.fire({
+        title: "Éxito",
+        text: "Insumo dado de baja correctamente",
+        icon: "success",
+        confirmButtonColor: "#db2777",
+      })
+    } catch (error) {
+      console.error("Error al dar de baja el insumo:", error)
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo dar de baja el insumo",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      })
+    }
+  }
+
+  const manejarInsumoActualizado = () => {
+    obtenerInsumos()
+    cerrarFormulario()
+  }
+
+  const manejarEliminarInsumo = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminarlo!",
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        if (!token) {
+          await Swal.fire({
+            title: "Error",
+            text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+            icon: "error",
+            confirmButtonColor: "#db2777",
+          })
+          return
         }
-    };
 
-    const abrirFormulario = (insumo) => {
-        setInsumoSeleccionado(insumo);
-        setFormModalIsOpen(true);
-    };
+        await axios.delete(`https://gitbf.onrender.com/api/insumos/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        obtenerInsumos()
+        Swal.fire({
+          title: "Eliminado!",
+          text: "El insumo ha sido eliminado.",
+          icon: "success",
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error("Error al eliminar el insumo:", error)
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo eliminar el insumo.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
 
-    const cerrarFormulario = () => {
-        setFormModalIsOpen(false);
-        setInsumoSeleccionado(null);
-    };
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
 
-    const manejarInsumoActualizado = () => {
-        obtenerInsumos();
-        cerrarFormulario();
-    };
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} este insumo?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
 
-    const manejarEliminarInsumo = async (id) => {
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminarlo!',
-            cancelButtonText: 'Cancelar'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const token = localStorage.getItem('token'); // Obtener el token del localStorage
-                if (!token) {
-                    await Swal.fire('Error', 'No se encontró el token de autenticación. Por favor, inicia sesión.', 'error');
-                    return;
-                }
-
-                await axios.delete(`https://gitbf.onrender.com/api/insumos/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}` // Incluir el token en el encabezado
-                    }
-                });
-                obtenerInsumos();
-                Swal.fire('Eliminado!', 'El insumo ha sido eliminado.', 'success');
-            } catch (error) {
-                console.error('Error al eliminar el insumo:', error);
-                Swal.fire('Error', 'No se pudo eliminar el insumo.', 'error');
-            }
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        if (!token) {
+          await Swal.fire({
+            title: "Error",
+            text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+            icon: "error",
+            confirmButtonColor: "#db2777",
+          })
+          return
         }
-    };
 
-    // Funciones de paginación
-    const indiceUltimoInsumo = paginaActual * insumosPorPagina;
-    const indicePrimerInsumo = indiceUltimoInsumo - insumosPorPagina;
-    const insumosActuales = insumos.slice(indicePrimerInsumo, indiceUltimoInsumo);
+        const insumoActualizado = {
+          ...insumos.find((insumo) => insumo._id === id),
+          estado: nuevoEstado,
+        }
 
-    const cambiarPagina = (numeroPagina) => {
-        setPaginaActual(numeroPagina);
-    };
+        await axios.put(`https://gitbf.onrender.com/api/insumos/${id}`, insumoActualizado, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-    const paginasTotales = Math.ceil(insumos.length / insumosPorPagina);
+        // Actualizar el estado local
+        setInsumos(insumos.map((insumo) => (insumo._id === id ? { ...insumo, estado: nuevoEstado } : insumo)))
 
-    const paginaAnterior = () => {
-        if (paginaActual > 1) setPaginaActual(paginaActual - 1);
-    };
+        Swal.fire({
+          icon: "success",
+          title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+          text: `El insumo ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error(`Error al ${accion} el insumo:`, error)
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: `No se pudo ${accion} el insumo`,
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
 
-    const paginaSiguiente = () => {
-        if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
-    };
+  // Funciones de búsqueda
+  const handleBusquedaChange = (e) => {
+    setBusqueda(e.target.value)
+  }
 
+  const insumosFiltrados = insumos.filter((insumo) =>
+    insumo.nombreInsumo.toLowerCase().includes(busqueda.toLowerCase()),
+  )
 
+  // Funciones de paginación
+  const indiceUltimoInsumo = paginaActual * insumosPorPagina
+  const indicePrimerInsumo = indiceUltimoInsumo - insumosPorPagina
+  const insumosActuales = insumosFiltrados.slice(indicePrimerInsumo, indiceUltimoInsumo)
+
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina)
+  }
+
+  const paginasTotales = Math.ceil(insumosFiltrados.length / insumosPorPagina)
+
+  const paginaAnterior = () => {
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
+  }
+
+  const paginaSiguiente = () => {
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
+  }
+
+  // Función para exportar a Excel
+  const exportarExcel = async () => {
+    try {
+      setExportando(true)
+
+      // Mostrar notificación de inicio de descarga
+      const toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      })
+
+      toast.fire({
+        icon: "info",
+        title: "Preparando la descarga...",
+      })
+
+      const datosExportar = insumos.map((insumo) => ({
+        "Nombre del Insumo": insumo.nombreInsumo,
+        Stock: insumo.stock,
+        Precio: `$${insumo.precio}`,
+        Estado: insumo.estado ? "Disponible" : "No disponible",
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(datosExportar)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Insumos")
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" })
+      const data = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      })
+
+      saveAs(data, "Insumos.xlsx")
+
+      // Mostrar notificación de éxito
+      toast.fire({
+        icon: "success",
+        title: "Archivo descargado correctamente",
+      })
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error)
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo exportar a Excel",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      })
+    } finally {
+      setExportando(false)
+    }
+  }
+
+  // Función para imprimir
+  const imprimirTabla = () => {
+    const printWindow = window.open("", "_blank")
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Listado de Insumos</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+            }
+            h1 {
+              color: #db2777;
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #f3f4f6;
+              color: #374151;
+              font-weight: bold;
+            }
+            tr:nth-child(even) {
+              background-color: #f9fafb;
+            }
+            .estado {
+              padding: 3px 8px;
+              border-radius: 12px;
+              font-weight: bold;
+              font-size: 12px;
+              display: inline-block;
+            }
+            .disponible {
+              background-color: #d1fae5;
+              color: #065f46;
+            }
+            .no-disponible {
+              background-color: #fee2e2;
+              color: #991b1b;
+            }
+            .footer {
+              text-align: center;
+              margin-top: 30px;
+              font-size: 12px;
+              color: #6b7280;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Listado de Insumos</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre del Insumo</th>
+                <th>Stock</th>
+                <th>Precio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${insumos
+                .map(
+                  (insumo) => `
+                <tr>
+                  <td>${insumo.nombreInsumo}</td>
+                  <td>${insumo.stock}</td>
+                  <td>$${insumo.precio}</td>
+                  <td>
+                    <span class="estado ${insumo.estado ? "disponible" : "no-disponible"}">
+                      ${insumo.estado ? "Disponible" : "No disponible"}
+                    </span>
+                  </td>
+                </tr>
+              `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+          <div class="footer">
+            <p>Fecha de impresión: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+            <p>Sistema de Gestión - Belleza Spa</p>
+          </div>
+        </body>
+      </html>
+    `)
+
+    printWindow.document.close()
+    printWindow.focus()
+
+    // Esperar a que los estilos se carguen
+    setTimeout(() => {
+      printWindow.print()
+      // printWindow.close()
+    }, 500)
+  }
+
+  if (isLoading) {
     return (
-        <div className="p-6 flex flex-col items-center" id='arroz'>
-            <h2 className="text-3xl font-semibold mb-8">Gestión de Insumos</h2>
-
-            {/* Botones y funcionalidades adicionales */}
-            <div className="flex justify-between mb-5 w-full h-7 max-w-4xl">
-                {/* Botón para agregar nuevo insumo ajustado */}
-                <button
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                    onClick={() => { setFormModalIsOpen(true); setInsumoSeleccionado(null); }}
-                >
-                    <FontAwesomeIcon icon={faPlus} /> {/* Icono de agregar */}
-                </button>
-
-                {/* Buscador */}
-                <input
-                    type="text"
-                    id="searchInput"
-                    className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Buscar en la tabla"
-                />
-            </div>
-
-            {/* Tabla de insumos ajustada */}
-            <div className="w-full max-w-4xl">
-                <table className="table min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-                    <thead className="bg-gray-50 content-center">
-                        <tr>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Insumo</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {insumosActuales.map((insumo) => (
-                            <tr key={insumo._id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{insumo.nombreInsumo}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{insumo.stock}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${insumo.precio}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{insumo.estado ? 'Disponible' : 'No disponible'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2">
-                                    <button
-                                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={() => abrirFormulario(insumo)}
-                                    >
-                                        <FontAwesomeIcon icon={faEdit} /> {/* Icono de editar */}
-                                    </button>
-                                    <button
-                                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={() => manejarEliminarInsumo(insumo._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} /> {/* Icono de eliminar */}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Paginación */}
-            <div className="mt-4">
-                <nav className="flex justify-center">
-                    <ul className="inline-flex items-center">
-                        <li>
-                            <button
-                                onClick={paginaAnterior}
-                                disabled={paginaActual === 1}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === 1 ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &lt; {/* Flecha izquierda */}
-                            </button>
-                        </li>
-                        {Array.from({ length: paginasTotales }, (_, index) => (
-                            <li key={index}>
-                                <button
-                                    onClick={() => cambiarPagina(index + 1)}
-                                    className={`px-3 py-1 mx-1 rounded ${
-                                        paginaActual === index + 1
-                                            ? 'bg-gray-300 text-gray-700'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {index + 1}
-                                </button>
-                            </li>
-                        ))}
-                        <li>
-                            <button
-                                onClick={paginaSiguiente}
-                                disabled={paginaActual === paginasTotales}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === paginasTotales ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &gt; {/* Flecha derecha */}
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-
-            {/* El Modal */}
-            <Modal
-                isOpen={formModalIsOpen}
-                onRequestClose={cerrarFormulario}
-                className="fixed inset-0 flex items-center justify-center p-4"
-                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full relative">
-                    <button
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                        onClick={cerrarFormulario}
-                    >
-                        <FontAwesomeIcon icon="times" />
-                    </button>
-                    <h2 className="text-2xl font-semibold mb-4">
-                        {insumoSeleccionado ? 'Actualizar Insumo' : 'Nuevo Insumo'}
-                    </h2>
-                    <FormularioInsumo
-                        insumo={insumoSeleccionado}
-                        onClose={cerrarFormulario}
-                        onUpdated={manejarInsumoActualizado}
-                    />
-                </div>
-            </Modal>
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando insumos...</p>
         </div>
-    );
-};
+      </div>
+    )
+  }
 
-export default TablaInsumos;
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+        <button
+          className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => obtenerInsumos()}
+        >
+          <FontAwesomeIcon icon={faSync} className="mr-2" />
+          Reintentar
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="tabla-container transition-all duration-500">
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Insumos</h2>
+
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <div className="flex space-x-2">
+          <button
+            className="btn-add"
+            onClick={() => {
+              setFormModalIsOpen(true)
+              setInsumoSeleccionado(null)
+            }}
+            title="Agregar nuevo insumo"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Nuevo Insumo
+          </button>
+          <button
+            className="btn-export"
+            onClick={exportarExcel}
+            disabled={exportando || insumos.length === 0}
+            title="Exportar a Excel"
+          >
+            {exportando ? (
+              <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+            ) : (
+              <FontAwesomeIcon icon={faFileExcel} className="mr-2" />
+            )}
+            Exportar
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={imprimirTabla}
+            disabled={insumos.length === 0}
+            title="Imprimir listado"
+          >
+            <FontAwesomeIcon icon={faPrint} className="mr-2" />
+            Imprimir
+          </button>
+        </div>
+
+        <div className="search-container">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={handleBusquedaChange}
+            className="search-input"
+            placeholder="Buscar insumos..."
+          />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+        <table className="tabla-moderna w-full">
+          <thead>
+            <tr>
+              <th>Nombre del Insumo</th>
+              <th>Stock</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {insumosActuales.length > 0 ? (
+              insumosActuales.map((insumo) => (
+                <tr key={insumo._id} className="hover:bg-gray-50">
+                  <td className="font-medium">{insumo.nombreInsumo}</td>
+                  <td>{insumo.stock}</td>
+                  <td>${insumo.precio}</td>
+                  <td>
+                    <span className={`estado-badge ${insumo.estado ? "activo" : "inactivo"}`}>
+                      {insumo.estado ? "Disponible" : "No disponible"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex space-x-2 center">
+                      <button className="btn-edit" onClick={() => abrirFormulario(insumo)} title="Editar insumo">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button className="btn-info" onClick={() => abrirModalBaja(insumo)} title="Dar de baja">
+                        <FontAwesomeIcon icon={faArrowDown} />
+                      </button>
+                      <button
+                        className="btn-delete"
+                        onClick={() => manejarEliminarInsumo(insumo._id)}
+                        title="Eliminar insumo"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        className={`btn-toggle ${insumo.estado ? "active" : "inactive"}`}
+                        onClick={() => manejarToggleEstado(insumo._id, insumo.estado)}
+                        title={insumo.estado ? "Desactivar insumo" : "Activar insumo"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-4 text-gray-500">
+                  No se encontraron insumos con ese criterio de búsqueda
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Paginación */}
+      {insumos.length > 0 && (
+        <div className="pagination-container mt-6">
+          <button
+            onClick={paginaAnterior}
+            disabled={paginaActual === 1}
+            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+          >
+            &lt;
+          </button>
+
+          <div className="pagination-pages">
+            {Array.from({ length: paginasTotales }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => cambiarPagina(index + 1)}
+                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={paginaSiguiente}
+            disabled={paginaActual === paginasTotales}
+            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+          >
+            &gt;
+          </button>
+        </div>
+      )}
+
+      {/* Modal para agregar/editar insumo */}
+      <Modal
+        isOpen={formModalIsOpen}
+        onRequestClose={cerrarFormulario}
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={cerrarFormulario}
+          >
+            &times;
+          </button>
+          <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">
+            {insumoSeleccionado ? "Actualizar Insumo" : "Nuevo Insumo"}
+          </h2>
+          <FormularioInsumo
+            insumo={insumoSeleccionado}
+            onClose={cerrarFormulario}
+            onUpdated={manejarInsumoActualizado}
+          />
+        </div>
+      </Modal>
+
+      {/* Modal para dar de baja un insumo */}
+      <Modal
+        isOpen={bajaModalIsOpen}
+        onRequestClose={cerrarModalBaja}
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={cerrarModalBaja}
+          >
+            &times;
+          </button>
+          <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">Dar de Baja Insumo</h2>
+          <FormularioBajaInsumo insumo={insumoSeleccionado} onClose={cerrarModalBaja} onSubmit={manejarBajaInsumo} />
+        </div>
+      </Modal>
+    </div>
+  )
+}
+
+export default TablaInsumos

@@ -12,6 +12,8 @@ import {
   FaCamera,
   FaUserCircle,
   FaClipboardList,
+  FaAsymmetrik,
+  FaDashcube
 } from "react-icons/fa"
 
 // Actualizamos la importación para usar una ruta relativa
@@ -81,7 +83,7 @@ export default function MainNavbar() {
       ],
       usuario: [
         {
-          icon: FaUserCircle,
+          icon: FaUserCircle, 
           label: "Mi Perfil",
           items: [
             { icon: FaUserCircle, label: "Ver Perfil", path: "/profile" },
@@ -99,26 +101,21 @@ export default function MainNavbar() {
       ],
       cliente: [
         {
-          icon: FaUserCircle,
-          label: "Mi Perfil",
-          items: [
-            { icon: FaUserCircle, label: "Ver Perfil", path: "/profile" },
-            { icon: FaUserCircle, label: "Editar Perfil", path: "/editar-perfil" },
-          ],
+          icon: FaTachometerAlt,
+          label: "Dashboard",
+          items: [{ icon: FaShoppingCart, label: "Historial de Compras", path: "/mi-cuenta" }],
         },
+        
         {
           icon: FaCalendarAlt,
           label: "Servicios",
           items: [
+            { icon: FaAsymmetrik, label: "Agendar Cita", path: "/seleccionarservicios" },
             { icon: FaCamera, label: "Portafolio de Servicios", path: "/articles" },
-            { icon: FaCalendarAlt, label: "Agendar Cita", path: "/citas" },
+           
           ],
         },
-        {
-          icon: FaShoppingCart,
-          label: "Mis Compras",
-          items: [{ icon: FaShoppingCart, label: "Historial de Compras", path: "/mis-compras" }],
-        },
+        
       ],
       empleado: [
         {

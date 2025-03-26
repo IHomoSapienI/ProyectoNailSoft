@@ -294,7 +294,7 @@ const iniciarCita = async (req, res) => {
         
         // Obtener el siguiente código de venta
         const contador = await Contador.findOneAndUpdate(
-            { nombre: "ventaservicio" },
+            { nombre: "venta" },
             { $inc: { secuencia: 1 } },
             { new: true, upsert: true }
         );
@@ -327,6 +327,48 @@ const iniciarCita = async (req, res) => {
     }
 };
 
+// En controllers/cita.js
+const obtenerCitasPorCliente = async (req, res) => {
+    try {
+      const clienteId = req.query.clienteId || req.usuario?.id;
+      
+      if (!clienteId) {
+        return res.status(400).json({ message: "ID de cliente no proporcionado" });
+      }
+      
+      console.log("Buscando citas para el cliente/usuario ID:", clienteId);
+      
+      // Buscar citas donde el cliente coincida con el ID proporcionado
+      // Primero intentar buscar por nombrecliente (si es un ID de cliente)
+      let citas = await Cita.find({ nombrecliente: clienteId })
+        .populate("nombreempleado")
+        .populate("nombrecliente")
+        .populate("servicios.servicio")
+        .sort({ fechacita: 1 });
+      
+      // Si no hay resultados, intentar buscar por usuario (si es un ID de usuario)
+      if (citas.length === 0) {
+        // Primero intentar encontrar el cliente asociado al usuario
+        const cliente = await Cliente.findOne({ usuario: clienteId });
+        
+        if (cliente) {
+          citas = await Cita.find({ nombrecliente: cliente._id })
+            .populate("nombreempleado")
+            .populate("nombrecliente")
+            .populate("servicios.servicio")
+            .sort({ fechacita: 1 });
+        }
+      }
+      
+      console.log(`Se encontraron ${citas.length} citas para el cliente/usuario ID: ${clienteId}`);
+      
+      res.status(200).json(citas);
+    } catch (error) {
+      console.error("Error al obtener citas del cliente:", error);
+      res.status(500).json({ message: "Error al obtener las citas", error: error.message });
+    }
+  };
+
 module.exports = {
     crearCita,
     obtenerCitas,
@@ -335,4 +377,5 @@ module.exports = {
     eliminarCita,
     verificarDisponibilidad,
     iniciarCita,
+    obtenerCitasPorCliente
 };

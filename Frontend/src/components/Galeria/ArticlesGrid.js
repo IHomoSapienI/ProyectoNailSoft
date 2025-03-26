@@ -64,6 +64,7 @@ const ArticlesGrid = () => {
       >
         <h1 className="services-title">Descubre la Magia en Tus Manos</h1>
         <p className="services-subtitle">Servicios exclusivos diseñados para realzar tu belleza natural</p>
+        
         <motion.button
           className="schedule-button primary"
           onClick={manejarAgregarCita}
@@ -71,7 +72,7 @@ const ArticlesGrid = () => {
           whileTap={{ scale: 0.95 }}
         >
           <FaCalendarPlus className="button-icon" />
-          <span>Agenda tu Cita Ahora</span>
+          <span className="span">Agenda tu Cita Ahora</span>
         </motion.button>
       </motion.div>
 
@@ -280,7 +281,7 @@ const ArticlesGrid = () => {
                       className="modal-button schedule"
                       onClick={() => {
                         const total = selectedService.precio
-                        navigate("/citas", { state: { total } })
+                        navigate("/seleccionarservicios", { state: { total } })
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

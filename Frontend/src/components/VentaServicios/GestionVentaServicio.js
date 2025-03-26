@@ -1,11 +1,9 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faTrash, faSave, faArrowLeft, faCheck } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faTrash, faSave, faArrowLeft, faCheck, faBoxOpen, faCut } from "@fortawesome/free-solid-svg-icons"
 import "./gestionVentaServicio.css"
 
 const GestionVentaServicio = () => {
@@ -14,13 +12,17 @@ const GestionVentaServicio = () => {
   const [venta, setVenta] = useState(null)
   const [cita, setCita] = useState(null)
   const [servicios, setServicios] = useState([])
+  const [productos, setProductos] = useState([])
   const [serviciosSeleccionados, setServiciosSeleccionados] = useState([])
+  const [productosSeleccionados, setProductosSeleccionados] = useState([])
   const [nuevoServicio, setNuevoServicio] = useState({ id: "", nombre: "" })
+  const [nuevoProducto, setNuevoProducto] = useState({ id: "", nombre: "", cantidad: 1 })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [metodoPago, setMetodoPago] = useState("Efectivo")
   const [error, setError] = useState(null)
   const [cambiosSinGuardar, setCambiosSinGuardar] = useState(false)
+  const [activeTab, setActiveTab] = useState("servicios") // servicios, productos
   const API_URL = "https://gitbf.onrender.com/api"
 
   // Cargar datos iniciales
@@ -33,31 +35,54 @@ const GestionVentaServicio = () => {
         const token = localStorage.getItem("token")
         const headers = { Authorization: `Bearer ${token}` }
 
-        // Cargar todos los servicios disponibles primero
+        // Cargar todos los servicios y productos disponibles primero
         try {
-          const serviciosResponse = await axios.get(`${API_URL}/servicios`, { headers })
+          const [serviciosResponse, productosResponse] = await Promise.all([
+            axios.get(`${API_URL}/servicios`, { headers }),
+            axios.get(`${API_URL}/productos`, { headers }),
+          ])
+
           setServicios(serviciosResponse.data.servicios || [])
-        } catch (serviciosError) {
-          console.error("Error al cargar servicios:", serviciosError)
-          // No interrumpimos el flujo si no se pueden cargar los servicios
+          setProductos(productosResponse.data.productos || [])
+        } catch (error) {
+          console.error("Error al cargar servicios o productos:", error)
+          // No interrumpimos el flujo si no se pueden cargar los servicios o productos
         }
 
-        // Intentar cargar servicios guardados en localStorage primero
+        // Intentar cargar servicios y productos guardados en localStorage primero
         let serviciosGuardados = null
+        let productosGuardados = null
         if (citaId) {
           try {
             const serviciosLocalStorage = localStorage.getItem(`servicios_cita_${citaId}`)
+            const productosLocalStorage = localStorage.getItem(`productos_cita_${citaId}`)
+
             if (serviciosLocalStorage) {
               serviciosGuardados = JSON.parse(serviciosLocalStorage)
               console.log("Servicios recuperados de localStorage:", serviciosGuardados)
 
               if (Array.isArray(serviciosGuardados) && serviciosGuardados.length > 0) {
                 setServiciosSeleccionados(serviciosGuardados)
-                setCambiosSinGuardar(false)
               }
             }
+
+            if (productosLocalStorage) {
+              productosGuardados = JSON.parse(productosLocalStorage)
+              console.log("Productos recuperados de localStorage:", productosGuardados)
+
+              if (Array.isArray(productosGuardados) && productosGuardados.length > 0) {
+                setProductosSeleccionados(productosGuardados)
+              }
+            }
+
+            if (
+              (serviciosGuardados && serviciosGuardados.length > 0) ||
+              (productosGuardados && productosGuardados.length > 0)
+            ) {
+              setCambiosSinGuardar(false)
+            }
           } catch (storageError) {
-            console.error("Error al recuperar servicios de localStorage:", storageError)
+            console.error("Error al recuperar datos de localStorage:", storageError)
           }
         }
 
@@ -67,7 +92,7 @@ const GestionVentaServicio = () => {
             console.log(`Intentando cargar venta con ID: ${id}`)
 
             // Intentar obtener la venta directamente
-            const ventaResponse = await axios.get(`${API_URL}/ventaservicios/${id}`, { headers })
+            const ventaResponse = await axios.get(`${API_URL}/ventas/${id}`, { headers })
 
             // Verificar la estructura de la respuesta
             if (!ventaResponse.data) {
@@ -139,9 +164,44 @@ const GestionVentaServicio = () => {
               } catch (storageError) {
                 console.error("Error al guardar servicios en localStorage:", storageError)
               }
-
-              setCambiosSinGuardar(false)
             }
+
+            // Si no tenemos productos guardados en localStorage, usamos los de la venta
+            if (!productosGuardados && ventaData.productos && Array.isArray(ventaData.productos)) {
+              // Asegurarse de que cada producto tenga la estructura correcta
+              const productosFormateados = ventaData.productos.map((producto) => {
+                // Obtener el ID del producto
+                const productoId = producto.producto?._id || producto.producto || producto._id
+
+                // Buscar el producto completo en la lista de productos disponibles
+                const productoCompleto = productos.find((p) => p._id === productoId)
+
+                return {
+                  producto: productoId,
+                  nombreProducto:
+                    producto.nombreProducto ||
+                    producto.producto?.nombreProducto ||
+                    (productoCompleto ? productoCompleto.nombreProducto : "Producto"),
+                  precio:
+                    producto.precio || producto.producto?.precio || (productoCompleto ? productoCompleto.precio : 0),
+                  cantidad: producto.cantidad || 1,
+                  subtotal: (producto.precio || productoCompleto?.precio || 0) * (producto.cantidad || 1),
+                }
+              })
+
+              console.log("Productos formateados de la venta:", productosFormateados)
+              setProductosSeleccionados(productosFormateados)
+
+              // Guardar estos productos en localStorage para futuras visitas
+              try {
+                localStorage.setItem(`productos_cita_${citaId}`, JSON.stringify(productosFormateados))
+                console.log("Productos de la venta guardados en localStorage")
+              } catch (storageError) {
+                console.error("Error al guardar productos en localStorage:", storageError)
+              }
+            }
+
+            setCambiosSinGuardar(false)
           } catch (ventaError) {
             console.error("Error al cargar la venta:", ventaError)
             setError("La venta solicitada no existe o ha sido eliminada")
@@ -179,7 +239,7 @@ const GestionVentaServicio = () => {
             let ventaExistente = null
             try {
               console.log(`Buscando ventas existentes para la cita: ${citaId}`)
-              const ventasResponse = await axios.get(`${API_URL}/ventaservicios/cita/${citaId}`, { headers })
+              const ventasResponse = await axios.get(`${API_URL}/venta/cita/${citaId}`, { headers })
 
               if (ventasResponse.data && Array.isArray(ventasResponse.data) && ventasResponse.data.length > 0) {
                 // Encontramos una venta existente para esta cita
@@ -228,8 +288,6 @@ const GestionVentaServicio = () => {
                 } catch (storageError) {
                   console.error("Error al guardar servicios en localStorage:", storageError)
                 }
-
-                setCambiosSinGuardar(false)
               }
               // Si no hay venta o no tiene servicios, usamos los de la cita
               else if (citaData && citaData.servicios && Array.isArray(citaData.servicios)) {
@@ -260,10 +318,48 @@ const GestionVentaServicio = () => {
                 } catch (storageError) {
                   console.error("Error al guardar servicios en localStorage:", storageError)
                 }
-
-                setCambiosSinGuardar(false)
               }
             }
+
+            // Si no tenemos productos guardados en localStorage, intentamos usar los de la venta existente
+            if (!productosGuardados) {
+              // Si encontramos una venta existente y tiene productos, usamos esos
+              if (
+                ventaExistente &&
+                ventaExistente.productos &&
+                Array.isArray(ventaExistente.productos) &&
+                ventaExistente.productos.length > 0
+              ) {
+                const productosVenta = ventaExistente.productos.map((producto) => {
+                  const productoId = producto.producto?._id || producto.producto
+
+                  // Buscar el producto completo en la lista de productos disponibles
+                  const productoCompleto = productos.find((p) => p._id === productoId)
+
+                  return {
+                    producto: productoId,
+                    nombreProducto:
+                      producto.nombreProducto || (productoCompleto ? productoCompleto.nombreProducto : "Producto"),
+                    precio: producto.precio || (productoCompleto ? productoCompleto.precio : 0),
+                    cantidad: producto.cantidad || 1,
+                    subtotal: (producto.precio || productoCompleto?.precio || 0) * (producto.cantidad || 1),
+                  }
+                })
+
+                console.log("Productos formateados de la venta existente:", productosVenta)
+                setProductosSeleccionados(productosVenta)
+
+                // Guardar estos productos en localStorage para futuras visitas
+                try {
+                  localStorage.setItem(`productos_cita_${citaId}`, JSON.stringify(productosVenta))
+                  console.log("Productos de la venta existente guardados en localStorage")
+                } catch (storageError) {
+                  console.error("Error al guardar productos en localStorage:", storageError)
+                }
+              }
+            }
+
+            setCambiosSinGuardar(false)
           } catch (citaError) {
             console.error("Error al cargar la cita:", citaError)
             setError("La cita solicitada no existe o ha sido eliminada")
@@ -290,19 +386,40 @@ const GestionVentaServicio = () => {
     }
 
     fetchData()
-  }, [id, citaId, navigate, servicios.length])
+  }, [id, citaId, navigate])
 
-  // Calcular el precio total
-  const precioTotal = serviciosSeleccionados.reduce(
+  // Calcular el precio total de servicios
+  const precioTotalServicios = serviciosSeleccionados.reduce(
     (total, servicio) => total + (Number.parseFloat(servicio.precio) || 0),
     0,
   )
+
+  // Calcular el precio total de productos
+  const precioTotalProductos = productosSeleccionados.reduce(
+    (total, producto) => total + (Number.parseFloat(producto.subtotal) || 0),
+    0,
+  )
+
+  // Calcular el precio total general
+  const precioTotal = precioTotalServicios + precioTotalProductos
 
   // Calcular el tiempo total
   const tiempoTotal = serviciosSeleccionados.reduce(
     (total, servicio) => total + (Number.parseInt(servicio.tiempo) || 0),
     0,
   )
+
+  // Determinar el tipo de venta
+  const getTipoVenta = () => {
+    if (serviciosSeleccionados.length > 0 && productosSeleccionados.length > 0) {
+      return "mixta"
+    } else if (serviciosSeleccionados.length > 0) {
+      return "servicios"
+    } else if (productosSeleccionados.length > 0) {
+      return "productos"
+    }
+    return "servicios" // Por defecto
+  }
 
   // Agregar un nuevo servicio
   const agregarServicio = async () => {
@@ -339,6 +456,78 @@ const GestionVentaServicio = () => {
     }
   }
 
+  // Agregar un nuevo producto
+  const agregarProducto = async () => {
+    if (nuevoProducto.id && nuevoProducto.cantidad > 0) {
+      const productoSeleccionado = productos.find((p) => p._id === nuevoProducto.id)
+
+      if (productoSeleccionado) {
+        // Verificar si hay suficiente stock
+        if (productoSeleccionado.stock < nuevoProducto.cantidad) {
+          return Swal.fire("Advertencia", `Stock insuficiente. Disponible: ${productoSeleccionado.stock}`, "warning")
+        }
+
+        // Verificar si el producto ya está en la lista
+        const productoExistente = productosSeleccionados.find((p) => p.producto === productoSeleccionado._id)
+
+        if (productoExistente) {
+          // Si ya existe, actualizar la cantidad
+          const nuevaCantidad = productoExistente.cantidad + nuevoProducto.cantidad
+
+          // Verificar stock nuevamente
+          if (productoSeleccionado.stock < nuevaCantidad) {
+            return Swal.fire(
+              "Advertencia",
+              `Stock insuficiente para agregar ${nuevoProducto.cantidad} más. Disponible: ${productoSeleccionado.stock}`,
+              "warning",
+            )
+          }
+
+          const nuevosProductos = productosSeleccionados.map((p) =>
+            p.producto === productoSeleccionado._id
+              ? {
+                  ...p,
+                  cantidad: nuevaCantidad,
+                  subtotal: productoSeleccionado.precio * nuevaCantidad,
+                }
+              : p,
+          )
+
+          setProductosSeleccionados(nuevosProductos)
+        } else {
+          // Si no existe, agregar nuevo
+          const nuevoProductoItem = {
+            producto: productoSeleccionado._id,
+            nombreProducto: productoSeleccionado.nombreProducto,
+            precio: productoSeleccionado.precio || 0,
+            cantidad: nuevoProducto.cantidad,
+            subtotal: productoSeleccionado.precio * nuevoProducto.cantidad,
+          }
+
+          const nuevosProductos = [...productosSeleccionados, nuevoProductoItem]
+          setProductosSeleccionados(nuevosProductos)
+        }
+
+        setNuevoProducto({ id: "", nombre: "", cantidad: 1 })
+        setCambiosSinGuardar(true) // Marcar que hay cambios sin guardar
+
+        // Guardar en localStorage
+        if (cita && cita._id) {
+          try {
+            localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
+            console.log("Productos actualizados guardados en localStorage después de agregar")
+          } catch (storageError) {
+            console.error("Error al guardar productos en localStorage:", storageError)
+          }
+        }
+      } else {
+        Swal.fire("Advertencia", "El producto seleccionado no existe", "warning")
+      }
+    } else {
+      Swal.fire("Advertencia", "Por favor selecciona un producto y especifica una cantidad válida", "warning")
+    }
+  }
+
   // Eliminar un servicio
   const eliminarServicio = (servicioId) => {
     const nuevosServicios = serviciosSeleccionados.filter((s) => s.servicio !== servicioId)
@@ -356,6 +545,60 @@ const GestionVentaServicio = () => {
     }
   }
 
+  // Eliminar un producto
+  const eliminarProducto = (productoId) => {
+    const nuevosProductos = productosSeleccionados.filter((p) => p.producto !== productoId)
+    setProductosSeleccionados(nuevosProductos)
+    setCambiosSinGuardar(true) // Marcar que hay cambios sin guardar
+
+    // Guardar en localStorage
+    if (cita && cita._id) {
+      try {
+        localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(nuevosProductos))
+        console.log("Productos actualizados guardados en localStorage después de eliminar")
+      } catch (storageError) {
+        console.error("Error al guardar productos en localStorage:", storageError)
+      }
+    }
+  }
+
+  // Actualizar cantidad de un producto
+  const actualizarCantidadProducto = (productoId, nuevaCantidad) => {
+    if (nuevaCantidad <= 0) {
+      return eliminarProducto(productoId)
+    }
+
+    const producto = productos.find((p) => p._id === productoId)
+
+    // Verificar stock
+    if (producto && producto.stock < nuevaCantidad) {
+      return Swal.fire("Advertencia", `Stock insuficiente. Disponible: ${producto.stock}`, "warning")
+    }
+
+    const nuevosProductos = productosSeleccionados.map((p) =>
+      p.producto === productoId
+        ? {
+            ...p,
+            cantidad: nuevaCantidad,
+            subtotal: p.precio * nuevaCantidad,
+          }
+        : p,
+    )
+
+    setProductosSeleccionados(nuevosProductos)
+    setCambiosSinGuardar(true) // Marcar que hay cambios sin guardar
+
+    // Guardar en localStorage
+    if (cita && cita._id) {
+      try {
+        localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(nuevosProductos))
+        console.log("Productos actualizados guardados en localStorage después de actualizar cantidad")
+      } catch (storageError) {
+        console.error("Error al guardar productos en localStorage:", storageError)
+      }
+    }
+  }
+
   // Guardar cambios en la cita (sin crear venta)
   const guardarCambios = async () => {
     if (isSaving) return
@@ -365,9 +608,9 @@ const GestionVentaServicio = () => {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
-      if (serviciosSeleccionados.length === 0) {
+      if (serviciosSeleccionados.length === 0 && productosSeleccionados.length === 0) {
         setIsSaving(false)
-        return Swal.fire("Error", "Debe seleccionar al menos un servicio", "error")
+        return Swal.fire("Error", "Debe seleccionar al menos un servicio o producto", "error")
       }
 
       // Verificar si tenemos la información necesaria
@@ -388,21 +631,28 @@ const GestionVentaServicio = () => {
       // Guardar en localStorage primero para asegurar que no se pierdan los datos
       try {
         localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
-        console.log("Servicios guardados en localStorage antes de guardar en API")
+        localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
+        console.log("Servicios y productos guardados en localStorage antes de guardar en API")
       } catch (storageError) {
-        console.error("Error al guardar servicios en localStorage:", storageError)
+        console.error("Error al guardar datos en localStorage:", storageError)
       }
 
       // IMPORTANTE: Ahora solo actualizamos la cita, no creamos una venta
       try {
-        // Actualizar el estado de la cita a "En Progreso" y guardar los servicios seleccionados
+        // Actualizar el estado de la cita a "En Progreso" y guardar los servicios y productos seleccionados
         const serviciosFormateados = serviciosSeleccionados.map((servicio) => ({
           servicio: typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio,
           precio: servicio.precio || 0,
           tiempo: servicio.tiempo || 0,
         }))
 
-        // Actualizar la cita con los servicios seleccionados y cambiar su estado
+        const productosFormateados = productosSeleccionados.map((producto) => ({
+          producto: typeof producto.producto === "object" ? producto.producto._id : producto.producto,
+          precio: producto.precio || 0,
+          cantidad: producto.cantidad || 1,
+        }))
+
+        // Actualizar la cita con los servicios y productos seleccionados y cambiar su estado
         const citaResponse = await axios.put(
           `${API_URL}/citas/${cita._id}`,
           {
@@ -412,6 +662,7 @@ const GestionVentaServicio = () => {
             horacita: cita.horacita || "00:00",
             duracionTotal: tiempoTotal,
             servicios: serviciosFormateados, // Guardar los servicios seleccionados en la cita
+            productos: productosFormateados, // Guardar los productos seleccionados en la cita
             montototal: precioTotal,
             estadocita: "En Progreso", // Cambiar estado a "En Progreso"
           },
@@ -489,30 +740,45 @@ const GestionVentaServicio = () => {
         return Swal.fire("Error", "La cita no tiene cliente o empleado asignado", "error")
       }
 
-      // Verificar que tengamos servicios seleccionados
-      if (serviciosSeleccionados.length === 0) {
-        // Intentar recuperar servicios del localStorage si no hay servicios seleccionados
+      // Verificar que tengamos servicios o productos seleccionados
+      if (serviciosSeleccionados.length === 0 && productosSeleccionados.length === 0) {
+        // Intentar recuperar datos del localStorage si no hay seleccionados
         try {
           const serviciosGuardados = localStorage.getItem(`servicios_cita_${cita._id}`)
+          const productosGuardados = localStorage.getItem(`productos_cita_${cita._id}`)
+
           if (serviciosGuardados) {
             const serviciosParsed = JSON.parse(serviciosGuardados)
             if (Array.isArray(serviciosParsed) && serviciosParsed.length > 0) {
               console.log("Recuperando servicios de localStorage para finalizar venta:", serviciosParsed)
               setServiciosSeleccionados(serviciosParsed)
-
-              // Continuar con la finalización después de un breve retraso para asegurar que el estado se actualice
-              setTimeout(() => {
-                finalizarVenta()
-              }, 500)
-              return
             }
           }
+
+          if (productosGuardados) {
+            const productosParsed = JSON.parse(productosGuardados)
+            if (Array.isArray(productosParsed) && productosParsed.length > 0) {
+              console.log("Recuperando productos de localStorage para finalizar venta:", productosParsed)
+              setProductosSeleccionados(productosParsed)
+            }
+          }
+
+          if (
+            (serviciosGuardados && JSON.parse(serviciosGuardados).length > 0) ||
+            (productosGuardados && JSON.parse(productosGuardados).length > 0)
+          ) {
+            // Continuar con la finalización después de un breve retraso para asegurar que el estado se actualice
+            setTimeout(() => {
+              finalizarVenta()
+            }, 500)
+            return
+          }
         } catch (storageError) {
-          console.error("Error al recuperar servicios de localStorage:", storageError)
+          console.error("Error al recuperar datos de localStorage:", storageError)
         }
 
         setIsSaving(false)
-        return Swal.fire("Error", "No hay servicios seleccionados para finalizar la venta", "error")
+        return Swal.fire("Error", "No hay servicios ni productos seleccionados para finalizar la venta", "error")
       }
 
       const clienteId = typeof cita.nombrecliente === "object" ? cita.nombrecliente._id : cita.nombrecliente
@@ -525,194 +791,56 @@ const GestionVentaServicio = () => {
 
         return {
           servicio: servicioId,
+          nombreServicio: servicio.nombreServicio || "",
           precio: servicio.precio || 0,
           tiempo: servicio.tiempo || 0,
         }
       })
 
+      // Formatear los productos para enviar al backend
+      const productosFormateados = productosSeleccionados.map((producto) => {
+        // Asegurarse de que estamos enviando el objeto completo con la estructura correcta
+        const productoId = typeof producto.producto === "object" ? producto.producto._id : producto.producto
+
+        return {
+          producto: productoId,
+          nombreProducto: producto.nombreProducto || "",
+          precio: producto.precio || 0,
+          cantidad: producto.cantidad || 1,
+          subtotal: producto.subtotal || producto.precio * producto.cantidad,
+        }
+      })
+
       console.log("Servicios formateados para finalizar venta:", serviciosFormateados)
+      console.log("Productos formateados para finalizar venta:", productosFormateados)
 
-      // Verificar si ya existe una venta para esta cita
-      let ventaId = null
+      // Calcular subtotales para la venta unificada
+      const subtotalServicios = precioTotalServicios
+      const subtotalProductos = precioTotalProductos
 
-      if (venta && venta._id) {
-        // Si ya tenemos una venta cargada, usamos su ID
-        ventaId = venta._id
-        console.log("Usando venta existente con ID:", ventaId)
-      } else {
-        // Intentar buscar si existe una venta para esta cita
-        try {
-          const ventasResponse = await axios.get(`${API_URL}/ventaservicios/cita/${cita._id}`, { headers })
-
-          if (ventasResponse.data && Array.isArray(ventasResponse.data) && ventasResponse.data.length > 0) {
-            // Encontramos una venta existente para esta cita
-            const ventaExistente = ventasResponse.data[0]
-            ventaId = ventaExistente._id
-            console.log("Venta existente encontrada para la cita:", ventaId)
-          }
-        } catch (ventasError) {
-          console.error("Error al buscar ventas existentes:", ventasError)
-          // Continuamos con el flujo normal si no podemos encontrar ventas existentes
-        }
-      }
-
-      // Si ya existe una venta, actualizamos sus servicios y la finalizamos
-      if (ventaId) {
-        try {
-          // Primero actualizamos los servicios de la venta
-          console.log("Actualizando servicios de la venta existente:", ventaId)
-
-          // Intentar actualizar la venta directamente
-          try {
-            await axios.put(
-              `${API_URL}/ventaservicios/${ventaId}`,
-              {
-                servicios: serviciosFormateados,
-                precioTotal: precioTotal,
-              },
-              { headers },
-            )
-          } catch (updateError) {
-            console.error("Error al actualizar venta directamente:", updateError)
-
-            // Intentar con el endpoint específico para agregar servicios
-            try {
-              await axios.put(
-                `${API_URL}/ventaservicios/${ventaId}/agregar-servicios`,
-                { servicios: serviciosFormateados },
-                { headers },
-              )
-            } catch (addServiciosError) {
-              console.error("Error al agregar servicios:", addServiciosError)
-              throw new Error("No se pudieron actualizar los servicios de la venta")
-            }
-          }
-
-          // Luego finalizamos la venta
-          console.log("Finalizando venta existente:", ventaId)
-          try {
-            await axios.put(`${API_URL}/ventaservicios/${ventaId}/finalizar`, { metodoPago }, { headers })
-          } catch (finalizeError) {
-            console.error("Error al finalizar venta:", finalizeError)
-
-            // Intentar actualizar el estado directamente
-            await axios.put(
-              `${API_URL}/ventaservicios/${ventaId}`,
-              {
-                estado: true,
-                metodoPago: metodoPago,
-                finalizada: true,
-              },
-              { headers },
-            )
-          }
-
-          // Actualizar el estado de la cita a "Completada"
-          await axios.put(
-            `${API_URL}/citas/${cita._id}`,
-            {
-              nombreempleado: empleadoId,
-              nombrecliente: clienteId,
-              fechacita: cita.fechacita,
-              horacita: cita.horacita || "00:00",
-              duracionTotal: tiempoTotal,
-              servicios: serviciosFormateados,
-              montototal: precioTotal,
-              estadocita: "Completada", // Cambiar estado a "Completada"
-            },
-            { headers },
-          )
-
-          // Limpiar localStorage
-          try {
-            localStorage.removeItem(`servicios_cita_${cita._id}`)
-            console.log("Servicios eliminados de localStorage después de finalizar venta")
-          } catch (storageError) {
-            console.error("Error al limpiar localStorage:", storageError)
-          }
-
-          // Marcar que no hay cambios sin guardar
-          setCambiosSinGuardar(false)
-
-          Swal.fire({
-            title: "Éxito",
-            text: "Venta finalizada correctamente",
-            icon: "success",
-            confirmButtonText: "Ir a ventas",
-          }).then(() => {
-            navigate("/ventas")
-          })
-
-          return // Terminamos aquí si ya existía una venta
-        } catch (error) {
-          console.error("Error al actualizar y finalizar venta existente:", error)
-          throw error
-        }
-      }
-
-      // Si no existe una venta, creamos una nueva
-      // Crear objeto de venta con el formato correcto
-      const ventaData = {
+      // Crear objeto de venta unificada
+      const ventaUnificadaData = {
         cliente: clienteId,
-        cita: cita._id,
         empleado: empleadoId,
+        cita: cita._id,
         servicios: serviciosFormateados,
-        precioTotal: precioTotal,
-        estado: true,
-        metodoPago: metodoPago, // Agregar el método de pago directamente en la creación
+        productos: productosFormateados,
+        subtotalServicios: subtotalServicios,
+        subtotalProductos: subtotalProductos,
+        total: precioTotal,
+        metodoPago: metodoPago,
+        tipoVenta: getTipoVenta(),
+        estado: true, // Venta finalizada
+        fechaCreacion: new Date(),
+        observaciones: `Venta generada desde cita #${cita._id}`,
       }
 
-      console.log("Creando nueva venta para finalizar:", ventaData)
+      console.log("Creando venta unificada:", ventaUnificadaData)
 
       try {
-        // Crear la venta
-        const createResponse = await axios.post(`${API_URL}/ventaservicios`, ventaData, { headers })
-        console.log("Respuesta de creación:", createResponse.data)
-
-        // Determinar la estructura correcta de la venta creada
-        let ventaCreada = null
-        if (createResponse.data.venta) {
-          ventaCreada = createResponse.data.venta
-        } else if (createResponse.data.ventaservicio) {
-          ventaCreada = createResponse.data.ventaservicio
-        } else if (createResponse.data._id) {
-          ventaCreada = createResponse.data
-        }
-
-        if (!ventaCreada || !ventaCreada._id) {
-          throw new Error("No se pudo determinar la estructura de la venta creada")
-        }
-
-        // Finalizar la venta recién creada
-        const nuevoVentaId = ventaCreada._id
-        console.log(`Finalizando venta con ID: ${nuevoVentaId}`)
-
-        try {
-          await axios.put(`${API_URL}/ventaservicios/${nuevoVentaId}/finalizar`, { metodoPago }, { headers })
-        } catch (finalizeError) {
-          console.error("Error al finalizar la venta:", finalizeError)
-          // Si falla la finalización, intentamos un enfoque alternativo
-          if (finalizeError.response && finalizeError.response.status === 400) {
-            console.log("Intentando finalizar con enfoque alternativo...")
-            // Intentar actualizar el estado directamente
-            try {
-              await axios.put(
-                `${API_URL}/ventaservicios/${nuevoVentaId}`,
-                {
-                  estado: true,
-                  metodoPago: metodoPago,
-                  finalizada: true,
-                },
-                { headers },
-              )
-            } catch (updateError) {
-              console.error("Error en enfoque alternativo:", updateError)
-              throw updateError
-            }
-          } else {
-            throw finalizeError
-          }
-        }
+        // Crear la venta unificada
+        const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
+        console.log("Respuesta de creación de venta unificada:", createResponse.data)
 
         // Actualizar el estado de la cita a "Completada"
         await axios.put(
@@ -724,6 +852,7 @@ const GestionVentaServicio = () => {
             horacita: cita.horacita || "00:00",
             duracionTotal: tiempoTotal,
             servicios: serviciosFormateados,
+            productos: productosFormateados,
             montototal: precioTotal,
             estadocita: "Completada", // Cambiar estado a "Completada"
           },
@@ -733,7 +862,8 @@ const GestionVentaServicio = () => {
         // Limpiar localStorage
         try {
           localStorage.removeItem(`servicios_cita_${cita._id}`)
-          console.log("Servicios eliminados de localStorage después de finalizar venta")
+          localStorage.removeItem(`productos_cita_${cita._id}`)
+          console.log("Datos eliminados de localStorage después de finalizar venta")
         } catch (storageError) {
           console.error("Error al limpiar localStorage:", storageError)
         }
@@ -747,10 +877,10 @@ const GestionVentaServicio = () => {
           icon: "success",
           confirmButtonText: "Ir a ventas",
         }).then(() => {
-          navigate("/ventas")
+          navigate("/ventas-unificadas")
         })
       } catch (error) {
-        console.error("Error al crear y finalizar la venta:", error)
+        console.error("Error al crear la venta unificada:", error)
         throw error
       }
     } catch (error) {
@@ -804,7 +934,7 @@ const GestionVentaServicio = () => {
   return (
     <div className="gestion-container">
       <div className="header-container">
-        <h1>{id && id !== "new" ? "Gestionar Venta de Servicio" : "Nueva Venta de Servicio"}</h1>
+        <h1>{id && id !== "new" ? "Gestionar Venta" : "Nueva Venta"}</h1>
         <button
           onClick={async () => {
             // Si hay cambios sin guardar, preguntar al usuario
@@ -831,9 +961,10 @@ const GestionVentaServicio = () => {
                 if (cita && cita._id) {
                   try {
                     localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
-                    console.log("Servicios guardados en localStorage antes de navegar sin guardar")
+                    localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
+                    console.log("Datos guardados en localStorage antes de navegar sin guardar")
                   } catch (storageError) {
-                    console.error("Error al guardar servicios en localStorage:", storageError)
+                    console.error("Error al guardar datos en localStorage:", storageError)
                   }
                 }
 
@@ -851,9 +982,10 @@ const GestionVentaServicio = () => {
             if (cita && cita._id) {
               try {
                 localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
-                console.log("Servicios guardados en localStorage antes de navegar sin cambios")
+                localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
+                console.log("Datos guardados en localStorage antes de navegar sin cambios")
               } catch (storageError) {
-                console.error("Error al guardar servicios en localStorage:", storageError)
+                console.error("Error al guardar datos en localStorage:", storageError)
               }
             }
 
@@ -903,90 +1035,270 @@ const GestionVentaServicio = () => {
         </div>
       </div>
 
-      {/* Servicios seleccionados */}
+      {/* Pestañas para servicios y productos */}
       <div className="card">
-        <h2 className="card-title">Servicios Seleccionados</h2>
-
-        {serviciosSeleccionados.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="tabla-servicios">
-              <thead>
-                <tr>
-                  <th>Servicio</th>
-                  <th className="text-right">Precio</th>
-                  <th className="text-right">Tiempo (min)</th>
-                  <th className="text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {serviciosSeleccionados.map((servicio, index) => (
-                  <tr key={index}>
-                    <td>{servicio.nombreServicio}</td>
-                    <td className="text-right">${Number.parseFloat(servicio.precio).toFixed(2)}</td>
-                    <td className="text-right">{servicio.tiempo}</td>
-                    <td className="text-center">
-                      <button
-                        onClick={() => eliminarServicio(servicio.servicio)}
-                        className="btn-icon delete"
-                        title="Eliminar servicio"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Total</td>
-                  <td className="text-right">${precioTotal.toFixed(2)}</td>
-                  <td className="text-right">{tiempoTotal} min</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
+        <div className="tabs-container">
+          <div className="tabs-header">
+            <button
+              type="button"
+              className={`tab-button ${activeTab === "servicios" ? "active" : ""}`}
+              onClick={() => setActiveTab("servicios")}
+            >
+              <FontAwesomeIcon icon={faCut} className="mr-2" />
+              Servicios
+            </button>
+            <button
+              type="button"
+              className={`tab-button ${activeTab === "productos" ? "active" : ""}`}
+              onClick={() => setActiveTab("productos")}
+            >
+              <FontAwesomeIcon icon={faBoxOpen} className="mr-2" />
+              Productos
+            </button>
           </div>
-        ) : (
-          <p className="text-gray-500 italic">No hay servicios seleccionados</p>
-        )}
+
+          {/* Tab de Servicios */}
+          <div className={`tab-content ${activeTab === "servicios" ? "block" : "hidden"}`}>
+            <h2 className="card-title">Servicios Seleccionados</h2>
+            {serviciosSeleccionados.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="tabla-servicios">
+                  <thead>
+                    <tr>
+                      <th>Servicio</th>
+                      <th className="text-right">Precio</th>
+                      <th className="text-right">Tiempo (min)</th>
+                      <th className="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {serviciosSeleccionados.map((servicio, index) => (
+                      <tr key={index}>
+                        <td>{servicio.nombreServicio}</td>
+                        <td className="text-right">${Number.parseFloat(servicio.precio).toFixed(2)}</td>
+                        <td className="text-right">{servicio.tiempo}</td>
+                        <td className="text-center">
+                          <button
+                            onClick={() => eliminarServicio(servicio.servicio)}
+                            className="btn-icon delete"
+                            title="Eliminar servicio"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td>Total Servicios</td>
+                      <td className="text-right">${precioTotalServicios.toFixed(2)}</td>
+                      <td className="text-right">{tiempoTotal} min</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No hay servicios seleccionados</p>
+            )}
+
+            {/* Agregar servicios */}
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Agregar Servicio</h3>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-grow">
+                  <select
+                    value={nuevoServicio.id}
+                    onChange={(e) =>
+                      setNuevoServicio({
+                        id: e.target.value,
+                        nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
+                      })
+                    }
+                    className="form-select"
+                  >
+                    <option value="">Selecciona un servicio</option>
+                    {servicios.map((servicio) => (
+                      <option key={servicio._id} value={servicio._id}>
+                        {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={agregarServicio} disabled={isSaving} className="btn-secondary">
+                  {isSaving ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span>Agregando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                      Agregar Servicio
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab de Productos */}
+          <div className={`tab-content ${activeTab === "productos" ? "block" : "hidden"}`}>
+            <h2 className="card-title">Productos Seleccionados</h2>
+            {productosSeleccionados.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="tabla-servicios">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th className="text-right">Precio</th>
+                      <th className="text-right">Cantidad</th>
+                      <th className="text-right">Subtotal</th>
+                      <th className="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productosSeleccionados.map((producto, index) => (
+                      <tr key={index}>
+                        <td>{producto.nombreProducto}</td>
+                        <td className="text-right">${Number.parseFloat(producto.precio).toFixed(2)}</td>
+                        <td className="text-right">
+                          <div className="flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => actualizarCantidadProducto(producto.producto, producto.cantidad - 1)}
+                              className="btn-icon-sm"
+                            >
+                              -
+                            </button>
+                            <span className="mx-2">{producto.cantidad}</span>
+                            <button
+                              type="button"
+                              onClick={() => actualizarCantidadProducto(producto.producto, producto.cantidad + 1)}
+                              className="btn-icon-sm"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        <td className="text-right">${Number.parseFloat(producto.subtotal).toFixed(2)}</td>
+                        <td className="text-center">
+                          <button
+                            onClick={() => eliminarProducto(producto.producto)}
+                            className="btn-icon delete"
+                            title="Eliminar producto"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="3">Total Productos</td>
+                      <td className="text-right">${precioTotalProductos.toFixed(2)}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No hay productos seleccionados</p>
+            )}
+
+            {/* Agregar productos */}
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Agregar Producto</h3>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-grow">
+                  <select
+                    value={nuevoProducto.id}
+                    onChange={(e) =>
+                      setNuevoProducto({
+                        ...nuevoProducto,
+                        id: e.target.value,
+                        nombre: productos.find((p) => p._id === e.target.value)?.nombreProducto || "",
+                      })
+                    }
+                    className="form-select"
+                  >
+                    <option value="">Selecciona un producto</option>
+                    {productos.map((producto) => (
+                      <option key={producto._id} value={producto._id}>
+                        {producto.nombreProducto} - ${producto.precio} (Stock: {producto.stock})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center">
+                  <label htmlFor="cantidad" className="mr-2 whitespace-nowrap">
+                    Cantidad:
+                  </label>
+                  <input
+                    type="number"
+                    id="cantidad"
+                    min="1"
+                    value={nuevoProducto.cantidad}
+                    onChange={(e) =>
+                      setNuevoProducto({
+                        ...nuevoProducto,
+                        cantidad: Number.parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="form-input w-20"
+                  />
+                </div>
+                <button onClick={agregarProducto} disabled={isSaving} className="btn-secondary">
+                  {isSaving ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span>Agregando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                      Agregar Producto
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Agregar servicios */}
+      {/* Resumen de la venta */}
       <div className="card">
-        <h2 className="card-title">Agregar Servicios</h2>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-grow">
-            <select
-              value={nuevoServicio.id}
-              onChange={(e) =>
-                setNuevoServicio({
-                  id: e.target.value,
-                  nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
-                })
-              }
-              className="form-select"
-            >
-              <option value="">Selecciona un servicio</option>
-              {servicios.map((servicio) => (
-                <option key={servicio._id} value={servicio._id}>
-                  {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
-                </option>
-              ))}
-            </select>
+        <h2 className="card-title">Resumen de la Venta</h2>
+        <div className="info-grid">
+          {serviciosSeleccionados.length > 0 && (
+            <div className="info-item">
+              <p className="info-label">Total Servicios:</p>
+              <p className="info-value">${precioTotalServicios.toFixed(2)}</p>
+            </div>
+          )}
+          {productosSeleccionados.length > 0 && (
+            <div className="info-item">
+              <p className="info-label">Total Productos:</p>
+              <p className="info-value">${precioTotalProductos.toFixed(2)}</p>
+            </div>
+          )}
+          <div className="info-item">
+            <p className="info-label">Total General:</p>
+            <p className="info-value font-bold text-xl">${precioTotal.toFixed(2)}</p>
           </div>
-          <button onClick={agregarServicio} disabled={isSaving} className="btn-secondary">
-            {isSaving ? (
-              <>
-                <span className="spinner"></span>
-                <span>Agregando...</span>
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                Agregar Servicio
-              </>
-            )}
-          </button>
+          <div className="info-item">
+            <p className="info-label">Tipo de Venta:</p>
+            <p className="info-value">
+              {getTipoVenta() === "mixta"
+                ? "Mixta (Servicios y Productos)"
+                : getTipoVenta() === "servicios"
+                  ? "Servicios"
+                  : "Productos"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -1037,4 +1349,3 @@ const GestionVentaServicio = () => {
 }
 
 export default GestionVentaServicio
-

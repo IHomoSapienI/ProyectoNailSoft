@@ -12,12 +12,15 @@ import AppointmentsChart from "./Charts/AppointmentsChart"
 import SalesChart from "./Charts/SalesChart"
 import ServicesChart from "./Charts/ServicesChart"
 import AppointmentsTable from "./AppointmentsTable"
+// import './Dashboard.css'
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("charts")
 
   return (
+    
     <div className="space-y-6">
+      
       {/* Welcome section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

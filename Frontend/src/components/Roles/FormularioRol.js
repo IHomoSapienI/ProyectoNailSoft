@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
 import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa"
-// import "../Formulario.css"
 import "./formularioRol.css"
 
 const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
@@ -309,6 +308,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
               "Agregar Rol"
             )}
           </button>
+
           <button type="button" onClick={onClose} disabled={enviando} className="btn-secondary">
             Cancelar
           </button>

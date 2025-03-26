@@ -4,15 +4,25 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { motion } from "framer-motion"
+import { Button } from "../../ui/button"
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-background p-2 shadow-md">
         <p className="font-medium">{label}</p>
-        <p className="text-sm">
-          <span className="font-medium text-primary">${new Intl.NumberFormat().format(payload[0].value)}</span>
-        </p>
+        {payload.map((entry, index) => (
+          <p key={index} className="text-sm">
+            <span className="font-medium" style={{ color: entry.color }}>
+              {entry.name}: ${new Intl.NumberFormat().format(entry.value)}
+            </span>
+          </p>
+        ))}
+        {payload.length > 1 && (
+          <p className="text-sm font-semibold border-t mt-1 pt-1">
+            Total: ${new Intl.NumberFormat().format(payload.reduce((sum, entry) => sum + entry.value, 0))}
+          </p>
+        )}
       </div>
     )
   }
@@ -21,9 +31,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const SalesChart = () => {
   const [data, setData] = useState([])
+  const [rawData, setRawData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [timeRange, setTimeRange] = useState("year") // 'year', 'month', 'week'
+  const [debugMode, setDebugMode] = useState(false)
+  const [showCombined, setShowCombined] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,9 +51,14 @@ const SalesChart = () => {
 
         const headers = { Authorization: `Bearer ${token}` }
 
-        // Obtener datos de ventas de servicios en lugar de citas
-        const response = await axios.get("https://gitbf.onrender.com/api/ventaservicios", { headers })
-        const ventas = response.data.ventaservicios || []
+        // Obtener datos solo del endpoint de ventas
+        const response = await axios.get("https://gitbf.onrender.com/api/ventas", { headers })
+        const ventas = response.data.ventas || []
+
+        console.log("Datos de ventas:", ventas)
+
+        // Guardar datos sin procesar para depuración
+        setRawData(ventas)
 
         // Filtrar solo ventas finalizadas (estado true)
         const ventasFinalizadas = ventas.filter((venta) => venta.estado === true)
@@ -71,18 +89,31 @@ const SalesChart = () => {
   // Procesar datos por año (mensualmente)
   const processYearlyData = (ventas) => {
     const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    const currentYear = new Date().getFullYear()
 
     // Inicializar array con todos los meses
     const monthlyData = months.map((month) => ({
       month,
-      sales: 0,
+      productos: 0,
+      servicios: 0,
+      total: 0,
     }))
 
     // Sumar ventas por mes
     ventas.forEach((venta) => {
-      const date = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
-      const monthIndex = date.getMonth()
-      monthlyData[monthIndex].sales += venta.precioTotal || 0
+      const date = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
+
+      // Solo procesar ventas del año actual
+      if (date.getFullYear() === currentYear) {
+        const monthIndex = date.getMonth()
+        // Asegurarse de que el índice es válido
+        if (monthIndex >= 0 && monthIndex < 12) {
+          // Agregar subtotales de productos y servicios
+          monthlyData[monthIndex].productos += venta.subtotalProductos || 0
+          monthlyData[monthIndex].servicios += venta.subtotalServicios || 0
+          monthlyData[monthIndex].total += venta.total || 0
+        }
+      }
     })
 
     return monthlyData
@@ -96,26 +127,28 @@ const SalesChart = () => {
 
     // Filtrar ventas del mes actual
     const ventasThisMonth = ventas.filter((venta) => {
-      const date = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
+      const date = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear
     })
 
     // Agrupar por semana del mes
     const weeklyData = [
-      { month: "Semana 1", sales: 0 },
-      { month: "Semana 2", sales: 0 },
-      { month: "Semana 3", sales: 0 },
-      { month: "Semana 4", sales: 0 },
-      { month: "Semana 5", sales: 0 },
+      { month: "Semana 1", productos: 0, servicios: 0, total: 0 },
+      { month: "Semana 2", productos: 0, servicios: 0, total: 0 },
+      { month: "Semana 3", productos: 0, servicios: 0, total: 0 },
+      { month: "Semana 4", productos: 0, servicios: 0, total: 0 },
+      { month: "Semana 5", productos: 0, servicios: 0, total: 0 },
     ]
 
     ventasThisMonth.forEach((venta) => {
-      const date = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
+      const date = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
       const dayOfMonth = date.getDate()
 
       // Asignar a la semana correspondiente (aproximado)
       const weekIndex = Math.min(Math.floor((dayOfMonth - 1) / 7), 4)
-      weeklyData[weekIndex].sales += venta.precioTotal || 0
+      weeklyData[weekIndex].productos += venta.subtotalProductos || 0
+      weeklyData[weekIndex].servicios += venta.subtotalServicios || 0
+      weeklyData[weekIndex].total += venta.total || 0
     })
 
     return weeklyData
@@ -142,33 +175,45 @@ const SalesChart = () => {
       return {
         month: day,
         date: date.toISOString().split("T")[0],
-        sales: 0,
+        productos: 0,
+        servicios: 0,
+        total: 0,
       }
     })
 
     // Sumar ventas por día
     ventas.forEach((venta) => {
-      const ventaDate = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
+      const ventaDate = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
       const ventaDateStr = ventaDate.toISOString().split("T")[0]
 
       const dayData = dailyData.find((d) => d.date === ventaDateStr)
       if (dayData) {
-        dayData.sales += venta.precioTotal || 0
+        dayData.productos += venta.subtotalProductos || 0
+        dayData.servicios += venta.subtotalServicios || 0
+        dayData.total += venta.total || 0
       }
     })
 
     // Eliminar el campo date que ya no necesitamos
-    return dailyData.map(({ month, sales }) => ({ month, sales }))
+    return dailyData.map(({ month, productos, servicios, total }) => ({ month, productos, servicios, total }))
   }
 
   const handleTimeRangeChange = (range) => {
     setTimeRange(range)
   }
 
+  const toggleDebugMode = () => {
+    setDebugMode(!debugMode)
+  }
+
+  const toggleDisplayMode = () => {
+    setShowCombined(!showCombined)
+  }
+
   if (isLoading) {
     return (
       <div className="h-[300px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
       </div>
     )
   }
@@ -183,7 +228,16 @@ const SalesChart = () => {
 
   return (
     <div className="h-full w-full">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={toggleDebugMode} className="text-xs">
+            {debugMode ? "Ocultar Datos" : "Mostrar Datos"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={toggleDisplayMode} className="text-xs">
+            {showCombined ? "Mostrar Separado" : "Mostrar Combinado"}
+          </Button>
+        </div>
+
         <div className="flex space-x-2">
           <button
             onClick={() => handleTimeRangeChange("week")}
@@ -218,6 +272,41 @@ const SalesChart = () => {
         </div>
       </div>
 
+      {debugMode && (
+        <div className="mb-4 p-4 border rounded-md bg-muted/20 text-xs overflow-auto max-h-[200px]">
+          <h3 className="font-bold mb-2">Datos sin procesar ({rawData.length} registros):</h3>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-1">ID</th>
+                <th className="text-left p-1">Fecha</th>
+                <th className="text-left p-1">Productos</th>
+                <th className="text-left p-1">Servicios</th>
+                <th className="text-left p-1">Total</th>
+                <th className="text-left p-1">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rawData.map((venta, index) => {
+                const fecha = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
+                const fechaFormateada = fecha ? fecha.toLocaleDateString() : "Sin fecha"
+
+                return (
+                  <tr key={index} className="border-b hover:bg-muted/40">
+                    <td className="p-1">{venta._id || index}</td>
+                    <td className="p-1">{fechaFormateada}</td>
+                    <td className="p-1">${(venta.subtotalProductos || 0).toFixed(2)}</td>
+                    <td className="p-1">${(venta.subtotalServicios || 0).toFixed(2)}</td>
+                    <td className="p-1">${(venta.total || 0).toFixed(2)}</td>
+                    <td className="p-1">{venta.estado ? "✅" : "❌"}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -227,7 +316,15 @@ const SalesChart = () => {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
             <defs>
-              <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="productosGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.6} />
+              </linearGradient>
+              <linearGradient id="serviciosGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#ec4899" stopOpacity={0.6} />
+              </linearGradient>
+              <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
               </linearGradient>
@@ -253,14 +350,38 @@ const SalesChart = () => {
                 fontSize: "12px",
               }}
             />
-            <Bar
-              dataKey="sales"
-              name="Ventas"
-              fill="url(#salesGradient)"
-              radius={[4, 4, 0, 0]}
-              animationDuration={1000}
-              animationBegin={0}
-            />
+
+            {showCombined ? (
+              <Bar
+                dataKey="total"
+                name="Total"
+                fill="url(#totalGradient)"
+                radius={[4, 4, 0, 0]}
+                animationDuration={1000}
+                animationBegin={0}
+              />
+            ) : (
+              <>
+                <Bar
+                  dataKey="productos"
+                  name="Productos"
+                  fill="url(#productosGradient)"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1000}
+                  animationBegin={0}
+                  stackId="a"
+                />
+                <Bar
+                  dataKey="servicios"
+                  name="Servicios"
+                  fill="url(#serviciosGradient)"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1000}
+                  animationBegin={200}
+                  stackId="a"
+                />
+              </>
+            )}
           </BarChart>
         </ResponsiveContainer>
       </motion.div>

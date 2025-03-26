@@ -1,6 +1,15 @@
 const { Router } = require('express');
 
-const { obtenerInsumos, crearInsumo, actualizarInsumo, eliminarInsumo, cambiarEstadoInsumo, darDeBajaInsumo } = require('../controllers/insumo');
+const { 
+    obtenerInsumos, 
+    crearInsumo, 
+    actualizarInsumo, 
+    eliminarInsumo, 
+    cambiarEstadoInsumo, 
+    darDeBajaInsumo,
+    verificarInsumoExistente,
+    incrementarStockInsumo
+} = require('../controllers/insumo');
 //const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
 //const verificarPermisos = require('../middlewares/verificarPermisos'); // Asegúrate de que la ruta sea correcta
 const router = Router();
@@ -38,6 +47,10 @@ router.patch('/:id/estado', cambiarEstadoInsumo);
 // Nueva ruta para dar de baja un insumo
 router.post('/dar-de-baja', darDeBajaInsumo);
 
+// Verificar si existe un insumo con el mismo nombre
+router.get('/verificar/:nombre', verificarInsumoExistente);
 
+// Incrementar el stock de un insumo existente
+router.put('/incrementar-stock/:id', incrementarStockInsumo);
 
 module.exports = router;

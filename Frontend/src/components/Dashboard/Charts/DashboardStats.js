@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { motion } from "framer-motion"
-import { DollarSign, Calendar, Users, ShoppingBag } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "../../ui/card"
+import { DollarSign, Users, ShoppingBag, CalendarHeart, Package, Scissors } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../ui/card"
 import { Badge } from "../../ui/badge"
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
     ingresosTotales: { valor: 0, cambio: 0 },
+    ingresosProductos: { valor: 0, cambio: 0 },
+    ingresosServicios: { valor: 0, cambio: 0 },
     citasTotales: { valor: 0, cambio: 0 },
     clientesNuevos: { valor: 0, cambio: 0 },
     serviciosVendidos: { valor: 0, cambio: 0 },
+    productosVendidos: { valor: 0, cambio: 0 },
   })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -30,13 +33,13 @@ const DashboardStats = () => {
 
         const headers = { Authorization: `Bearer ${token}` }
 
-        // Obtener datos de citas (solo para contar citas)
+        // Obtener datos de citas
         const citasResponse = await axios.get("https://gitbf.onrender.com/api/citas", { headers })
         const citas = citasResponse.data.citas || []
 
-        // Obtener datos de ventas de servicios (para ingresos y servicios vendidos)
-        const ventasResponse = await axios.get("https://gitbf.onrender.com/api/ventaservicios", { headers })
-        const ventas = ventasResponse.data.ventaservicios || []
+        // Obtener datos de ventas
+        const ventasResponse = await axios.get("https://gitbf.onrender.com/api/ventas", { headers })
+        const ventas = ventasResponse.data.ventas || []
 
         // Obtener datos de clientes
         const clientesResponse = await axios.get("https://gitbf.onrender.com/api/clientes", { headers })
@@ -47,7 +50,7 @@ const DashboardStats = () => {
         const inicioMesActual = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
         const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1)
 
-        // Filtrar citas por mes actual y anterior (solo para contar citas)
+        // Filtrar citas por mes actual y anterior
         const citasMesActual = citas.filter((cita) => new Date(cita.fechacita) >= inicioMesActual)
         const citasMesAnterior = citas.filter(
           (cita) => new Date(cita.fechacita) >= inicioMesAnterior && new Date(cita.fechacita) < inicioMesActual,
@@ -59,8 +62,8 @@ const DashboardStats = () => {
           // Verificar si la venta está finalizada (estado true)
           if (!venta.estado) return false
 
-          // Usar fecha de venta o fecha de creación
-          const ventaDate = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
+          // Usar fecha de creación o finalización
+          const ventaDate = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
           return ventaDate >= inicioMesActual
         })
 
@@ -68,17 +71,44 @@ const DashboardStats = () => {
           // Verificar si la venta está finalizada (estado true)
           if (!venta.estado) return false
 
-          // Usar fecha de venta o fecha de creación
-          const ventaDate = new Date(venta.fecha || venta.fechaventa || venta.fechacreacion)
+          // Usar fecha de creación o finalización
+          const ventaDate = new Date(venta.fechaCreacion || venta.fechaFinalizacion || new Date())
           return ventaDate >= inicioMesAnterior && ventaDate < inicioMesActual
         })
 
-        // Calcular ingresos basados en ventas finalizadas, no en citas agendadas
-        const ingresosMesActual = ventasMesActual.reduce((total, venta) => total + (venta.precioTotal || 0), 0)
-        const ingresosMesAnterior = ventasMesAnterior.reduce((total, venta) => total + (venta.precioTotal || 0), 0)
-
+        // Calcular ingresos totales
+        const ingresosMesActual = ventasMesActual.reduce((total, venta) => total + (venta.total || 0), 0)
+        const ingresosMesAnterior = ventasMesAnterior.reduce((total, venta) => total + (venta.total || 0), 0)
         const cambioPorcentajeIngresos =
           ingresosMesAnterior === 0 ? 100 : ((ingresosMesActual - ingresosMesAnterior) / ingresosMesAnterior) * 100
+
+        // Calcular ingresos por productos
+        const ingresosProductosMesActual = ventasMesActual.reduce(
+          (total, venta) => total + (venta.subtotalProductos || 0),
+          0,
+        )
+        const ingresosProductosMesAnterior = ventasMesAnterior.reduce(
+          (total, venta) => total + (venta.subtotalProductos || 0),
+          0,
+        )
+        const cambioPorcentajeProductos =
+          ingresosProductosMesAnterior === 0
+            ? 100
+            : ((ingresosProductosMesActual - ingresosProductosMesAnterior) / ingresosProductosMesAnterior) * 100
+
+        // Calcular ingresos por servicios
+        const ingresosServiciosMesActual = ventasMesActual.reduce(
+          (total, venta) => total + (venta.subtotalServicios || 0),
+          0,
+        )
+        const ingresosServiciosMesAnterior = ventasMesAnterior.reduce(
+          (total, venta) => total + (venta.subtotalServicios || 0),
+          0,
+        )
+        const cambioPorcentajeServicios =
+          ingresosServiciosMesAnterior === 0
+            ? 100
+            : ((ingresosServiciosMesActual - ingresosServiciosMesAnterior) / ingresosServiciosMesAnterior) * 100
 
         // Calcular número de citas
         const numCitasMesActual = citasMesActual.length
@@ -87,13 +117,11 @@ const DashboardStats = () => {
           numCitasMesAnterior === 0 ? 100 : ((numCitasMesActual - numCitasMesAnterior) / numCitasMesAnterior) * 100
 
         // Calcular clientes nuevos
-        // Filtrar clientes creados en el mes actual
         const clientesNuevosMesActual = clientes.filter((cliente) => {
           const fechaCreacion = new Date(cliente.fechacreacion || cliente.createdAt)
           return fechaCreacion >= inicioMesActual
         }).length
 
-        // Filtrar clientes creados en el mes anterior
         const clientesNuevosMesAnterior = clientes.filter((cliente) => {
           const fechaCreacion = new Date(cliente.fechacreacion || cliente.createdAt)
           return fechaCreacion >= inicioMesAnterior && fechaCreacion < inicioMesActual
@@ -104,29 +132,51 @@ const DashboardStats = () => {
             ? 100
             : ((clientesNuevosMesActual - clientesNuevosMesAnterior) / clientesNuevosMesAnterior) * 100
 
-        // Calcular servicios vendidos (de ventas finalizadas, no de citas agendadas)
+        // Calcular servicios vendidos
         const serviciosVendidosMesActual = ventasMesActual.reduce((total, venta) => {
-          // Verificar si la venta tiene servicios y es un array
           if (!venta.servicios || !Array.isArray(venta.servicios)) return total
           return total + venta.servicios.length
         }, 0)
 
         const serviciosVendidosMesAnterior = ventasMesAnterior.reduce((total, venta) => {
-          // Verificar si la venta tiene servicios y es un array
           if (!venta.servicios || !Array.isArray(venta.servicios)) return total
           return total + venta.servicios.length
         }, 0)
 
-        const cambioPorcentajeServicios =
+        const cambioPorcentajeServiciosVendidos =
           serviciosVendidosMesAnterior === 0
             ? 100
             : ((serviciosVendidosMesActual - serviciosVendidosMesAnterior) / serviciosVendidosMesAnterior) * 100
+
+        // Calcular productos vendidos
+        const productosVendidosMesActual = ventasMesActual.reduce((total, venta) => {
+          if (!venta.productos || !Array.isArray(venta.productos)) return total
+          return total + venta.productos.reduce((sum, producto) => sum + (producto.cantidad || 0), 0)
+        }, 0)
+
+        const productosVendidosMesAnterior = ventasMesAnterior.reduce((total, venta) => {
+          if (!venta.productos || !Array.isArray(venta.productos)) return total
+          return total + venta.productos.reduce((sum, producto) => sum + (producto.cantidad || 0), 0)
+        }, 0)
+
+        const cambioPorcentajeProductosVendidos =
+          productosVendidosMesAnterior === 0
+            ? 100
+            : ((productosVendidosMesActual - productosVendidosMesAnterior) / productosVendidosMesAnterior) * 100
 
         // Actualizar estado con las estadísticas calculadas
         setStats({
           ingresosTotales: {
             valor: ingresosMesActual,
             cambio: cambioPorcentajeIngresos.toFixed(1),
+          },
+          ingresosProductos: {
+            valor: ingresosProductosMesActual,
+            cambio: cambioPorcentajeProductos.toFixed(1),
+          },
+          ingresosServicios: {
+            valor: ingresosServiciosMesActual,
+            cambio: cambioPorcentajeServicios.toFixed(1),
           },
           citasTotales: {
             valor: numCitasMesActual,
@@ -138,7 +188,11 @@ const DashboardStats = () => {
           },
           serviciosVendidos: {
             valor: serviciosVendidosMesActual,
-            cambio: cambioPorcentajeServicios.toFixed(1),
+            cambio: cambioPorcentajeServiciosVendidos.toFixed(1),
+          },
+          productosVendidos: {
+            valor: productosVendidosMesActual,
+            cambio: cambioPorcentajeProductosVendidos.toFixed(1),
           },
         })
       } catch (error) {
@@ -201,15 +255,31 @@ const DashboardStats = () => {
       title: "Ingresos Totales",
       value: `$${stats.ingresosTotales.valor.toLocaleString()}`,
       change: `${stats.ingresosTotales.cambio}%`,
-      icon: <DollarSign className="h-4 w-4" />,
+      icon: <DollarSign className="h-5 w-5 text-pink-600" />,
       trend: Number.parseFloat(stats.ingresosTotales.cambio) >= 0 ? "up" : "down",
       className: "card-gradient-1",
+      details: [
+        {
+          label: "Productos",
+          value: `$${stats.ingresosProductos.valor.toLocaleString()}`,
+          icon: <Package className="h-4 w-4" />,
+          change: `${stats.ingresosProductos.cambio}%`,
+          trend: Number.parseFloat(stats.ingresosProductos.cambio) >= 0 ? "up" : "down",
+        },
+        {
+          label: "Servicios",
+          value: `$${stats.ingresosServicios.valor.toLocaleString()}`,
+          icon: <Scissors className="h-4 w-4" />,
+          change: `${stats.ingresosServicios.cambio}%`,
+          trend: Number.parseFloat(stats.ingresosServicios.cambio) >= 0 ? "up" : "down",
+        },
+      ],
     },
     {
       title: "Citas Totales",
       value: stats.citasTotales.valor.toString(),
       change: `${stats.citasTotales.cambio}%`,
-      icon: <Calendar className="h-4 w-4" />,
+      icon: <CalendarHeart className="h-5 w-5 text-pink-600" />,
       trend: Number.parseFloat(stats.citasTotales.cambio) >= 0 ? "up" : "down",
       className: "card-gradient-2",
     },
@@ -217,17 +287,33 @@ const DashboardStats = () => {
       title: "Clientes Nuevos",
       value: stats.clientesNuevos.valor.toString(),
       change: `${stats.clientesNuevos.cambio}%`,
-      icon: <Users className="h-4 w-4" />,
+      icon: <Users className="h-5 w-5 text-pink-600" />,
       trend: Number.parseFloat(stats.clientesNuevos.cambio) >= 0 ? "up" : "down",
       className: "card-gradient-3",
     },
     {
-      title: "Servicios Vendidos",
-      value: stats.serviciosVendidos.valor.toString(),
-      change: `${stats.serviciosVendidos.cambio}%`,
-      icon: <ShoppingBag className="h-4 w-4" />,
-      trend: Number.parseFloat(stats.serviciosVendidos.cambio) >= 0 ? "up" : "down",
+      title: "Ventas",
+      value: (stats.serviciosVendidos.valor + stats.productosVendidos.valor).toString(),
+      change: `${((Number(stats.serviciosVendidos.cambio) + Number(stats.productosVendidos.cambio)) / 2).toFixed(1)}%`,
+      icon: <ShoppingBag className="h-5 w-5 text-pink-600" />,
+      trend: (Number(stats.serviciosVendidos.cambio) + Number(stats.productosVendidos.cambio)) / 2 >= 0 ? "up" : "down",
       className: "card-gradient-1",
+      details: [
+        {
+          label: "Productos",
+          value: stats.productosVendidos.valor.toString(),
+          icon: <Package className="h-4 w-4" />,
+          change: `${stats.productosVendidos.cambio}%`,
+          trend: Number.parseFloat(stats.productosVendidos.cambio) >= 0 ? "up" : "down",
+        },
+        {
+          label: "Servicios",
+          value: stats.serviciosVendidos.valor.toString(),
+          icon: <Scissors className="h-4 w-4" />,
+          change: `${stats.serviciosVendidos.cambio}%`,
+          trend: Number.parseFloat(stats.serviciosVendidos.cambio) >= 0 ? "up" : "down",
+        },
+      ],
     },
   ]
 
@@ -255,6 +341,29 @@ const DashboardStats = () => {
                 </Badge>
               </div>
             </CardContent>
+            {stat.details && (
+              <CardFooter className="pt-0 pb-3 px-6">
+                <div className="w-full grid grid-cols-2 gap-2 text-xs border-t pt-2">
+                  {stat.details.map((detail, idx) => (
+                    <div key={idx} className="flex flex-col items-start">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        {detail.icon}
+                        <span>{detail.label}</span>
+                      </div>
+                      <div className="flex items-center gap-1 font-medium">
+                        <span>{detail.value}</span>
+                        <Badge
+                          variant={detail.trend === "up" ? "success" : "destructive"}
+                          className="text-[10px] px-1 py-0"
+                        >
+                          {detail.change}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardFooter>
+            )}
           </Card>
         </motion.div>
       ))}

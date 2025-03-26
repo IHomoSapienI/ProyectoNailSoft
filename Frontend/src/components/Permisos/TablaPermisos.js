@@ -408,7 +408,7 @@ export default function TablaPermisos() {
         <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-2/3">
           <div className="relative w-full md:w-1/3">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <FontAwesomeIcon icon={faFilter} className="text-gray-400" />
+              {/* <FontAwesomeIcon icon={faFilter} className="text-gray-400" /> */}
             </div>
             <select
               value={categoriaFiltro}

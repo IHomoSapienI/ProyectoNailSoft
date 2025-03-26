@@ -1,29 +1,68 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import { useAuth } from "../../context/AuthContext"
 import "./Login.css"
-import Swal from "sweetalert2" // Asegúrate de tener sweetalert2 instalado
+import Swal from "sweetalert2"
 
 export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const navigate = useNavigate()
   const { login } = useAuth()
+  const loginContainerRef = useRef(null)
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
+  // Función para aplicar estilos forzados
+  const applyForcedStyles = () => {
+    // Forzar estilos en el body y html
+    document.body.classList.add("login-page-active")
+    document.documentElement.classList.add("login-page-active")
+
+    // Forzar estilos en el contenedor de la aplicación
+    const appContainer = document.getElementById("root") || document.getElementById("app")
+    if (appContainer) {
+      appContainer.classList.add("login-app-container")
     }
 
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+    // Forzar estilos en el contenedor de login
+    if (loginContainerRef.current) {
+      loginContainerRef.current.style.height = "100vh"
+      loginContainerRef.current.style.width = "100%"
+      loginContainerRef.current.style.display = "flex"
+      loginContainerRef.current.style.alignItems = "center"
+      loginContainerRef.current.style.justifyContent = "center"
+      loginContainerRef.current.style.paddingTop = "4rem"
+    }
+  }
+
+  // Aplicar estilos inmediatamente al montar y en intervalos regulares
+  useEffect(() => {
+    // Aplicar estilos inmediatamente
+    applyForcedStyles()
+
+    // Aplicar estilos después de un breve retraso para asegurar que se apliquen después de cualquier otro cambio
+    const initialTimeout = setTimeout(applyForcedStyles, 100)
+
+    // Aplicar estilos periódicamente para asegurar que se mantengan
+    const intervalId = setInterval(applyForcedStyles, 500)
+
+    // Limpiar al desmontar
+    return () => {
+      clearTimeout(initialTimeout)
+      clearInterval(intervalId)
+      document.body.classList.remove("login-page-active")
+      document.documentElement.classList.remove("login-page-active")
+
+      const appContainer = document.getElementById("root") || document.getElementById("app")
+      if (appContainer) {
+        appContainer.classList.remove("login-app-container")
+      }
+    }
   }, [])
 
   const handleLogin = async (e) => {
@@ -79,33 +118,22 @@ export default function Login() {
   }
 
   return (
-    <div className="login-container">
+    <div className="login-container" ref={loginContainerRef}>
       <div className="login-background">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="floating-bubble"
-            style={{
-              transform: `translate(
-                ${Math.sin((mousePosition.x + i * 100) * 0.01) * 20}px,
-                ${Math.cos((mousePosition.y + i * 100) * 0.01) * 20}px
-              )`,
-            }}
-          />
-        ))}
+        <div className="background-pattern"></div>
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
         className="login-card"
       >
         <div className="login-content">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
             className="logo-container"
           >
             <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
@@ -176,17 +204,17 @@ export default function Login() {
         <div className="login-decoration">
           <div className="decoration-content">
             <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
               className="decoration-title"
             >
               Belleza y Estilo
             </motion.h2>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
               className="decoration-text"
             >
               Descubre un mundo de belleza y profesionalismo
