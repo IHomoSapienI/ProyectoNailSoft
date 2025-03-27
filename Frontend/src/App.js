@@ -88,7 +88,7 @@ const Layout = ({ children }) => {
   const showSidebar = isAdmin || isEmployee
 
   return (
-    <div className="min-h-screen bg-gray-10 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-10 ">
       {showSidebar ? (
         <>
           <Sidebar />

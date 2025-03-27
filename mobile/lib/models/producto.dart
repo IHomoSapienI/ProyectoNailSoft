@@ -24,12 +24,14 @@ class Producto {
       id: json['_id'] ?? '',
       nombreProducto: json['nombreProducto'] ?? '',
       precio: (json['precio']?? 0.0 ).toDouble(),
-      stock: json['stock'] ?? 0,
+      stock: (json['stock'] ?? 0).hashCode,
       categoria: json['categoria'] ?? '',
-      estado:json['estado'] ?? '',
+      estado:json['estado'] ?? true,
       imagenUrl:json['imagenurl'] ?? ''
     );
   }
+
+  get cantidad => null;
   Map<String, dynamic> toJson() {
     return{
       '_id': id,

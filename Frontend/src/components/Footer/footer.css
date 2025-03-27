@@ -10,7 +10,7 @@
     position: fixed;
     bottom: 0;
     right: 0;
-    left: 250px; /* Ancho del sidebar */
+    left: 0px; /* Ancho del sidebar */
     z-index: 10;
   }
   

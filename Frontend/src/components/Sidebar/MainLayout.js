@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useSidebar } from "./Sidebar"
 import DashboardNavbar from "../NavBars/DashboardNavbar"
 import Footer from "../Footer/Footer" // Importar el componente Footer
+import '../../App.css'
 
 // Componente de layout principal que se ajusta al estado del sidebar
 const MainLayout = ({ children }) => {

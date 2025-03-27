@@ -22,7 +22,7 @@ class Empleado {
       apellidoempleado: json['apellidoempleado'] ?? '',
       correoempleado: json['correoempleado']?? '',
       telefonoempleado: json['telefonoempleado'] ?? '',
-      estadoempleado : json['estadoempleado'] ?? ''
+      estadoempleado : json['estadoempleado'] ?? true
     );
   }
 

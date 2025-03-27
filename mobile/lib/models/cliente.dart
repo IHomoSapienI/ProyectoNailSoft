@@ -3,7 +3,7 @@ class Cliente {
   final String nombrecliente;
   final String correocliente;
   final String celularcliente;
-  bool estadocliente;
+  final bool estadocliente;
 
   Cliente({
     required this.id, 

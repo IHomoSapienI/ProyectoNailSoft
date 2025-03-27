@@ -4,6 +4,7 @@ import 'package:mobile/screens/list_usuarios_screen.dart';
 import 'package:mobile/screens/login_screen.dart';  
 import 'package:mobile/screens/list_services_screen.dart';
 import 'package:mobile/screens/list_tipo_servicios_screen.dart';
+import 'package:mobile/screens/list_ventas.dart';
 
 void main() {
   runApp(const Principal());
@@ -35,6 +36,10 @@ class Principal extends StatelessWidget {
         '/usuarios': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as String;
           return ListUsuariosScreen(token: args);  // Redirige correctamente a la lista de usuarios
+        },
+        '/ventas': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as String;
+          return ListVentasScreen(token: args);  // Nueva ruta para la lista de ventas
         },
       },
     );

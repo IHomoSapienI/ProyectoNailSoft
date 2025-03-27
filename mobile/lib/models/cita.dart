@@ -29,10 +29,19 @@ class Cita{
       id: json['_id'] ?? '',
       nombreempleado: Empleado.fromJson(json['nombreempleado'] ?? {}),
       nombrecliente: Cliente.fromJson(json['nombrecliente'] ?? {}),
-      fechacita: json['fechacita'] ?? '',
-      horacita: json['horacita'] ?? '',
-      duracionTotal: json['duraciontotal'] ?? '',
-      estadocita: json['estadocita'] ?? '',
+      fechacita: json['fechacita'] != null
+    ? DateTime.tryParse(json['fechacita']) ?? DateTime(1970, 1, 1)
+    : DateTime(1970, 1, 1),
+
+horacita: json['horacita'] != null
+    ? DateTime.tryParse(json['horacita']) ?? DateTime(1970, 1, 1)
+    : DateTime(1970, 1, 1),
+
+duracionTotal: json['duracionTotal'] != null
+    ? DateTime.tryParse(json['duracionTotal']) ?? DateTime(1970, 1, 1)
+    : DateTime(1970, 1, 1),
+
+      estadocita: json['estadocita'] ?? true,
       nombreServicio:Servicio.fromJson(json['nombreServicio'] ?? {})
     ); 
   }

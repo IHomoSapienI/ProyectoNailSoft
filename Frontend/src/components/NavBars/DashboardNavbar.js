@@ -59,7 +59,7 @@ const DashboardNavbar = () => {
       className={cn(
         "sticky top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:bg-gray-900/95 dark:border-pink-900/20",
         isScrolled && "shadow-md shadow-pink-600/10 dark:shadow-pink-900/5",
-        isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "ml-[500px] w-[calc(100%-100vh)]",
+        isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "m-[auto] w-[calc(100%-0vh)]",
       )}
     >
       
