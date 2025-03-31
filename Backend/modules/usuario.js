@@ -37,6 +37,8 @@ const UsuarioSchema = Schema({
         default: true,
         required: [true, 'El estado es obligatorio']
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
 });
 
 module.exports = model('Usuario', UsuarioSchema);

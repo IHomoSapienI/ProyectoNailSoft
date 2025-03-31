@@ -44,7 +44,7 @@ export const useSidebar = () => useContext(SidebarContext)
 const MenuItem = ({ icon: Icon, children, to, isActive, onClick, collapsed }) => (
   <Link
     to={to}
-    className={`menu-item group ${isActive ? "active" : ""}`}
+    className={`menu-item group  ${isActive ? "active" : ""}`}
     onClick={onClick}
     title={collapsed ? children : ""}
   >
@@ -208,7 +208,7 @@ const Sidebar = () => {
     <SidebarContext.Provider value={{ isCollapsed, isSidebarOpen: isOpen }}>
       {/* Botón de toggle para móvil */}
       {isMobile && (
-        <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>
+        <button className="mobile-toggle " onClick={() => setIsOpen(!isOpen)}>
           <FaBars />
         </button>
       )}
@@ -261,9 +261,9 @@ const Sidebar = () => {
           ease: [0.25, 0.1, 0.25, 1], // Curva de bezier más suave
           opacity: { duration: 0.2 },
         }}
-        className={`sidebar-container ${isCollapsed ? "collapsed" : ""}`}
+        className={`sidebar-container dark:bg-primary ${isCollapsed ? "collapsed" : ""}`}
       >
-        <div className="sidebar-content">
+        <div className="sidebar-content dark:bg-primary">
           <div className="sidebar-header">
 
             <Link to={userRole === "admin" ? "/dashboard" : "/agenda-empleado"} className="logo-container">
@@ -286,7 +286,7 @@ const Sidebar = () => {
             
           </div>
 
-          <div className="menu-container">
+          <div className="menu-container dark:text-pink-600">
             {/* Menú para administradores */}
             {userRole === "admin" && (
               <>

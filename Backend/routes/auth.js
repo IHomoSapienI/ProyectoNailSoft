@@ -1,5 +1,11 @@
 const { Router } = require("express")
-const { login, register, verificarToken } = require("../controllers/authController")
+const {
+  login,
+  register,
+  requestPasswordReset,
+  verifyResetToken,
+  resetPassword,
+} = require("../controllers/authController")
 const { validarJWT } = require("../middlewares/verificartoken")
 
 const router = Router()
@@ -10,8 +16,10 @@ router.post("/login", login)
 // Ruta para registro
 router.post("/register", register)
 
-// Ruta para verificar token
-router.get("/verificar-token", validarJWT, verificarToken)
+// Rutas para restablecimiento de contraseña
+router.post("/request-password-reset", requestPasswordReset)
+router.post("/verify-reset-token", verifyResetToken)
+router.post("/reset-password", resetPassword)
 
 module.exports = router
 

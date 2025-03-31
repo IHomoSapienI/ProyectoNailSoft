@@ -29,12 +29,12 @@ const Dashboard = () => {
         className="flex flex-col gap-2"
       >
         <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">¡Bienvenida de nuevo!</h2>
+          <h2 className="text-2xl font-bold tracking-tight md:text-3xl dark:text-pink-600">¡Bienvenida de nuevo!</h2>
           <motion.div animate={{ rotate: [0, 10, 0] }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.5 }}>
-            <Heart className="h-6 w-6 text-pink-600" />
+            <Heart className="h-6 w-6 text-pink-600 dark:text-white" />
           </motion.div>
         </div>
-        <p className="text-muted-foreground">Aquí tienes un resumen del rendimiento de tu spa de uñas.</p>
+        <p className="text-muted-foreground hover:text-pink-600">Aquí tienes un resumen del rendimiento de tu spa de uñas.</p>
       </motion.div>
 
       {/* Stats cards */}
@@ -46,7 +46,7 @@ const Dashboard = () => {
           <div className="flex space-x-1 rounded-lg bg-muted/50 p-1">
             <button
               className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                activeTab === "charts" ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                activeTab === "charts" ? "bg-pink-600 text-primary-foreground" : "text-foreground hover:bg-muted"
               }`}
               onClick={() => setActiveTab("charts")}
             >
@@ -54,17 +54,17 @@ const Dashboard = () => {
             </button>
             <button
               className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                activeTab === "appointments" ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                activeTab === "appointments" ? "bg-pink-600 text-primary-foreground" : "text-foreground hover:bg-muted"
               }`}
               onClick={() => setActiveTab("appointments")}
             >
               Citas del Día
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 dark:bg-primary dark:hover:bg-pink-600">
             <Button size="sm" variant="outline" className="h-8 gap-1 border-fancy">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Exportar</span>
+              <Download className="h-4 w-4 dark:text-white" />
+              <span className="hidden sm:inline dark:text-white">Exportar</span>
             </Button>
           </div>
         </div>
@@ -78,7 +78,7 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="overflow-hidden border-none shadow-lg card-gradient-1 hover-glow">
+              <Card className="overflow-hidden border-none shadow-lg card-gradient-2 hover-glow">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div className="flex flex-col space-y-1">
                     <CardTitle>Comportamiento de Citas</CardTitle>
@@ -120,7 +120,7 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="overflow-hidden border-none shadow-lg card-gradient-3 hover-glow">
+              <Card className="overflow-hidden border-none shadow-lg card-gradient-1 hover-glow dark:card-gradient-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div className="flex flex-col space-y-1">
                     <CardTitle>Ventas Mensuales</CardTitle>

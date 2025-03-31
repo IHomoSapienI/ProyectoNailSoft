@@ -255,9 +255,9 @@ const DashboardStats = () => {
       title: "Ingresos Totales",
       value: `$${stats.ingresosTotales.valor.toLocaleString()}`,
       change: `${stats.ingresosTotales.cambio}%`,
-      icon: <DollarSign className="h-5 w-5 text-pink-600" />,
+      icon: <DollarSign className="h-5 w-5 text-pink-600 dark:text-black" />,
       trend: Number.parseFloat(stats.ingresosTotales.cambio) >= 0 ? "up" : "down",
-      className: "card-gradient-1",
+      className: "card-gradient-1 text-black dark:card-gradient-33 dark:text-black ",
       details: [
         {
           label: "Productos",
@@ -279,25 +279,25 @@ const DashboardStats = () => {
       title: "Citas Totales",
       value: stats.citasTotales.valor.toString(),
       change: `${stats.citasTotales.cambio}%`,
-      icon: <CalendarHeart className="h-5 w-5 text-pink-600" />,
+      icon: <CalendarHeart className="h-5 w-5 text-pink-600 dark:text-black" />,
       trend: Number.parseFloat(stats.citasTotales.cambio) >= 0 ? "up" : "down",
-      className: "card-gradient-2",
+      className: "card-gradient-1 text-black dark:card-gradient-33 dark:text-black",
     },
     {
       title: "Clientes Nuevos",
       value: stats.clientesNuevos.valor.toString(),
       change: `${stats.clientesNuevos.cambio}%`,
-      icon: <Users className="h-5 w-5 text-pink-600" />,
+      icon: <Users className="h-5 w-5 text-pink-600 dark:text-black" />,
       trend: Number.parseFloat(stats.clientesNuevos.cambio) >= 0 ? "up" : "down",
-      className: "card-gradient-3",
+      className: "card-gradient-1 dark:card-gradient-33 dark:text-black",
     },
     {
       title: "Ventas",
       value: (stats.serviciosVendidos.valor + stats.productosVendidos.valor).toString(),
       change: `${((Number(stats.serviciosVendidos.cambio) + Number(stats.productosVendidos.cambio)) / 2).toFixed(1)}%`,
-      icon: <ShoppingBag className="h-5 w-5 text-pink-600" />,
+      icon: <ShoppingBag className="h-5 w-5 text-pink-600 dark:text-black" />,
       trend: (Number(stats.serviciosVendidos.cambio) + Number(stats.productosVendidos.cambio)) / 2 >= 0 ? "up" : "down",
-      className: "card-gradient-1",
+      className: "card-gradient-1 text-black dark:card-gradient-33 dark:text-black",
       details: [
         {
           label: "Productos",
@@ -327,26 +327,26 @@ const DashboardStats = () => {
       {statsData.map((stat, index) => (
         <motion.div key={index} variants={item}>
           <Card className={`overflow-hidden border-none shadow-md ${stat.className} hover-glow`}>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 dark:text-black">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                <div className="rounded-full bg-primary/20 p-1.5 text-primary">{stat.icon}</div>
+                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-black">{stat.title}</CardTitle>
+                <div className="rounded-full bg-primary/20 p-1.5 dark:text-primary">{stat.icon}</div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <Badge variant={stat.trend === "up" ? "success" : "destructive"} className="text-xs">
+              <div className="flex items-baseline justify-between dark:text-primary">
+                <div className="text-2xl font-bold ">{stat.value}</div>
+                <Badge variant={stat.trend === "up" ? "success" : "destructive"} className="text-xsw">
                   {stat.change}
                 </Badge>
               </div>
             </CardContent>
             {stat.details && (
-              <CardFooter className="pt-0 pb-3 px-6">
-                <div className="w-full grid grid-cols-2 gap-2 text-xs border-t pt-2">
+              <CardFooter className="pt-0 pb-3 px-6 dark:text-black">
+                <div className="w-full grid grid-cols-2 gap-2 text-xs border-t pt-2 dark:text-black">
                   {stat.details.map((detail, idx) => (
                     <div key={idx} className="flex flex-col items-start">
-                      <div className="flex items-center gap-1 text-muted-foreground">
+                      <div className="flex items-center gap-1 text-muted-foreground dark:text-black">
                         {detail.icon}
                         <span>{detail.label}</span>
                       </div>

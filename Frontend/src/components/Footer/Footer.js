@@ -14,7 +14,7 @@ const Footer = () => {
   // Mostrar el footer de admin tanto para administradores como para empleados
   if (isAdmin || isEmployee) {
     return (
-      <div className={`admin-footer dark:bg-gray-600 ${isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
+      <div className={`admin-footer dark:bg-primary ${isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
         <p>
           Desarrollado con <FaHeart className="inline-block text-pink-500 animate-pulse dark:text-white  " /> por NailsSoft
         </p>

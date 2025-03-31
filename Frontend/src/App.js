@@ -138,7 +138,7 @@ const Layout = ({ children }) => {
 }
 
 const AuthLayout = ({ children }) => (
-  <div className="App dark:bg-gray-900 dark:text-white">
+  <div className="App">
     <NavbarAuth />
     <div className="content">{children}</div>
   </div>

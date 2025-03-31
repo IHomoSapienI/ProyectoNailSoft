@@ -9,6 +9,7 @@ import { Bell, ChevronDown, Heart, LogOut, Search, Settings, User } from 'lucide
 import { cn } from "../../libs/util"
 import { useSidebar } from ".././Sidebar/Sidebar"
 import ThemeToggle from "../ThemeToggle" // Importar el componente ThemeToggle
+import './dashboardNavBar.css'
 
 const DashboardNavbar = () => {
   const navigate = useNavigate()
@@ -57,13 +58,13 @@ const DashboardNavbar = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:bg-gray-900/95 dark:border-pink-900/20",
-        isScrolled && "shadow-md shadow-pink-600/10 dark:shadow-pink-900/5",
+        " top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:bg-primary dark:border-pink-900/20",
+        isScrolled && "shadow-md shadow-pink-600/10 dark:shadow-pink-600/5",
         isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "m-[auto] w-[calc(100%-0vh)]",
       )}
     >
       
-      <div className="flex w-full items-center justify-between px-6">
+      <div className=" flex w-full items-center justify-between px-16">
         <div className="flex items-center gap-4">
           <motion.div animate={{ rotate: [0, -50, 0] }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 6.5 }}>
             <Heart className="h-8 w-8 text-pink-600" />

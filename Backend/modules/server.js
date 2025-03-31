@@ -3,6 +3,7 @@ const { dbConnection } = require('../database/config');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const compression = require("compression");
 
 class Server {
     constructor() {
@@ -52,6 +53,7 @@ class Server {
         // Para servir los archivos subidos
         this.app.use(express.static('uploads'));
         this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+        this.app.use(compression());
     }
 
     routes() {

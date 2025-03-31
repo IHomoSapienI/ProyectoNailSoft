@@ -4,22 +4,23 @@
   top: 0;
   left: 0;
   height: 100vh;
-  background: linear-gradient(to bottom, #ffffff, #fdf2f8);
+  /* background:  #fdf2f8; */
   box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
   z-index: 1000;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #db2777 #fff;
+  scrollbar-width:thin;
+  scrollbar-color: #f1006c #9a3462;
   transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  
 }
 
 .sidebar-container::-webkit-scrollbar {
-  width: 6px;
+  width: 16px;
 }
 
 .sidebar-container::-webkit-scrollbar-track {
-  background: #fff;
+  background: #ffff;
 }
 
 .sidebar-container::-webkit-scrollbar-thumb {
@@ -98,6 +99,7 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+  
 }
 
 .menu-group {

@@ -4,7 +4,7 @@ const BajaProducto = require("../modules/bajaproducto")
 // Obtener todos los insumos
 const obtenerInsumos = async (req, res) => {
   try {
-    const insumos = await Insumo.find()
+    const insumos = await Insumo.find().lean()
     res.json(insumos)
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los insumos", error })
@@ -16,7 +16,7 @@ const verificarInsumoExistente = async (req, res) => {
   const { nombre } = req.params
 
   try {
-    const insumo = await Insumo.findOne({ nombreInsumo: nombre })
+    const insumo = await Insumo.findOne({ nombreInsumo: nombre }).lean()
 
     if (insumo) {
       return res.json({ existe: true, insumo })
@@ -34,7 +34,7 @@ const incrementarStockInsumo = async (req, res) => {
   const { cantidadAIncrementar } = req.body
 
   try {
-    const insumo = await Insumo.findById(id)
+    const insumo = await Insumo.findById(id).lean()
 
     if (!insumo) {
       return res.status(404).json({ message: "Insumo no encontrado" })
