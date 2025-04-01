@@ -13,7 +13,8 @@ import {
   FaUserCircle,
   FaClipboardList,
   FaAsymmetrik,
-  FaDashcube
+  FaDashcube,
+  FaFileAlt
 } from "react-icons/fa"
 
 // Actualizamos la importación para usar una ruta relativa
@@ -115,8 +116,15 @@ export default function MainNavbar() {
            
           ],
         },
+        // Nuevo menú para políticas
+        {
+          icon: FaFileAlt,
+          label: "Políticas",
+          items: [{ icon: FaFileAlt, label: "Políticas del Salón", path: "/politicas" }],
+        },
+      ],
         
-      ],
+      
       empleado: [
         {
           icon: FaUserCircle,

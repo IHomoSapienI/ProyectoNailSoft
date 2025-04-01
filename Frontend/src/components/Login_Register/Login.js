@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import { useAuth } from "../../context/AuthContext"
@@ -191,12 +191,12 @@ export default function Login() {
             </form>
 
             <div className="additional-options">
-              <motion.a href="#" whileHover={{ scale: 1.05 }} className="forgot-password">
+              <Link to="/forgot-password" whileHover={{ scale: 1.05 }} className="forgot-password">
                 ¿Olvidaste tu contraseña?
-              </motion.a>
-              <motion.a href="/register" whileHover={{ scale: 1.05 }} className="create-account">
+              </Link>
+              <motion.Link to="/register" whileHover={{ scale: 1.05 }} className="create-account">
                 Crear cuenta
-              </motion.a>
+              </motion.Link>
             </div>
           </div>
         </div>

@@ -1,16 +1,11 @@
-"use client"
-
-// src/App.js
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
-import { useEffect } from "react"
 import axios from "axios"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
 import "./App.css"
 import MainLayout from "./components/Sidebar/MainLayout"
-import { getTheme, setTheme } from "./util/theme-util" // Importar funciones de tema
-
+import ClientDashboard from "./components/Clientes/client-dashboard"
 import Sidebar from "./components/Sidebar/Sidebar"
 import Navbar from "./components/NavBars/Navbar"
 import NavbarAuth from "./components/NavBars/NavbarAuth"
@@ -20,7 +15,7 @@ import TablaRoles from "./components/Roles/TablaRoles"
 import TablaServicios from "./components/Servicios/TablaServicios"
 import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
 import UserProfile from "./components/PerfilUsuario/UserProfile"
-import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo"
+import TablaVentas from "./components/Venta/TablaVentas"
 import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
 import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
 import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
@@ -39,9 +34,13 @@ import TablaCompras from "./components/Compras/TablaCompras"
 import Dashboard from "./components/Dashboard/Dashboard"
 import Login from "./components/Login_Register/Login"
 import Register from "./components/Login_Register/Register"
+import Politicas from "./components/Politicas/Politicas"
+import ForgotPassword from "./components/Login_Register/ForgotPassword/ForgotPassword"
+import VerifyToken from "./components/Login_Register/VerifyToken/VerifyToken"
+import ResetPassword from "./components/Login_Register/ResetPassword/ResetPassword"
+
+
 import TablaPermisos from "./components/Permisos/TablaPermisos"
-import TablaVentas from "./components/Venta/TablaVentas"
-import ClientDashboard from "./components/Clientes/client-dashboard" // Importar el nuevo componente
 
 axios.interceptors.request.use(
   (config) => {
@@ -88,7 +87,7 @@ const Layout = ({ children }) => {
   const showSidebar = isAdmin || isEmployee
 
   return (
-    <div className="min-h-screen bg-gray-10 ">
+    <div className="min-h-screen bg-gray-10">
       {showSidebar ? (
         <>
           <Sidebar />
@@ -145,12 +144,6 @@ const AuthLayout = ({ children }) => (
 )
 
 function App() {
-  useEffect(() => {
-    // Inicializar el tema cuando carga la aplicación
-    const currentTheme = getTheme()
-    setTheme(currentTheme)
-  }, [])
-
   return (
     <Router>
       <Routes>
@@ -170,6 +163,9 @@ function App() {
             </AuthLayout>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-token" element={<VerifyToken />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/"
           element={
@@ -188,7 +184,6 @@ function App() {
             </PrivateRoute>
           }
         />
-        {/* Nueva ruta para el dashboard del cliente */}
         <Route
           path="/mi-cuenta"
           element={
@@ -199,6 +194,17 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/politicas"
+          element={
+            <PrivateRoute allowedRoles={["cliente"]}>
+              <Layout>
+                <Politicas />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/insumos"
           element={
@@ -252,14 +258,13 @@ function App() {
         <Route
           path="/ventas"
           element={
-            <PrivateRoute allowedRoles={["admin", "empleado", "cliente"]}>
+            <PrivateRoute allowedRoles={["admin"]}>
               <Layout>
                 <TablaVentaServicios />
               </Layout>
             </PrivateRoute>
           }
         />
-
         <Route
           path="/ventas-unificadas"
           element={
@@ -268,9 +273,8 @@ function App() {
                 <TablaVentas />
               </Layout>
             </PrivateRoute>
-          }
-        />
-
+          }
+        />
         <Route
           path="/servicios"
           element={
@@ -372,17 +376,6 @@ function App() {
           }
         />
         <Route
-          path="/baja-producto"
-          element={
-            <PrivateRoute allowedRoles={["admin", "empleado"]}>
-              <Layout>
-                <TablaBajaInsumo />
-              </Layout>
-            </PrivateRoute>
-          }
-        />
-
-        <Route
           path="/ventasProductos"
           element={
             <PrivateRoute allowedRoles={["admin"]}>
@@ -434,11 +427,12 @@ function App() {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/unauthorized"
           element={
             <Layout>
-              <h1 className="dark:text-white">No tienes permiso para acceder a esta página :3</h1>
+              <h1>No tienes permiso para acceder a esta página :3</h1>
             </Layout>
           }
         />

@@ -423,7 +423,33 @@ const SeleccionarServicios = () => {
     obtenerServicios()
   }, [])
 
-  // Función para verificar disponibilidad
+  // Modificar la función handleInputChange para manejar correctamente las fechas
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+
+    if (name === "fecha") {
+      // Para fechas, necesitamos asegurarnos de que no se ajuste por zona horaria
+      // Crear la fecha a partir de los componentes para evitar ajustes de zona horaria
+      const [year, month, day] = value.split("-").map(Number)
+
+      // Crear una fecha usando UTC para evitar cualquier ajuste de zona horaria
+      const correctedDate = `${year}-${month < 10 ? "0" + month : month}-${day < 10 ? "0" + day : day}`
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: correctedDate,
+      }))
+
+      console.log(`Fecha seleccionada: ${value}, fecha guardada: ${correctedDate}`)
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
+    }
+  }
+
+  // Modificar la función verificarDisponibilidad para usar el mismo enfoque
   const verificarDisponibilidad = (fecha, hora, empleadoId, duracion) => {
     // Si no hay citas existentes o no se ha seleccionado empleado, no hay conflicto
     if (citasExistentes.length === 0 || !empleadoId) return true
@@ -443,8 +469,9 @@ const SeleccionarServicios = () => {
     }
 
     // Convertir la fecha seleccionada a formato YYYY-MM-DD para comparar
-    const fechaSeleccionada = new Date(fecha)
-    const fechaFormateada = fechaSeleccionada.toISOString().split("T")[0]
+    // Usar el enfoque directo para evitar problemas de zona horaria
+    const [year, month, day] = fecha.split("-").map(Number)
+    const fechaFormateada = `${year}-${month < 10 ? "0" + month : month}-${day < 10 ? "0" + day : day}`
 
     console.log(
       `Verificando disponibilidad para ${fechaFormateada} a las ${hora} (${inicioSeleccionado}-${finSeleccionado} min)`,
@@ -658,15 +685,6 @@ const SeleccionarServicios = () => {
   // Calcular duración total
   const duracionTotal = serviciosSeleccionados.reduce((total, servicio) => total + (servicio.tiempo || 0), 0)
 
-  // Manejar cambios en el formulario
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
   // Avanzar al siguiente paso
   const nextStep = () => {
     if (currentStep === 1 && serviciosSeleccionados.length === 0) {
@@ -751,7 +769,8 @@ const SeleccionarServicios = () => {
     const [horas, minutos] = formData.hora.split(":").map(Number)
     // Crear la fecha correctamente para evitar problemas de zona horaria
     const [year, month, day] = formData.fecha.split("-").map(Number)
-    const fechaCompleta = new Date(year, month - 1, day, horas, minutos, 0)
+    // Usar UTC para evitar ajustes de zona horaria
+    const fechaCompleta = new Date(Date.UTC(year, month - 1, day, horas, minutos, 0))
 
     // Crear el objeto de datos para enviar al servidor
     const dataToSend = {
@@ -1302,12 +1321,17 @@ const SeleccionarServicios = () => {
                       <div className="confirmation-detail">
                         <span>Fecha:</span>
                         <span>
-                          {new Date(formData.fecha).toLocaleDateString("es-ES", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
+                          {(() => {
+                            // Crear la fecha correctamente para mostrar
+                            const [year, month, day] = formData.fecha.split("-").map(Number)
+                            const fechaCorrecta = new Date(year, month - 1, day)
+                            return fechaCorrecta.toLocaleDateString("es-ES", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          })()}
                         </span>
                       </div>
                       <div className="confirmation-detail">
@@ -1401,11 +1425,16 @@ const SeleccionarServicios = () => {
                       <div className="summary-item">
                         <Calendar className="summary-icon" />
                         <span>
-                          {new Date(formData.fecha).toLocaleDateString("es-ES", {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "short",
-                          })}
+                          {(() => {
+                            // Crear la fecha correctamente para mostrar
+                            const [year, month, day] = formData.fecha.split("-").map(Number)
+                            const fechaCorrecta = new Date(year, month - 1, day)
+                            return fechaCorrecta.toLocaleDateString("es-ES", {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "short",
+                            })
+                          })()}
                           {" a las "}
                           {formData.hora}
                         </span>
