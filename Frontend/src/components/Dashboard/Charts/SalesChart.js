@@ -229,11 +229,11 @@ const SalesChart = () => {
   return (
     <div className="h-full w-full">
       <div className="flex justify-between mb-4">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={toggleDebugMode} className="text-xs">
+        <div className="flex gap-4">
+          <Button variant="outline" size="sm" onClick={toggleDebugMode} className="text-xs hover:bg-pink-500 hover:text-black">
             {debugMode ? "Ocultar Datos" : "Mostrar Datos"}
           </Button>
-          <Button variant="outline" size="sm" onClick={toggleDisplayMode} className="text-xs">
+          <Button variant="outline" size="sm" onClick={toggleDisplayMode} className="text-xs hover:bg-pink-500 hover:text-black">
             {showCombined ? "Mostrar Separado" : "Mostrar Combinado"}
           </Button>
         </div>
@@ -241,9 +241,9 @@ const SalesChart = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => handleTimeRangeChange("week")}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-1 rounded-md text-sm  ${
               timeRange === "week"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500  "
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -253,7 +253,7 @@ const SalesChart = () => {
             onClick={() => handleTimeRangeChange("month")}
             className={`px-3 py-1 rounded-md text-sm ${
               timeRange === "month"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500  "
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -263,7 +263,7 @@ const SalesChart = () => {
             onClick={() => handleTimeRangeChange("year")}
             className={`px-3 py-1 rounded-md text-sm ${
               timeRange === "year"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500  "
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -314,19 +314,19 @@ const SalesChart = () => {
         className="h-[250px] w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} style={{ filter: "drop-shadow(0px 0px 10px hsl(330, 81%, 58%))" }}>
             <defs>
               <linearGradient id="productosGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.6} />
+                <stop offset="5%" stopColor="#A105FBFF" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#000000FF" stopOpacity={0.6} />
               </linearGradient>
               <linearGradient id="serviciosGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#ec4899" stopOpacity={0.6} />
+                <stop offset="5%" stopColor="#0000BCFF" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#000000FF" stopOpacity={0.6} />
               </linearGradient>
               <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
+                <stop offset="5%" stopColor="#FF00D9FF" stopOpacity={0.8}  />
+                <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.6}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" vertical={false} />

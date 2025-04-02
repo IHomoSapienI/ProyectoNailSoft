@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
 import "./App.css"
+import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo"
 import MainLayout from "./components/Sidebar/MainLayout"
 import ClientDashboard from "./components/Clientes/client-dashboard"
 import Sidebar from "./components/Sidebar/Sidebar"
@@ -215,6 +216,16 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/baja-producto"
+          element={
+            <PrivateRoute allowedRoles={["admin", "empleado"]}>
+              <Layout>
+                <TablaBajaInsumo />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/usuarios"
           element={

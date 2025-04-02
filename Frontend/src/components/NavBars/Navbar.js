@@ -101,6 +101,15 @@ export default function MainNavbar() {
         },
       ],
       cliente: [
+
+        {
+          icon: FaUserCircle,
+          label: "Mi Perfil",
+          items: [
+            { icon: FaUserCircle, label: "Ver Perfil", path: "/profile" },
+            
+          ],
+        },
         {
           icon: FaTachometerAlt,
           label: "Dashboard",

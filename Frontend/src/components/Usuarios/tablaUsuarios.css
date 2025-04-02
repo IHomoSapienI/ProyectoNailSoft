@@ -28,7 +28,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: #6b7280;
+  /* color: #6b7280; */
   letter-spacing: 0.05em;
   border-bottom: 1px solid #e5e7eb;
   transition: background-color 0.2s;

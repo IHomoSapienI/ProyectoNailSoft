@@ -58,7 +58,7 @@ const DashboardNavbar = () => {
   return (
     <header
       className={cn(
-        " top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:bg-primary dark:border-pink-900/20",
+        " top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:card-gradient-4 dark:border-pink-900/20",
         isScrolled && "shadow-md shadow-pink-600/10 dark:shadow-pink-600/5",
         isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "m-[auto] w-[calc(100%-0vh)]",
       )}

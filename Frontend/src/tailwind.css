@@ -68,11 +68,16 @@
   }
 
   .card-gradient-333 {
-    background: linear-gradient(135deg, #ff008c 0%, #e26ab4 50%, #ceb6c4 100%);
+    background: linear-gradient(135deg, #000000 0%, #080005 50%, #000000 100%);
     color: white;
   }
   .card-gradient-33 {
     background: linear-gradient(135deg, #ff008c 0%, #e26ab4 50%, #ceb6c4 100%);
+    color: white;
+  }
+
+  .card-gradient-4 {
+    background: linear-gradient(135deg, #151315 0%, #22273898 50%, #3c3c3c 100%);
     color: white;
   }
   
@@ -92,6 +97,29 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
+  .text-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-secondary {
+  background: linear-gradient(135deg, #ef0090 0%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-3 {
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
 }
 
 @layer base {

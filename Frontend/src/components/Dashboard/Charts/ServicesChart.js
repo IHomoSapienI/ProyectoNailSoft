@@ -21,10 +21,10 @@ const COLORS = [
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-background p-2 shadow-md">
-        <p className="font-medium">{payload[0].name}</p>
-        <p className="text-sm">
-          <span className="font-medium text-primary">{payload[0].value}</span>{" "}
+      <div className="rounded-lg border bg-background p-2 shadow-md dark:bg-foreground dark:text-white">
+        <p className="font-medium text-black">{payload[0].name}</p>
+        <p className="text-sm text-black">
+          <span className="font-medium text-primary dark:text-white">{payload[0].value}</span>{" "}
           {payload[0].value === 1 ? "servicio" : "servicios"}
         </p>
       </div>
@@ -135,6 +135,8 @@ const ServicesChart = () => {
     setTimeRange(range)
   }
 
+  
+
   if (isLoading) {
     return (
       <div className="h-[300px] flex items-center justify-center">
@@ -165,29 +167,29 @@ const ServicesChart = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => handleTimeRangeChange("week")}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-1 rounded-md text-sm  ${
               timeRange === "week"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500 hover:text-black"
+                : "bg-muted text-muted-foreground hover:bg-muted/80 "
             }`}
           >
             Semana
           </button>
           <button
             onClick={() => handleTimeRangeChange("month")}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-1 rounded-md text-sm  ${
               timeRange === "month"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500 hover:text-black"
+                : "bg-muted text-muted-foreground hover:bg-muted/80 "
             }`}
           >
             Mes
           </button>
           <button
             onClick={() => handleTimeRangeChange("year")}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-1 rounded-md text-sm  ${
               timeRange === "year"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500 hover:text-black"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -213,11 +215,13 @@ const ServicesChart = () => {
               innerRadius={60}
               outerRadius={80}
               paddingAngle={5}
+              style={{ filter: "drop-shadow(0px 0px 10px hsl(330, 81%, 58%))" }}
               label={({ cx, cy, midAngle, innerRadius, outerRadius, value, index }) => {
                 const RADIAN = Math.PI / 180
                 const radius = 25 + innerRadius + (outerRadius - innerRadius)
                 const x = cx + radius * Math.cos(-midAngle * RADIAN)
                 const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                
 
                 return (
                   <text
@@ -226,7 +230,7 @@ const ServicesChart = () => {
                     fill="hsl(var(--foreground))"
                     textAnchor={x > cx ? "start" : "end"}
                     dominantBaseline="central"
-                    fontSize="12"
+                    fontSize="11"
                   >
                     {`${data[index].employee} (${value})`}
                   </text>
@@ -237,20 +241,26 @@ const ServicesChart = () => {
                 <Cell
                   key={`cell-${index}`}
                   fill={COLORS[index % COLORS.length]}
-                  stroke="hsl(var(--background))"
-                  strokeWidth={2}
+                  stroke="#ffffff"
+                  strokeWidth={4}
+                  style={{ filter: "drop-shadow(0px 0px 10px hsl(330, 81%, 58%))" }}
                 />
               ))}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
             <Legend
+            
               layout="vertical"
               verticalAlign="middle"
               align="right"
+              
               wrapperStyle={{
                 fontSize: "12px",
+                color: "hsl(var(--foreground))",
                 paddingLeft: "20px",
               }}
+              style={{ filter: "drop-shadow(0px 0px 10px hsl(330, 81%, 58%))" }}
+
             />
           </PieChart>
         </ResponsiveContainer>

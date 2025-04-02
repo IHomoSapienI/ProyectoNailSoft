@@ -8,10 +8,10 @@ import { motion } from "framer-motion"
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border bg-background p-2 shadow-md">
-        <p className="font-medium">{label}</p>
-        <p className="text-sm">
-          <span className="font-medium text-primary">{payload[0].value}</span>{" "}
+      <div className="rounded-lg border bg-background p-2 shadow-md dark:bg-foreground">
+        <p className="font-medium text-black dark:text-white">{label}</p>
+        <p className="text-sm text-black dark:text-white">
+          <span className="font-medium text-primary dark:text-white">{payload[0].value}</span>{" "}
           {payload[0].value === 1 ? "cita" : "citas"}
         </p>
       </div>
@@ -167,7 +167,7 @@ const AppointmentsChart = () => {
   if (isLoading) {
     return (
       <div className="h-[300px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
       </div>
     )
   }
@@ -195,9 +195,9 @@ const AppointmentsChart = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => handleTimeRangeChange("week")}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-1 rounded-md text-sm  ${
               timeRange === "week"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -207,7 +207,7 @@ const AppointmentsChart = () => {
             onClick={() => handleTimeRangeChange("month")}
             className={`px-3 py-1 rounded-md text-sm ${
               timeRange === "month"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500 "
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -217,7 +217,8 @@ const AppointmentsChart = () => {
             onClick={() => handleTimeRangeChange("year")}
             className={`px-3 py-1 rounded-md text-sm ${
               timeRange === "year"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-pink-600 text-primary-foreground hover:bg-pink-500"
+                
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -234,7 +235,7 @@ const AppointmentsChart = () => {
         style={{ minHeight: "300px" }}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 20, right: 50, left: 20, bottom: 40 }}>
+          <AreaChart data={data} margin={{ top: 20, right: 50, left: 20, bottom: 40 }} style={{ filter: "drop-shadow(0px 0px 10px hsl(330, 81%, 58%))" }}>
             <defs>
               <linearGradient id="appointmentGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#F75EEFFF" stopOpacity={0.8} />
@@ -258,6 +259,7 @@ const AppointmentsChart = () => {
             <Legend
               verticalAlign="top"
               align="right"
+              
               wrapperStyle={{
                 paddingBottom: "20px",
                 fontSize: "12px",
@@ -267,11 +269,12 @@ const AppointmentsChart = () => {
               type="monotone"
               dataKey="appointments"
               name="Citas"
-              stroke="#27252AFF"
+              
+              stroke="#FC00CAFF" 
               strokeWidth={2}
               fill="url(#appointmentGradient)"
               dot={{
-                stroke: "#F500C4FF",
+                stroke: "#FFFFFFFF",
                 strokeWidth: 2,
                 r: 4,
                 fill: "white",

@@ -265,7 +265,7 @@ const TablaUsuarios = () => {
 
   return (
     <div className="content">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Usuarios</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Usuarios</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <button className="usuario-btn-add" onClick={manejarAgregarNuevo}>
@@ -273,22 +273,22 @@ const TablaUsuarios = () => {
           Nuevo Usuario
         </button>
 
-        <div className="usuario-search-container">
+        <div className="usuario-search-container dark:card-gradient-4">
           <FontAwesomeIcon icon={faSearch} className="usuario-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="usuario-search-input"
+            className="usuario-search-input dark:card-gradient-4"
             placeholder="Buscar usuarios..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 ">
         <table className="usuario-tabla-moderna w-full">
-          <thead>
-            <tr>
+          <thead className=" text-black dark:card-gradient-4">
+            <tr className="text-foreground">
               <th style={{ width: "14%" }}>Nombre</th>
               <th style={{ width: "14%" }}>Apellido</th>
               <th style={{ width: "18%" }}>Email</th>

@@ -79,7 +79,7 @@ const Dashboard = () => {
               transition={{ delay: 0.1 }}
             >
               <Card className="overflow-hidden border-none shadow-lg card-gradient-2 hover-glow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 text-black dark:text-gradient-secondary">
                   <div className="flex flex-col space-y-1">
                     <CardTitle>Comportamiento de Citas</CardTitle>
                     <CardDescription>Tendencia de citas agendadas</CardDescription>
@@ -100,7 +100,7 @@ const Dashboard = () => {
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <Card className="overflow-hidden border-none shadow-lg card-gradient-2 hover-glow">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 text-black dark:text-gradient-secondary">
                   <div className="flex flex-col space-y-1">
                     <CardTitle>Servicios por Empleado</CardTitle>
                     <CardDescription>Distribución de servicios realizados</CardDescription>
@@ -120,8 +120,8 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="overflow-hidden border-none shadow-lg card-gradient-1 hover-glow dark:card-gradient-1">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <Card className="overflow-hidden border-none shadow-lg hover-glow dark:card-gradient-1">
+                <CardHeader className="flex flex-row items-center justify-between pb-3 text-black dark:text-gradient-secondary">
                   <div className="flex flex-col space-y-1">
                     <CardTitle>Ventas Mensuales</CardTitle>
                     <CardDescription>Ingresos del negocio</CardDescription>

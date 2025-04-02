@@ -63,7 +63,7 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
         
         <div className="menu-group-header-collapsed">
         
-          <h5 className="truncate">{title}</h5>
+          <h5>{title}</h5>
         </div>
         <div className="menu-group-content-collapsed">
           {React.Children.map(children, (child) => React.cloneElement(child, { collapsed }))}
@@ -75,7 +75,7 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
   return (
     <div className="menu-group">
       
-      <button className="menu-group-header" onClick={() => setIsExpanded(!isExpanded)}>
+      <button className="menu-group-header dark:text-foreground" onClick={() => setIsExpanded(!isExpanded)}>
         <h5>{title}</h5>
         <FaChevronDown className={`menu-group-icon ${isExpanded ? "expanded" : ""}`} />
       </button>
@@ -286,12 +286,13 @@ const Sidebar = () => {
             
           </div>
 
-          <div className="menu-container dark:text-pink-600">
+          <div className="menu-container">
             {/* Menú para administradores */}
             {userRole === "admin" && (
               <>
                 <MenuGroup title="Principal" defaultExpanded={true} collapsed={isCollapsed}>
                   <MenuItem
+                  
                     icon={FaTachometerAlt}
                     to="/dashboard"
                     isActive={location.pathname === "/dashboard"}
