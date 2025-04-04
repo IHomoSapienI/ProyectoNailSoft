@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import FormularioVenta from "./FormularioVenta"
 import { useLocation } from "react-router-dom"
@@ -229,8 +231,8 @@ const TablaVentas = () => {
   }
 
   return (
-    <div className="tabla-container dark:bg-card">
-      <h2 className="text-3xl font-semibold mb-8 text-gray-800 dark:text-pink-500">Gestión de Ventas</h2>
+    <div className="tabla-container dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-8 text-foreground">Gestión de Ventas</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <button
@@ -251,22 +253,22 @@ const TablaVentas = () => {
           )}
         </button>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="flex items-center">
-            <label htmlFor="filtroTipo" className="mr-2 text-sm font-medium text-gray-700">
+        <div className="flex flex-col md:flex-row gap-4 items-center ">
+          <div className="flex items-center  w-[40vh]">
+            <label htmlFor="filtroTipo" className="mr-2 text-sm font-medium text-foreground">
               Tipo:
             </label>
             <select
               id="filtroTipo"
               value={filtroTipo}
               onChange={(e) => setFiltroTipo(e.target.value)}
-              className="form-select text-sm"
+              className="form-select text-sm dark:card-gradient-4 text-foreground "
               disabled={isProcessing}
             >
-              <option value="todos">Todos</option>
-              <option value="productos">Solo Productos</option>
-              <option value="servicios">Solo Servicios</option>
-              <option value="mixta">Mixta</option>
+              <option value="todos" className="dark:bg-gray-600 hover:bg-gray-500">Todos</option>
+              <option value="productos" className="dark:bg-gray-600 hover:bg-gray-500">Solo Productos</option>
+              <option value="servicios" className="dark:bg-gray-600 hover:bg-gray-500">Solo Servicios</option>
+              <option value="mixta" className="dark:bg-gray-600 hover:bg-gray-500 hover:bg-gray-300">Mixta</option>
             </select>
           </div>
 
@@ -276,7 +278,7 @@ const TablaVentas = () => {
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="search-input"
+              className="search-input dark:card-gradient-4"
               placeholder="Buscar por cliente (nombre, apellido o correo)"
               disabled={isProcessing}
             />
@@ -285,9 +287,9 @@ const TablaVentas = () => {
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
+        <table className="venta-tabla-moderna w-full">
+          <thead className="dark:card-gradient-4">
+            <tr className="text-foreground">
               <th>Código</th>
               <th>Cliente</th>
               <th>Tipo</th>
@@ -532,7 +534,20 @@ const TablaVentas = () => {
                       {detallesVenta.servicios.map((servicio, index) => (
                         <tr key={`servicio-${index}`}>
                           <td>{servicio.nombreServicio}</td>
-                          <td className="text-right">${servicio.precio.toFixed(2)}</td>
+                          <td className="text-right">
+                            {servicio.tieneDescuento ? (
+                              <div className="price-with-discount">
+                                <span className="original-price">
+                                  ${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}
+                                </span>
+                                <span>
+                                  ${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                            )}
+                          </td>
                           <td className="text-right">{servicio.tiempo} min</td>
                         </tr>
                       ))}
@@ -584,3 +599,4 @@ const TablaVentas = () => {
 }
 
 export default TablaVentas
+

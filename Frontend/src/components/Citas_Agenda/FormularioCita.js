@@ -472,7 +472,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         text: "No podrás revertir esta acción",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#ff69b4",
         cancelButtonColor: "#d33",
         confirmButtonText: "Sí, eliminar",
       }).then((result) => result.isConfirmed)
@@ -523,9 +523,9 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
   // Renderizar el indicador de carga
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <p className="ml-3">Cargando datos...</p>
+      <div className="flex flex-col justify-center items-center h-64 bg-white rounded-xl shadow-lg p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mb-4"></div>
+        <p className="text-pink-500 font-medium">Cargando datos...</p>
       </div>
     )
   }
@@ -535,7 +535,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
         <p>{error}</p>
-        <button onClick={onClose} className="mt-3 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+        <button onClick={onClose} className="mt-3 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded">
           Cerrar
         </button>
       </div>
@@ -544,18 +544,18 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
   // Renderizar el formulario por pasos
   return (
-    <div className="max-w-5xl mx-auto relative">
-      {/* Botón de cerrar */}
+    <div className="max-w-5xl mx-auto relative bg-gradient-to-br from-white to-pink-50 rounded-xl shadow-xl overflow-hidden border border-pink-100">
+      {/* Botón de cerrar mejorado */}
       <button
         onClick={onClose}
-        className="absolute top-0 right-0 bg-gray-200 hover:bg-gray-300 rounded-full p-2 m-2 z-10"
+        className="absolute top-2 right-2 bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-700 rounded-full p-2 shadow-md transition-all duration-200 z-20 transform hover:scale-110"
         aria-label="Cerrar"
       >
-        <FaTimes />
+        <FaTimes size={18} />
       </button>
 
       {/* Indicador de pasos */}
-      <div className="mb-8">
+      <div className="mb-8 px-6 pt-6">
         <div className="flex items-center justify-between">
           <div className={`step ${paso >= 1 ? "active" : ""}`}>
             <div className="step-circle">
@@ -590,18 +590,21 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
       <form onSubmit={manejarSubmit} className="space-y-6">
         {/* Paso 1: Selección de servicios */}
         {paso === 1 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Selecciona los servicios</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona los servicios</h2>
 
             {/* NUEVO: Mostrar mensaje cuando los servicios ya están seleccionados */}
             {vieneDePaginaServicios && serviciosSeleccionados.length > 0 ? (
-              <div className="bg-green-50 p-4 rounded-lg mb-4">
-                <p className="text-green-700 font-medium">
+              <div className="bg-pink-50 p-4 rounded-lg mb-4">
+                <p className="text-pink-700 font-medium">
                   Ya has seleccionado {serviciosSeleccionados.length} servicios desde la página anterior.
                 </p>
-                <div className="mt-3 bg-white p-3 rounded border">
+                <div className="mt-3 bg-white p-3 rounded border border-pink-200">
                   {serviciosSeleccionados.map((servicio, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center py-2 border-b border-pink-100 last:border-0"
+                    >
                       <span>{servicio.nombreServicio}</span>
                       <div className="flex items-center">
                         <span className="font-medium mr-4">${servicio.precio}</span>
@@ -619,7 +622,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 <button
                   type="button"
                   onClick={avanzarPaso}
-                  className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  className="mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded transition-all duration-200 transform hover:translate-y-[-2px]"
                 >
                   Continuar con estos servicios
                 </button>
@@ -636,7 +639,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                         nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
                       })
                     }
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200"
                   >
                     <option value="">Selecciona un servicio</option>
                     {servicios.map((servicio) => (
@@ -648,7 +651,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                   <button
                     type="button"
                     onClick={agregarServicio}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded whitespace-nowrap"
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded whitespace-nowrap transition-all duration-200 transform hover:translate-y-[-2px]"
                   >
                     Agregar
                   </button>
@@ -658,10 +661,13 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
             {serviciosSeleccionados.length > 0 && !vieneDePaginaServicios ? (
               <div className="mt-6">
-                <h3 className="font-medium mb-2">Servicios seleccionados:</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-2 text-pink-700">Servicios seleccionados:</h3>
+                <div className="bg-pink-50 p-4 rounded-lg">
                   {serviciosSeleccionados.map((servicio, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                    <div
+                      key={index}
+                      className="flex justify-between items-center py-2 border-b border-pink-100 last:border-0"
+                    >
                       <div>
                         <span className="font-medium">{servicio.nombreServicio}</span>
                         <span className="text-sm text-gray-500 ml-2">({servicio.tiempo} min)</span>
@@ -683,7 +689,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                       <span>Total</span>
                       <span className="text-sm text-gray-500 ml-2">({totalTiempo} min)</span>
                     </div>
-                    <span>${precioTotal.toFixed(2)}</span>
+                    <span className="text-pink-600">${precioTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -698,7 +704,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 type="button"
                 onClick={avanzarPaso}
                 disabled={serviciosSeleccionados.length === 0}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px] transition-all duration-200"
               >
                 Siguiente
               </button>
@@ -708,8 +714,8 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
         {/* Paso 2: Selección de empleado */}
         {paso === 2 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Selecciona un empleado</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona un empleado</h2>
 
             <div className="mb-6">
               <p className="text-sm text-gray-600 mb-4">
@@ -721,15 +727,15 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                   empleadosFiltrados.map((empleado) => (
                     <div
                       key={empleado._id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                         formData.nombreempleado === empleado._id
-                          ? "border-blue-500 bg-blue-50"
-                          : "hover:border-gray-400"
+                          ? "border-pink-500 bg-pink-50 shadow-md"
+                          : "hover:border-pink-300 hover:bg-pink-50"
                       }`}
                       onClick={() => setFormData({ ...formData, nombreempleado: empleado._id })}
                     >
                       <div className="flex items-center">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-bold mr-4">
+                        <div className="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center text-pink-700 font-bold mr-4">
                           {empleado.nombreempleado.charAt(0)}
                         </div>
                         <div>
@@ -753,7 +759,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
               <button
                 type="button"
                 onClick={retrocederPaso}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded"
+                className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200"
               >
                 Anterior
               </button>
@@ -761,7 +767,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 type="button"
                 onClick={avanzarPaso}
                 disabled={!formData.nombreempleado}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px]"
               >
                 Siguiente
               </button>
@@ -771,8 +777,8 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
         {/* Paso 3: Selección de fecha, hora y cliente */}
         {paso === 3 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Selecciona cliente y hora</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona cliente y hora</h2>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Cliente:</label>
@@ -780,7 +786,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 name="nombrecliente"
                 value={formData.nombrecliente}
                 onChange={manejarCambio}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200"
                 required
               >
                 <option value="">Selecciona un cliente</option>
@@ -792,13 +798,13 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
               </select>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <h3 className="font-medium mb-3">Información de la cita</h3>
+            <div className="bg-pink-50 p-4 rounded-lg mb-6">
+              <h3 className="font-medium mb-3 text-pink-700">Información de la cita</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Fecha seleccionada:</span>{" "}
-                    <span className="text-blue-600">
+                    <span className="text-pink-600">
                       {new Date(formData.fechacita).toLocaleDateString("es-ES", {
                         weekday: "long",
                         year: "numeric",
@@ -811,7 +817,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 <div>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Empleado:</span>{" "}
-                    <span className="text-blue-600">
+                    <span className="text-pink-600">
                       {empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado || "No seleccionado"}
                     </span>
                   </p>
@@ -819,13 +825,13 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 <div>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Duración total:</span>{" "}
-                    <span className="text-blue-600">{totalTiempo} minutos</span>
+                    <span className="text-pink-600">{totalTiempo} minutos</span>
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-700">
                     <span className="font-medium">Precio total:</span>{" "}
-                    <span className="text-blue-600 font-bold">${precioTotal.toFixed(2)}</span>
+                    <span className="text-pink-600 font-bold">${precioTotal.toFixed(2)}</span>
                   </p>
                 </div>
               </div>
@@ -836,7 +842,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 <label className="block text-sm font-medium text-gray-700 mb-2 md:mb-0">
                   Selecciona un horario disponible:
                 </label>
-                <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                <div className="text-xs text-gray-500 bg-pink-50 p-2 rounded">
                   <p>
                     <strong>Horario del empleado:</strong> {(() => {
                       const empleado = empleados.find((e) => e._id === formData.nombreempleado)
@@ -860,8 +866,10 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                   {horariosDisponibles.map((hora) => (
                     <div
                       key={hora}
-                      className={`p-2 border rounded text-center cursor-pointer transition-all ${
-                        horaSeleccionada === hora ? "bg-blue-500 text-white" : "hover:bg-gray-100"
+                      className={`p-2 border rounded-lg text-center cursor-pointer transition-all duration-200 ${
+                        horaSeleccionada === hora
+                          ? "bg-pink-500 text-white border-pink-500 shadow-md"
+                          : "hover:bg-pink-50 hover:border-pink-300"
                       }`}
                       onClick={() => {
                         setHoraSeleccionada(hora)
@@ -884,7 +892,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
               <button
                 type="button"
                 onClick={retrocederPaso}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded"
+                className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200"
               >
                 Anterior
               </button>
@@ -892,7 +900,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 type="button"
                 onClick={avanzarPaso}
                 disabled={!formData.nombrecliente || !horaSeleccionada}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
+                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px]"
               >
                 Siguiente
               </button>
@@ -902,46 +910,46 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
         {/* Paso 4: Confirmación */}
         {paso === 4 && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Confirma tu cita</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-pink-500">Confirma tu cita</h2>
 
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-pink-50 p-6 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-medium text-gray-700">Cliente</h3>
+                  <h3 className="font-medium text-pink-700">Cliente</h3>
                   <p>{clientes.find((c) => c._id === formData.nombrecliente)?.nombrecliente || "No seleccionado"}</p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700">Empleado</h3>
+                  <h3 className="font-medium text-pink-700">Empleado</h3>
                   <p>{empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado || "No seleccionado"}</p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700">Fecha y Hora</h3>
+                  <h3 className="font-medium text-pink-700">Fecha y Hora</h3>
                   <p>
                     {new Date(formData.fechacita).toLocaleDateString()} a las {horaSeleccionada}
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700">Duración Total</h3>
+                  <h3 className="font-medium text-pink-700">Duración Total</h3>
                   <p>{totalTiempo} minutos</p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700">Estado</h3>
+                  <h3 className="font-medium text-pink-700">Estado</h3>
                   <p>{formData.estadocita}</p>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700">Precio Total</h3>
-                  <p className="font-bold">${precioTotal.toFixed(2)}</p>
+                  <h3 className="font-medium text-pink-700">Precio Total</h3>
+                  <p className="font-bold text-pink-600">${precioTotal.toFixed(2)}</p>
                 </div>
               </div>
 
               <div className="mt-6">
-                <h3 className="font-medium text-gray-700 mb-2">Servicios</h3>
+                <h3 className="font-medium text-pink-700 mb-2">Servicios</h3>
                 <ul className="list-disc pl-5">
                   {serviciosSeleccionados.map((servicio, index) => (
                     <li key={index}>
@@ -957,7 +965,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 <button
                   type="button"
                   onClick={retrocederPaso}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded mr-2"
+                  className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200 mr-2"
                 >
                   Anterior
                 </button>
@@ -973,7 +981,10 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                 )}
               </div>
 
-              <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
+              <button
+                type="submit"
+                className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg shadow-md transition-all duration-200 font-medium transform hover:translate-y-[-2px]"
+              >
                 {cita ? "Actualizar Cita" : "Crear Cita"}
               </button>
             </div>
@@ -994,17 +1005,21 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background-color: #e5e7eb;
+          background-color: #f9f0ff;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-bottom: 8px;
           transition: all 0.3s;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          color: #6b7280;
         }
         
         .step.active .step-circle {
-          background-color: #3b82f6;
+          background-color: #ff69b4;
           color: white;
+          box-shadow: 0 4px 6px rgba(255, 105, 180, 0.3);
+          transform: scale(1.1);
         }
         
         .step-icon {
@@ -1018,14 +1033,14 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         }
         
         .step.active .step-text {
-          color: #3b82f6;
+          color: #ff69b4;
           font-weight: 500;
         }
         
         .step-line {
           flex-grow: 1;
           height: 2px;
-          background-color: #e5e7eb;
+          background-color: #f9f0ff;
           margin-top: -28px;
           z-index: 0;
         }

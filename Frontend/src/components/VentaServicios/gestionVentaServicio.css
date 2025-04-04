@@ -22,7 +22,8 @@
 }
 
 .btn-back {
-  display: inline-flex;
+  /* display: inline-flex; */
+  margin: 10vh 10vh 10vh 85%;
   align-items: center;
   justify-content: center;
   padding: 0.5rem 1rem;

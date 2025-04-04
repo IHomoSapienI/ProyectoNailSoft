@@ -54,6 +54,7 @@ export default function TablaPermisos() {
     { value: "proveedores", label: "Proveedores" },
     { value: "reportes", label: "Reportes" },
     { value: "roles", label: "Roles" },
+    { value: "tipoServicios", label: "Tipo de Servicios" },
     { value: "servicios", label: "Servicios" },
     { value: "usuarios", label: "Usuarios" },
     { value: "ventaServicios", label: "Venta de Servicios" },
@@ -381,8 +382,8 @@ export default function TablaPermisos() {
   }
 
   return (
-    <div className="tabla-container">
-      <h2 className="text-3xl font-semibold mb-8 text-gray-800 px-4 pt-4">Gestión de Permisos</h2>
+    <div className="tabla-container dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-8 text-foreground px-4 pt-4">Gestión de Permisos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
@@ -402,6 +403,7 @@ export default function TablaPermisos() {
                 <FontAwesomeIcon icon={faDownload} className="text-xs" />
               </>
             )}
+            Exportar
           </button>
         </div>
 
@@ -413,10 +415,10 @@ export default function TablaPermisos() {
             <select
               value={categoriaFiltro}
               onChange={(e) => setCategoriaFiltro(e.target.value)}
-              className="form-select pl-10"
+              className="form-select pl-10 dark:card-gradient-4 text-foreground"
             >
               {categorias.map((cat) => (
-                <option key={cat.value} value={cat.value}>
+                <option className="text-black" key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
               ))}
@@ -425,10 +427,11 @@ export default function TablaPermisos() {
           <div className="search-container w-full md:w-2/3">
             <FontAwesomeIcon icon={faSearch} className="search-icon" />
             <input
+              
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="search-input"
+              className="search-input dark:card-gradient-4"
               placeholder="Buscar permiso"
             />
           </div>
@@ -436,22 +439,22 @@ export default function TablaPermisos() {
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort("nombrePermiso")} className="cursor-pointer">
+        <table className="permiso-tabla-moderna w-full">
+          <thead className="dark:card-gradient-4"  >
+            <tr className="text-foreground">
+              <th onClick={() => handleSort("nombrePermiso")} className="text-foreground">
                 Nombre {getSortIcon("nombrePermiso")}
               </th>
-              <th onClick={() => handleSort("descripcion")} className="cursor-pointer">
+              <th onClick={() => handleSort("descripcion")}>
                 Descripción {getSortIcon("descripcion")}
               </th>
-              <th onClick={() => handleSort("categoria")} className="cursor-pointer">
+              <th onClick={() => handleSort("categoria")} >
                 Categoría {getSortIcon("categoria")}
               </th>
-              <th onClick={() => handleSort("nivel")} className="cursor-pointer">
+              <th onClick={() => handleSort("nivel")} >
                 Nivel {getSortIcon("nivel")}
               </th>
-              <th onClick={() => handleSort("activo")} className="cursor-pointer text-center">
+              <th onClick={() => handleSort("activo")} className="text-center">
                 Estado {getSortIcon("activo")}
               </th>
               <th className="text-center">Acciones</th>

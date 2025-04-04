@@ -641,4 +641,96 @@
     pointer-events: none;
   }
   
-  
+  /* Añadir estilos para mostrar el precio original tachado y el descuento */
+.original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.85em;
+  margin-right: 5px;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e11d48;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para mostrar descuentos en ArticlesGrid */
+.discount-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e11d48;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.85em;
+  margin-right: 5px;
+}
+
+.discounted-price {
+  color: #e11d48;
+  font-weight: bold;
+}
+
+.promo-badge {
+  display: inline-block;
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* Estilos para el modal */
+.modal-discount-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #e11d48;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+
+.price-with-discount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discount-percentage {
+  background-color: #e11d48;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+

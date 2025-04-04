@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
-import { FaUpload, FaSpinner } from "react-icons/fa"
+import { FaUpload, FaSpinner, FaPercent, FaTag } from "react-icons/fa"
 import "./formularioServ.css"
+import { calcularPrecioConDescuento } from "./obtenerServicios"
 
 const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualizado }) => {
   const [formData, setFormData] = useState({
@@ -58,12 +59,8 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
       })
 
       // Si hay una imagen existente, mostrarla en la vista previa
-      if (servicioSeleccionado.imagen) {
-        setPreviewImage(
-          servicioSeleccionado.imagen.startsWith("http")
-            ? servicioSeleccionado.imagen
-            : `https://gitbf.onrender.com/uploads/${servicioSeleccionado.imagen}`,
-        )
+      if (servicioSeleccionado.imagenUrl) {
+        setPreviewImage(`https://gitbf.onrender.com/uploads/${servicioSeleccionado.imagenUrl}`)
       }
     }
   }, [servicioSeleccionado])
@@ -83,6 +80,45 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
         ...formData,
         [name]: type === "checkbox" ? checked : value,
       })
+    }
+  }
+
+  const manejarCambioTipoServicio = (e) => {
+    const tipoServicioId = e.target.value
+
+    // Actualizar el estado del formulario
+    setFormData({
+      ...formData,
+      tipoServicio: tipoServicioId,
+    })
+
+    // Si se seleccionó un tipo de servicio, verificar si tiene descuento
+    if (tipoServicioId) {
+      const tipoSeleccionado = tiposServicios.find((tipo) => tipo._id === tipoServicioId)
+
+      if (tipoSeleccionado && tipoSeleccionado.descuento > 0) {
+        // Calcular el precio con descuento si hay un precio ingresado
+        if (formData.precio) {
+          const precioOriginal = Number.parseFloat(formData.precio)
+          const descuento = tipoSeleccionado.descuento / 100
+          const precioConDescuento = precioOriginal - precioOriginal * descuento
+
+          // Mostrar mensaje de descuento
+          Swal.fire({
+            icon: "info",
+            title: "Descuento Aplicado",
+            html: `
+              <div class="text-left">
+                <p>Este tipo de servicio tiene un descuento del <b>${tipoSeleccionado.descuento}%</b>.</p>
+                <p class="mt-2">Precio original: <span style="text-decoration: line-through;">$${precioOriginal.toFixed(2)}</span></p>
+                <p style="color: #e11d48; font-weight: bold;">Precio con descuento: $${precioConDescuento.toFixed(2)}</p>
+                ${tipoSeleccionado.esPromocional ? '<p class="mt-2" style="color: #f59e0b;">Este es un tipo promocional.</p>' : ""}
+              </div>
+            `,
+            confirmButtonColor: "#db2777",
+          })
+        }
+      }
     }
   }
 
@@ -137,6 +173,17 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
     }
   }
 
+  // Función para calcular el precio con descuento
+  const calcularPrecioConDescuentoLocal = () => {
+    if (!formData.tipoServicio || !formData.precio) return null
+
+    const tipoSeleccionado = tiposServicios.find((t) => t._id === formData.tipoServicio)
+    if (!tipoSeleccionado) return null
+
+    const precioOriginal = Number.parseFloat(formData.precio)
+    return calcularPrecioConDescuento(precioOriginal, tipoSeleccionado)
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -147,6 +194,17 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
       </div>
     )
   }
+
+  // Obtener el tipo de servicio seleccionado
+  const tipoServicioSeleccionado = formData.tipoServicio
+    ? tiposServicios.find((t) => t._id === formData.tipoServicio)
+    : null
+
+  // Verificar si tiene descuento
+  const tieneDescuento = tipoServicioSeleccionado && tipoServicioSeleccionado.descuento > 0
+
+  // Calcular precio con descuento
+  const precioConDescuento = calcularPrecioConDescuentoLocal()
 
   return (
     <div className="formulario-moderno bg-white p-6 rounded-lg shadow-lg w-full max-w-xl max-h-[80vh] overflow-y-auto">
@@ -171,14 +229,14 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
         </div>
 
         <div className="form-group">
-          <label htmlFor="tipoServicio" className="form-label">
-            Tipo de Servicio <span className="text-pink-500">*</span>
+          <label htmlFor="tipoServicio" className="form-label flex items-center">
+            <span>Tipo de Servicio</span> <span className="text-pink-500 ml-1">*</span>
           </label>
           <select
             id="tipoServicio"
             name="tipoServicio"
             value={formData.tipoServicio}
-            onChange={manejarCambio}
+            onChange={manejarCambioTipoServicio}
             required
             className="form-select"
           >
@@ -186,9 +244,36 @@ const FormularioServicio = ({ servicioSeleccionado, onClose, onServicioActualiza
             {tiposServicios.map((tipo) => (
               <option key={tipo._id} value={tipo._id}>
                 {tipo.nombreTs}
+                {tipo.descuento > 0 ? ` (${tipo.descuento}% descuento)` : ""}
+                {tipo.esPromocional ? " - Promocional" : ""}
               </option>
             ))}
           </select>
+
+          {tieneDescuento && (
+            <div className="mt-2 p-3 bg-pink-50 border border-pink-200 rounded-md text-sm">
+              <div className="flex items-center mb-1">
+                <FaPercent className="text-pink-500 mr-2" />
+                <p className="text-pink-700 font-semibold">Descuento aplicado: {tipoServicioSeleccionado.descuento}%</p>
+              </div>
+
+              {formData.precio && (
+                <div className="flex items-center mt-2">
+                  <span className="line-through text-gray-500 mr-2">
+                    ${Number.parseFloat(formData.precio).toFixed(2)}
+                  </span>
+                  <span className="font-bold text-pink-600">${precioConDescuento.toFixed(2)}</span>
+                </div>
+              )}
+
+              {tipoServicioSeleccionado.esPromocional && (
+                <div className="flex items-center mt-2 text-amber-600">
+                  <FaTag className="mr-2" />
+                  <span>Tipo promocional</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

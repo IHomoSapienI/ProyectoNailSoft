@@ -14,10 +14,12 @@ import {
   faSortUp,
   faSortDown,
   faFileExcel,
+  faPowerOff,
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
 import "./tablaServ.css"
+import { obtenerServiciosConDescuento } from "./obtenerServicios"
 
 Modal.setAppElement("#root")
 
@@ -100,18 +102,9 @@ const TablaServicios = () => {
         return
       }
 
-      const response = await fetch("https://gitbf.onrender.com/api/servicios", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-
-      const data = await response.json()
-      dispatch({ type: ACTIONS.FETCH_SUCCESS, payload: data.servicios || [] })
+      const serviciosConDescuento = await obtenerServiciosConDescuento()
+      console.log("Servicios obtenidos con descuentos aplicados:", serviciosConDescuento)
+      dispatch({ type: ACTIONS.FETCH_SUCCESS, payload: serviciosConDescuento || [] })
     } catch (error) {
       console.error("Error al obtener los datos:", error)
       Swal.fire({
@@ -197,6 +190,67 @@ const TablaServicios = () => {
           title: "Error",
           text: "No se pudo eliminar el servicio.",
           icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
+
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
+
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} este servicio?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch(`https://gitbf.onrender.com/api/servicios/${id}/toggle-estado`, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        // Actualizar el estado local
+        dispatch({
+          type: ACTIONS.UPDATE_SERVICIO,
+          payload: {
+            ...state.servicios.find((s) => s._id === id),
+            _id: id,
+            estado: nuevoEstado,
+          },
+        })
+
+        Swal.fire({
+          icon: "success",
+          title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+          text: `El servicio ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          confirmButtonColor: "#db2777",
+        })
+
+        // Actualizar la lista después de cambiar el estado
+        obtenerServicios()
+      } catch (error) {
+        console.error(`Error al ${accion} el servicio:`, error)
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: `No se pudo ${accion} el servicio`,
           confirmButtonColor: "#db2777",
         })
       }
@@ -343,8 +397,8 @@ const TablaServicios = () => {
   if (state.error) return <div className="alert alert-error">{state.error}</div>
 
   return (
-    <div className="tabla-container transition-all duration-100">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Servicios</h2>
+    <div className="tabla-container transition-all duration-100 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Servicios</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex gap-2">
@@ -364,16 +418,17 @@ const TablaServicios = () => {
             type="text"
             value={state.busqueda}
             onChange={(e) => dispatch({ type: ACTIONS.SET_SEARCH, payload: e.target.value })}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar servicios..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
+        {/* Modificar la tabla para mostrar información de descuento */}
+        <table className="serv-tabla-moderna w-full">
+          <thead className="dark:card-gradient-4 ">
+            <tr className="text-foreground">
               <th onClick={() => handleSort("nombreServicio")} className="cursor-pointer">
                 Nombre del Servicio {getSortIcon("nombreServicio")}
               </th>
@@ -386,6 +441,7 @@ const TablaServicios = () => {
               <th onClick={() => handleSort("precio")} className="cursor-pointer">
                 Precio {getSortIcon("precio")}
               </th>
+              <th>Precio con Descuento</th>
               <th onClick={() => handleSort("estado")} className="cursor-pointer">
                 Estado {getSortIcon("estado")}
               </th>
@@ -394,32 +450,62 @@ const TablaServicios = () => {
           </thead>
           <tbody>
             {serviciosActuales.length > 0 ? (
-              serviciosActuales.map((servicio) => (
-                <tr key={servicio._id}>
-                  <td className="font-medium">{servicio.nombreServicio}</td>
-                  <td>{servicio.tipoServicio?.nombreTs || "No definido"}</td>
-                  <td>{servicio.tiempo} min</td>
-                  <td>${Number.parseFloat(servicio.precio).toFixed(2)}</td>
-                  <td>
-                    <span className={`estado-badge ${servicio.estado ? "activo" : "inactivo"}`}>
-                      {servicio.estado ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="flex space-x-2">
-                      <button className="btn-edit" onClick={() => manejarEditar(servicio)} title="Editar">
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button className="btn-delete" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              serviciosActuales.map((servicio) => {
+                // Calcular precio con descuento si el tipo de servicio tiene descuento
+                const tieneDescuento = servicio.tipoServicio?.descuento > 0
+                const precioOriginal = Number.parseFloat(servicio.precio)
+                const precioConDescuento = tieneDescuento
+                  ? precioOriginal - (precioOriginal * servicio.tipoServicio.descuento) / 100
+                  : precioOriginal
+
+                return (
+                  <tr key={servicio._id}>
+                    <td className="font-medium">{servicio.nombreServicio}</td>
+                    <td>
+                      {servicio.tipoServicio?.nombreTs || "No definido"}
+                      {tieneDescuento && (
+                        <span className="ml-2 inline-block bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
+                          {servicio.tipoServicio.descuento}% OFF
+                        </span>
+                      )}
+                    </td>
+                    <td>{servicio.tiempo} min</td>
+                    <td>${precioOriginal.toFixed(2)}</td>
+                    <td>
+                      {tieneDescuento ? (
+                        <span className="text-pink-600 font-medium">${precioConDescuento.toFixed(2)}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`estado-badge ${servicio.estado ? "activo" : "inactivo"}`}>
+                        {servicio.estado ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex space-x-2">
+                        <button className="btn-edit" onClick={() => manejarEditar(servicio)} title="Editar">
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        <button className="btn-delete" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                        <button
+                          className={`btn-toggle ${servicio.estado ? "active" : "inactive"}`}
+                          onClick={() => manejarToggleEstado(servicio._id, servicio.estado)}
+                          title={servicio.estado ? "Desactivar servicio" : "Activar servicio"}
+                        >
+                          <FontAwesomeIcon icon={faPowerOff} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-4 text-gray-500">
+                <td colSpan="7" className="text-center py-4 text-gray-500">
                   No se encontraron servicios
                 </td>
               </tr>

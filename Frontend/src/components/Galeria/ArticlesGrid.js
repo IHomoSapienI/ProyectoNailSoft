@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { FaClock, FaTags, FaStar, FaHeart, FaCalendarPlus, FaTimes, FaCheck } from "react-icons/fa"
 import "./articlesgrid.css"
+import { obtenerServiciosConDescuento } from "../Servicios/obtenerServicios"
 
 const ArticlesGrid = () => {
   const [servicios, setServicios] = useState([])
@@ -14,10 +14,12 @@ const ArticlesGrid = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const obtenerServicios = async () => {
+    const cargarServicios = async () => {
       try {
-        const response = await axios.get("https://gitbf.onrender.com/api/servicios")
-        setServicios(response.data.servicios)
+        setLoading(true)
+        const serviciosConDescuento = await obtenerServiciosConDescuento()
+        console.log("Servicios obtenidos con descuentos aplicados:", serviciosConDescuento)
+        setServicios(serviciosConDescuento)
         setLoading(false)
       } catch (error) {
         console.error("Error al obtener los servicios:", error)
@@ -25,7 +27,7 @@ const ArticlesGrid = () => {
       }
     }
 
-    obtenerServicios()
+    cargarServicios()
   }, [])
 
   const baseUrl = "https://gitbf.onrender.com/uploads"
@@ -64,7 +66,7 @@ const ArticlesGrid = () => {
       >
         <h1 className="services-title">Descubre la Magia en Tus Manos</h1>
         <p className="services-subtitle">Servicios exclusivos diseñados para realzar tu belleza natural</p>
-        
+
         <motion.button
           className="schedule-button primary"
           onClick={manejarAgregarCita}
@@ -105,13 +107,23 @@ const ArticlesGrid = () => {
                       <span>Ver Detalles</span>
                     </motion.div>
                   </div>
+                  {servicio.tipoServicio?.descuento > 0 && (
+                    <div className="discount-badge">{servicio.tipoServicio.descuento}% OFF</div>
+                  )}
                 </div>
 
                 <div className="card-content">
                   <div className="card-header">
                     <h2 className="card-title">{servicio.nombreServicio}</h2>
                     <div className="price-tag">
-                      <span>${servicio.precio}</span>
+                      {servicio.tieneDescuento ? (
+                        <>
+                          <span className="original-price">${servicio.precioOriginal.toFixed(2)}</span>
+                          <span className="discounted-price">${servicio.precioConDescuento.toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                      )}
                     </div>
                   </div>
 
@@ -121,7 +133,10 @@ const ArticlesGrid = () => {
                     <div className="service-meta">
                       <div className="meta-item">
                         <FaTags className="meta-icon" />
-                        <span>{servicio.tipoServicio.nombreTs}</span>
+                        <span>
+                          {servicio.tipoServicio?.nombreTs || "General"}
+                          {servicio.tipoServicio?.esPromocional && <span className="promo-badge">Promo</span>}
+                        </span>
                       </div>
                       <div className="meta-item">
                         <FaClock className="meta-icon" />
@@ -216,7 +231,7 @@ const ArticlesGrid = () => {
                   >
                     <div className="meta-tag">
                       <FaTags className="meta-icon" />
-                      <span>{selectedService.tipoServicio.nombreTs}</span>
+                      <span>{selectedService.tipoServicio?.nombreTs || "General"}</span>
                     </div>
                     <div className="meta-tag">
                       <FaClock className="meta-icon" />
@@ -231,7 +246,15 @@ const ArticlesGrid = () => {
                     className="modal-price"
                   >
                     <span className="price-label">Precio del Servicio</span>
-                    <span className="price-amount">${selectedService.precio}</span>
+                    {selectedService.tieneDescuento ? (
+                      <div className="modal-price-with-discount">
+                        <span className="modal-original-price">${selectedService.precioOriginal.toFixed(2)}</span>
+                        <span className="modal-discounted-price">${selectedService.precioConDescuento.toFixed(2)}</span>
+                        <span className="modal-discount-badge">{selectedService.porcentajeDescuento}% OFF</span>
+                      </div>
+                    ) : (
+                      <span className="price-amount">${Number.parseFloat(selectedService.precio).toFixed(2)}</span>
+                    )}
                   </motion.div>
 
                   <motion.div

@@ -192,11 +192,42 @@ const serviciosExportExcel = async (req, res = response) => {
   }
 }
 
+// Cambiar el estado de un servicio (activar/desactivar)
+const serviciosToggleEstado = async (req, res = response) => {
+  const { id } = req.params
+
+  try {
+    const servicio = await Servicio.findById(id)
+
+    if (!servicio) {
+      return res.status(404).json({
+        msg: "Servicio no encontrado",
+      })
+    }
+
+    // Cambiar el estado (invertir el valor actual)
+    servicio.estado = !servicio.estado
+
+    await servicio.save()
+
+    res.json({
+      msg: `Servicio ${servicio.estado ? "activado" : "desactivado"} correctamente`,
+      servicio,
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      msg: "Error al cambiar el estado del servicio",
+    })
+  }
+}
+
 module.exports = {
   serviciosGet,
   serviciosPost,
   serviciosPut,
   serviciosDelete,
   serviciosExportExcel,
+  serviciosToggleEstado,
 }
 

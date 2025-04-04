@@ -290,7 +290,12 @@ const DetalleVenta = () => {
                     (servicio) => `
                 <tr>
                   <td>${servicio.nombreServicio}</td>
-                  <td>$${servicio.precio.toFixed(2)}</td>
+                  <td>${
+                    servicio.tieneDescuento
+                      ? `<span style="text-decoration: line-through;">$${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}</span> 
+                       <span style="color: #e83e8c; font-weight: bold;">$${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}</span>`
+                      : `$${Number.parseFloat(servicio.precio).toFixed(2)}`
+                  }</td>
                   <td>${servicio.tiempo} min</td>
                 </tr>
                 `,
@@ -504,7 +509,18 @@ const DetalleVenta = () => {
                 {venta.servicios.map((servicio, index) => (
                   <tr key={`servicio-${index}`}>
                     <td>{servicio.nombreServicio}</td>
-                    <td className="text-right">${servicio.precio.toFixed(2)}</td>
+                    <td className="text-right">
+                      {servicio.tieneDescuento ? (
+                        <div className="price-with-discount">
+                          <span className="original-price">
+                            ${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}
+                          </span>
+                          <span>${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}</span>
+                        </div>
+                      ) : (
+                        <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                      )}
+                    </td>
                     <td className="text-right">{servicio.tiempo} min</td>
                   </tr>
                 ))}

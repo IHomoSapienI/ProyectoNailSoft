@@ -55,7 +55,7 @@ body {
   height: calc(100vh - 8rem); /* Altura ajustada para evitar scroll */
   max-height: 600px;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  /* backdrop-filter: blur(10px); */
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   display: flex;

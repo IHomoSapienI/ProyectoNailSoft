@@ -120,4 +120,45 @@
     animation: fadeIn 0.3s ease-out;
   }
   
-  
+  /* Estilos para descuentos */
+.discount-badge {
+  display: inline-block;
+  background-color: #fecdd3;
+  color: #be123c;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.price-with-discount {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #9ca3af;
+  font-size: 0.85em;
+}
+
+.discounted-price {
+  color: #e11d48;
+  font-weight: 600;
+}
+
+.promotional-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #fef3c7;
+  color: #92400e;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+}
+

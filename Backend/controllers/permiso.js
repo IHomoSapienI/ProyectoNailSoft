@@ -43,6 +43,7 @@ const permisosPost = async (req, res = response) => {
     "configuración",
     "reportes",
     "compras",
+    "tipoServicios",
     "servicios",
     "ventaServicios",
     "productos",

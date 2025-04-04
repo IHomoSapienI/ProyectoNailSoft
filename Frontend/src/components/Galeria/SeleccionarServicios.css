@@ -1168,3 +1168,67 @@ h6 {
   }
 }
 
+/* Añadir estilos para mostrar el precio con descuento */
+.price-with-discount {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.85em;
+}
+
+.discount-pill {
+  background-color: #e11d48;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+/* Estilos para mostrar descuentos en SeleccionarServicios */
+.price-with-discount {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.85em;
+}
+
+.discount-pill {
+  background-color: #e11d48;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+.service-type-badge {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Estilos para el resumen de selección */
+.selected-item .item-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.selected-item .original-price {
+  font-size: 0.7em;
+  margin-bottom: -2px;
+}
+

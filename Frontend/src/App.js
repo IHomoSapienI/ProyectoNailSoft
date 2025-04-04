@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
-import axios from "axios"
+
 import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
@@ -39,9 +39,10 @@ import Politicas from "./components/Politicas/Politicas"
 import ForgotPassword from "./components/Login_Register/ForgotPassword/ForgotPassword"
 import VerifyToken from "./components/Login_Register/VerifyToken/VerifyToken"
 import ResetPassword from "./components/Login_Register/ResetPassword/ResetPassword"
-
+import TablaTipoServicios from "./components/Servicios/TablaTipoServicios"
 
 import TablaPermisos from "./components/Permisos/TablaPermisos"
+import axios from "axios"
 
 axios.interceptors.request.use(
   (config) => {
@@ -292,6 +293,16 @@ function App() {
             <PrivateRoute allowedRoles={["admin", "cliente", "empleado"]}>
               <Layout>
                 <TablaServicios />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/tiposervicios"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <Layout>
+                <TablaTipoServicios />
               </Layout>
             </PrivateRoute>
           }

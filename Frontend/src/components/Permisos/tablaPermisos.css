@@ -9,7 +9,7 @@
     padding: 0;
   }
   
-  .tabla-moderna {
+  .permiso-tabla-moderna {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -18,27 +18,27 @@
     table-layout: fixed;
   }
   
-  .tabla-moderna thead {
+  .permiso-tabla-moderna thead {
     background-color: #f9fafb;
   }
   
-  .tabla-moderna th {
+  .permiso-tabla-moderna th {
     padding: 1rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    color: #6b7280;
+    /* color: #6b7280; */
     letter-spacing: 0.05em;
     border-bottom: 1px solid #e5e7eb;
     transition: background-color 0.2s;
   }
   
-  .tabla-moderna th:hover {
-    background-color: #f3f4f6;
+  .permiso-tabla-moderna th:hover {
+    background-color: #5b5b5b;
   }
   
-  .tabla-moderna td {
+  .permiso-tabla-moderna td {
     padding: 1rem;
     font-size: 0.875rem;
     color: #374151;
@@ -48,39 +48,39 @@
     text-overflow: ellipsis;
   }
   
-  .tabla-moderna tbody tr:hover {
+  .permiso-tabla-moderna tbody tr:hover {
     background-color: #f9fafb;
   }
   
-  .tabla-moderna tbody tr:last-child td {
+  .permiso-tabla-moderna tbody tr:last-child td {
     border-bottom: none;
   }
   
   /* Ajustar anchos de columnas */
-  .tabla-moderna th:nth-child(1),
-  .tabla-moderna td:nth-child(1) {
+  .permiso-tabla-moderna th:nth-child(1),
+  .permiso-tabla-moderna td:nth-child(1) {
     width: 20%;
   }
   
-  .tabla-moderna th:nth-child(2),
-  .tabla-moderna td:nth-child(2) {
+  .permiso-tabla-moderna th:nth-child(2),
+  .permiso-tabla-moderna td:nth-child(2) {
     width: 25%;
   }
   
-  .tabla-moderna th:nth-child(3),
-  .tabla-moderna td:nth-child(3),
-  .tabla-moderna th:nth-child(4),
-  .tabla-moderna td:nth-child(4) {
+  .permiso-tabla-moderna th:nth-child(3),
+  .permiso-tabla-moderna td:nth-child(3),
+  .permiso-tabla-moderna th:nth-child(4),
+  .permiso-tabla-moderna td:nth-child(4) {
     width: 15%;
   }
   
-  .tabla-moderna th:nth-child(5),
-  .tabla-moderna td:nth-child(5) {
+  .permiso-tabla-moderna th:nth-child(5),
+  .permiso-tabla-moderna td:nth-child(5) {
     width: 10%;
   }
   
-  .tabla-moderna th:nth-child(6),
-  .tabla-moderna td:nth-child(6) {
+  .permiso-tabla-moderna th:nth-child(6),
+  .permiso-tabla-moderna td:nth-child(6) {
     width: 15%;
   }
   

@@ -330,10 +330,10 @@ export default function TablaRoles() {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Roles</h2>
+    <div className="tabla-container  dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Roles</h2>
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4 ">
         <div className="flex space-x-2">
           <button className="btn-add" onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
@@ -361,15 +361,15 @@ export default function TablaRoles() {
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar roles..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 w-full">
-        <table className="tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
-          <thead>
+      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full">
+        <table className="rol-tabla-moderna w-full dark:bg-foreground" style={{ width: "100%", tableLayout: "fixed" }}>
+          <thead className="dark:card-gradient-4">
             <tr>
               <th>Nombre del Rol</th>
               <th>Estado</th>

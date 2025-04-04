@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
@@ -62,7 +64,141 @@ const GestionVentaServicio = () => {
               console.log("Servicios recuperados de localStorage:", serviciosGuardados)
 
               if (Array.isArray(serviciosGuardados) && serviciosGuardados.length > 0) {
-                setServiciosSeleccionados(serviciosGuardados)
+                // Intentar obtener información de descuentos para los servicios guardados
+                try {
+                  const serviciosConInfo = await Promise.all(
+                    serviciosGuardados.map(async (servicio) => {
+                      // Si el servicio ya tiene información de descuento, usarla
+                      if (servicio.tieneDescuento !== undefined) {
+                        return servicio
+                      }
+
+                      // Intentar obtener el servicio completo con información de descuento
+                      try {
+                        const servicioId =
+                          typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+
+                        // Buscar el servicio en la lista de servicios ya cargados primero
+                        const servicioEnLista = servicios.find((s) => s._id === servicioId)
+
+                        if (servicioEnLista) {
+                          // Verificar si el servicio tiene tipo de servicio con descuento
+                          const tieneDescuento =
+                            servicioEnLista.tipoServicio &&
+                            servicioEnLista.tipoServicio.descuento &&
+                            servicioEnLista.tipoServicio.descuento > 0
+
+                          const precioOriginal = Number.parseFloat(servicio.precio || servicioEnLista.precio || 0)
+
+                          // Calcular precio con descuento si aplica
+                          const precioConDescuento = tieneDescuento
+                            ? precioOriginal - (precioOriginal * servicioEnLista.tipoServicio.descuento) / 100
+                            : precioOriginal
+
+                          console.log(
+                            `Servicio ${servicioEnLista.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioEnLista.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
+                          )
+
+                          return {
+                            ...servicio,
+                            tieneDescuento,
+                            precioOriginal,
+                            precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+                            porcentajeDescuento: tieneDescuento ? servicioEnLista.tipoServicio.descuento : 0,
+                            nombreServicio: servicio.nombreServicio || servicioEnLista.nombreServicio,
+                            tiempo: servicio.tiempo || servicioEnLista.tiempo,
+                          }
+                        }
+
+                        // Si no se encuentra en la lista, intentar obtenerlo de la API
+                        const token = localStorage.getItem("token")
+                        const headers = { Authorization: `Bearer ${token}` }
+
+                        const response = await axios.get(`${API_URL}/servicios/${servicioId}`, { headers })
+
+                        if (response.data && response.data.servicio) {
+                          const servicioCompleto = response.data.servicio
+
+                          // Verificar si el servicio tiene tipo de servicio con descuento
+                          const tieneDescuento =
+                            servicioCompleto.tipoServicio &&
+                            servicioCompleto.tipoServicio.descuento &&
+                            servicioCompleto.tipoServicio.descuento > 0
+
+                          const precioOriginal = Number.parseFloat(servicio.precio || servicioCompleto.precio || 0)
+
+                          // Calcular precio con descuento si aplica
+                          const precioConDescuento = tieneDescuento
+                            ? precioOriginal - (precioOriginal * servicioCompleto.tipoServicio.descuento) / 100
+                            : precioOriginal
+
+                          console.log(
+                            `Servicio ${servicioCompleto.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
+                          )
+
+                          return {
+                            ...servicio,
+                            tieneDescuento,
+                            precioOriginal,
+                            precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+                            porcentajeDescuento: tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0,
+                            nombreServicio: servicio.nombreServicio || servicioCompleto.nombreServicio,
+                            tiempo: servicio.tiempo || servicioCompleto.tiempo,
+                          }
+                        }
+                      } catch (error) {
+                        console.error(
+                          `Error al obtener información de descuento para servicio ${servicio.nombreServicio}:`,
+                          error,
+                        )
+                        // Usar la función de obtenerServiciosConDescuento para intentar obtener la información
+                        try {
+                          const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+                          const serviciosConDescuento = await obtenerServiciosConDescuento()
+                          const servicioConDescuento = serviciosConDescuento.find(
+                            (s) =>
+                              s._id ===
+                              (typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio),
+                          )
+
+                          if (servicioConDescuento) {
+                            console.log(
+                              `Servicio encontrado con obtenerServiciosConDescuento: ${servicioConDescuento.nombreServicio}`,
+                            )
+                            return {
+                              ...servicio,
+                              tieneDescuento: servicioConDescuento.tieneDescuento || false,
+                              precioOriginal:
+                                servicioConDescuento.precioOriginal || Number.parseFloat(servicio.precio || 0),
+                              precioConDescuento:
+                                servicioConDescuento.precioConDescuento || Number.parseFloat(servicio.precio || 0),
+                              porcentajeDescuento: servicioConDescuento.porcentajeDescuento || 0,
+                              nombreServicio: servicio.nombreServicio || servicioConDescuento.nombreServicio,
+                              tiempo: servicio.tiempo || servicioConDescuento.tiempo,
+                            }
+                          }
+                        } catch (importError) {
+                          console.error("Error al importar obtenerServiciosConDescuento:", importError)
+                        }
+                      }
+
+                      // Si no se pudo obtener información adicional, devolver el servicio original
+                      return {
+                        ...servicio,
+                        tieneDescuento: false,
+                        precioOriginal: Number.parseFloat(servicio.precio || 0),
+                        precioConDescuento: Number.parseFloat(servicio.precio || 0),
+                        porcentajeDescuento: 0,
+                      }
+                    }),
+                  )
+
+                  console.log("Servicios con información de descuento:", serviciosConInfo)
+                  setServiciosSeleccionados(serviciosConInfo)
+                } catch (error) {
+                  console.error("Error al procesar servicios con descuentos:", error)
+                  setServiciosSeleccionados(serviciosGuardados)
+                }
               }
             }
 
@@ -389,10 +525,14 @@ const GestionVentaServicio = () => {
   }, [id, citaId, navigate])
 
   // Calcular el precio total de servicios
-  const precioTotalServicios = serviciosSeleccionados.reduce(
-    (total, servicio) => total + (Number.parseFloat(servicio.precio) || 0),
-    0,
-  )
+  const precioTotalServicios = serviciosSeleccionados.reduce((total, servicio) => {
+    // Usar el precio con descuento si está disponible
+    if (servicio.tieneDescuento) {
+      return total + (Number.parseFloat(servicio.precioConDescuento) || 0)
+    } else {
+      return total + (Number.parseFloat(servicio.precio) || 0)
+    }
+  }, 0)
 
   // Calcular el precio total de productos
   const precioTotalProductos = productosSeleccionados.reduce(
@@ -426,12 +566,33 @@ const GestionVentaServicio = () => {
     if (nuevoServicio.id) {
       const servicioSeleccionado = servicios.find((s) => s._id === nuevoServicio.id)
       if (servicioSeleccionado && !serviciosSeleccionados.some((s) => s.servicio === servicioSeleccionado._id)) {
-        // Si llegamos aquí, agregamos el servicio
+        // Verificar si el servicio tiene descuento
+        const tieneDescuento =
+          servicioSeleccionado.tipoServicio &&
+          servicioSeleccionado.tipoServicio.descuento &&
+          servicioSeleccionado.tipoServicio.descuento > 0
+
+        const precioOriginal = Number.parseFloat(servicioSeleccionado.precio || 0)
+
+        // Calcular precio con descuento si aplica
+        const precioConDescuento = tieneDescuento
+          ? precioOriginal - (precioOriginal * servicioSeleccionado.tipoServicio.descuento) / 100
+          : precioOriginal
+
+        console.log(
+          `Agregando servicio ${servicioSeleccionado.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioSeleccionado.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
+        )
+
+        // Si llegamos aquí, agregamos el servicio con información de descuento
         const nuevoServicioItem = {
           servicio: servicioSeleccionado._id,
           nombreServicio: servicioSeleccionado.nombreServicio,
           precio: servicioSeleccionado.precio || 0,
           tiempo: servicioSeleccionado.tiempo || 0,
+          tieneDescuento,
+          precioOriginal,
+          precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+          porcentajeDescuento: tieneDescuento ? servicioSeleccionado.tipoServicio.descuento : 0,
         }
 
         const nuevosServicios = [...serviciosSeleccionados, nuevoServicioItem]
@@ -789,11 +950,17 @@ const GestionVentaServicio = () => {
         // Asegurarse de que estamos enviando el objeto completo con la estructura correcta
         const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
 
+        // Usar el precio con descuento si está disponible
+        const precioFinal = servicio.tieneDescuento ? servicio.precioConDescuento : servicio.precio
+
         return {
           servicio: servicioId,
           nombreServicio: servicio.nombreServicio || "",
-          precio: servicio.precio || 0,
+          precio: precioFinal || 0,
           tiempo: servicio.tiempo || 0,
+          tieneDescuento: servicio.tieneDescuento || false,
+          precioOriginal: servicio.precioOriginal || precioFinal,
+          porcentajeDescuento: servicio.porcentajeDescuento || 0,
         }
       })
 
@@ -1075,7 +1242,20 @@ const GestionVentaServicio = () => {
                     {serviciosSeleccionados.map((servicio, index) => (
                       <tr key={index}>
                         <td>{servicio.nombreServicio}</td>
-                        <td className="text-right">${Number.parseFloat(servicio.precio).toFixed(2)}</td>
+                        <td className="text-right">
+                          {servicio.tieneDescuento ? (
+                            <div className="price-with-discount">
+                              <span className="original-price">
+                                ${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}
+                              </span>
+                              <span className="discounted-price">
+                                ${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                          )}
+                        </td>
                         <td className="text-right">{servicio.tiempo}</td>
                         <td className="text-center">
                           <button
@@ -1119,11 +1299,25 @@ const GestionVentaServicio = () => {
                     className="form-select"
                   >
                     <option value="">Selecciona un servicio</option>
-                    {servicios.map((servicio) => (
-                      <option key={servicio._id} value={servicio._id}>
-                        {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
-                      </option>
-                    ))}
+                    {servicios.map((servicio) => {
+                      const tieneDescuento =
+                        servicio.tipoServicio && servicio.tipoServicio.descuento && servicio.tipoServicio.descuento > 0
+
+                      const precioOriginal = Number.parseFloat(servicio.precio || 0)
+                      const precioConDescuento = tieneDescuento
+                        ? precioOriginal - (precioOriginal * servicio.tipoServicio.descuento) / 100
+                        : precioOriginal
+
+                      return (
+                        <option key={servicio._id} value={servicio._id}>
+                          {servicio.nombreServicio} -
+                          {tieneDescuento
+                            ? `$${precioConDescuento.toFixed(2)} (${servicio.tipoServicio.descuento}% OFF)`
+                            : `$${precioOriginal.toFixed(2)}`}
+                          ({servicio.tiempo} min)
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
                 <button onClick={agregarServicio} disabled={isSaving} className="btn-secondary">
@@ -1349,3 +1543,4 @@ const GestionVentaServicio = () => {
 }
 
 export default GestionVentaServicio
+

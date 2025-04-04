@@ -30,7 +30,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa"
-import { MdOutlineSpa } from "react-icons/md"
+import { Md10K, MdOutlineSpa } from "react-icons/md"
 import "./sidebar.css"
 
 // Crear contexto para el estado del sidebar
@@ -337,6 +337,14 @@ const Sidebar = () => {
                     collapsed={isCollapsed}
                   >
                     Servicios
+                  </MenuItem>
+                  <MenuItem
+                    icon={Md10K}
+                    to="/tiposervicios"
+                    isActive={location.pathname === "/tiposervicios"}
+                    collapsed={isCollapsed}
+                  >
+                    Tipo Servicios
                   </MenuItem>
                   <MenuItem
                     icon={FaTags}

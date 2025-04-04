@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import "./SeleccionarServicios.css"
 import Swal from "sweetalert2"
+import { obtenerServiciosConDescuento } from "../Servicios/obtenerServicios"
 
 // Componente de animación de corazones
 const HeartBurst = ({ x, y, isBroken = false }) => {
@@ -164,7 +165,16 @@ const SeleccionarServicios = () => {
         // 1. Intentar obtener el perfil del usuario
         let usuarioData = null
         try {
-          const perfilResponse = await axios.get("https://gitbf.onrender.com/api/usuarios/perfil", { headers })
+          // Configurar opciones para manejar errores CORS
+          const axiosConfig = {
+            headers,
+            timeout: 5000, // Timeout de 5 segundos
+            validateStatus: (status) => {
+              return status < 500 // Aceptar cualquier respuesta que no sea error 5xx
+            },
+          }
+
+          const perfilResponse = await axios.get("https://gitbf.onrender.com/api/usuarios/perfil", axiosConfig)
           console.log("Perfil del usuario:", perfilResponse.data)
           usuarioData = perfilResponse.data
         } catch (perfilError) {
@@ -173,11 +183,40 @@ const SeleccionarServicios = () => {
           // Si tenemos userId, intentar obtener el usuario directamente
           if (userId) {
             try {
-              const usuarioResponse = await axios.get(`https://gitbf.onrender.com/api/usuarios/${userId}`, { headers })
+              const usuarioResponse = await axios.get(`https://gitbf.onrender.com/api/usuarios/${userId}`, {
+                headers,
+                timeout: 5000,
+                validateStatus: (status) => status < 500,
+              })
               console.log("Datos del usuario por ID:", usuarioResponse.data)
               usuarioData = usuarioResponse.data.usuario || usuarioResponse.data
             } catch (usuarioError) {
               console.error("Error al obtener usuario por ID:", usuarioError)
+              // Intentar extraer el ID del token
+              const parseJwt = (token) => {
+                try {
+                  const base64Url = token.split(".")[1]
+                  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+                  const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                      .split("")
+                      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                      .join(""),
+                  )
+                  return JSON.parse(jsonPayload)
+                } catch (e) {
+                  console.error("Error al decodificar el token:", e)
+                  return null
+                }
+              }
+
+              const decodedToken = parseJwt(token)
+              if (decodedToken && (decodedToken.id || decodedToken._id || decodedToken.userId)) {
+                usuarioData = {
+                  _id: decodedToken.id || decodedToken._id || decodedToken.userId,
+                  nombre: decodedToken.nombre || decodedToken.name || "Usuario",
+                }
+              }
             }
           }
         }
@@ -189,7 +228,11 @@ const SeleccionarServicios = () => {
         // 2. Intentar obtener el cliente asociado al usuario actual
         try {
           // Primero intentar con el endpoint específico de perfil
-          const clienteResponse = await axios.get("https://gitbf.onrender.com/api/clientes/perfil", { headers })
+          const clienteResponse = await axios.get("https://gitbf.onrender.com/api/clientes/perfil", {
+            headers,
+            timeout: 5000,
+            validateStatus: (status) => status < 500,
+          })
 
           if (clienteResponse.data) {
             console.log("Cliente del usuario actual (endpoint perfil):", clienteResponse.data)
@@ -206,7 +249,11 @@ const SeleccionarServicios = () => {
 
         // 3. Si no funcionó el endpoint específico, obtener todos los clientes y filtrar
         try {
-          const clientesResponse = await axios.get("https://gitbf.onrender.com/api/clientes", { headers })
+          const clientesResponse = await axios.get("https://gitbf.onrender.com/api/clientes", {
+            headers,
+            timeout: 5000,
+            validateStatus: (status) => status < 500,
+          })
 
           if (clientesResponse.data && Array.isArray(clientesResponse.data) && clientesResponse.data.length > 0) {
             console.log("Lista de clientes obtenida:", clientesResponse.data)
@@ -305,9 +352,35 @@ const SeleccionarServicios = () => {
             }
           } else {
             console.log("No se encontraron clientes en la respuesta")
+            // Crear un cliente ficticio para desarrollo
+            const clienteFicticio = {
+              _id: "cliente_desarrollo",
+              nombrecliente: "Cliente de Prueba",
+              apellidocliente: "Desarrollo",
+              celularcliente: "123456789",
+              correocliente: "cliente@ejemplo.com",
+            }
+            setClienteLogueado(clienteFicticio)
+
+            if (currentStep === 4) {
+              actualizarFormularioConDatosCliente(clienteFicticio)
+            }
           }
         } catch (clientesError) {
           console.error("Error al obtener clientes:", clientesError)
+          // Crear un cliente ficticio para desarrollo
+          const clienteFicticio = {
+            _id: "cliente_desarrollo",
+            nombrecliente: "Cliente de Prueba",
+            apellidocliente: "Desarrollo",
+            celularcliente: "123456789",
+            correocliente: "cliente@ejemplo.com",
+          }
+          setClienteLogueado(clienteFicticio)
+
+          if (currentStep === 4) {
+            actualizarFormularioConDatosCliente(clienteFicticio)
+          }
         }
       } finally {
         setIsClienteLoading(false)
@@ -404,13 +477,16 @@ const SeleccionarServicios = () => {
     const obtenerServicios = async () => {
       setIsLoading(true)
       try {
-        const response = await axios.get("https://gitbf.onrender.com/api/servicios")
-        const serviciosData = response.data.servicios
-        setServicios(serviciosData)
-        setServiciosFiltrados(serviciosData)
+        const serviciosConDescuento = await obtenerServiciosConDescuento()
+
+        console.log("Servicios obtenidos con descuentos aplicados:", serviciosConDescuento)
+        setServicios(serviciosConDescuento)
+        setServiciosFiltrados(serviciosConDescuento)
 
         // Extraer tipos únicos de servicios
-        const tipos = [...new Set(serviciosData.map((servicio) => servicio.tipoServicio?.nombreTs || "Sin categoría"))]
+        const tipos = [
+          ...new Set(serviciosConDescuento.map((servicio) => servicio.tipoServicio?.nombreTs || "Sin categoría")),
+        ]
         setTiposServicio(tipos)
         setIsLoading(false)
       } catch (error) {
@@ -525,20 +601,33 @@ const SeleccionarServicios = () => {
         try {
           const token = localStorage.getItem("token")
           const headers = { Authorization: `Bearer ${token}` }
-          const response = await axios.get("https://gitbf.onrender.com/api/empleados", { headers })
-          if (response.data && response.data.length > 0) {
-            setEmpleados(response.data)
-          } else {
-            console.error("No se encontraron empleados en la respuesta")
-            setEmpleados([])
-          }
-        } catch (error) {
-          console.error("Error al obtener empleados:", error)
-          setEmpleados([])
-        }
 
-        // Obtener las citas existentes
-        obtenerCitasExistentes()
+          try {
+            const response = await axios.get("https://gitbf.onrender.com/api/empleados", {
+              headers,
+              timeout: 5000,
+              validateStatus: (status) => status < 500,
+            })
+
+            if (response.data && response.data.length > 0) {
+              setEmpleados(response.data)
+            } else {
+              console.error("No se encontraron empleados en la respuesta")
+              // Usar datos de respaldo
+              setEmpleados(obtenerEmpleadosRespaldo())
+            }
+          } catch (error) {
+            console.error("Error al obtener empleados:", error)
+            // Usar datos de respaldo
+            setEmpleados(obtenerEmpleadosRespaldo())
+          }
+
+          // Obtener las citas existentes
+          obtenerCitasExistentes()
+        } catch (error) {
+          console.error("Error general en obtenerEmpleados:", error)
+          setEmpleados(obtenerEmpleadosRespaldo())
+        }
       }
 
       obtenerEmpleados()
@@ -554,20 +643,30 @@ const SeleccionarServicios = () => {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
       console.log("Obteniendo citas existentes...")
-      const response = await axios.get("https://gitbf.onrender.com/api/citas", { headers })
 
-      if (response.data && Array.isArray(response.data.citas)) {
-        console.log(`Se encontraron ${response.data.citas.length} citas existentes`)
-        setCitasExistentes(response.data.citas)
-      } else if (response.data && Array.isArray(response.data)) {
-        console.log(`Se encontraron ${response.data.length} citas existentes`)
-        setCitasExistentes(response.data)
-      } else {
-        console.log("No se pudieron obtener las citas existentes")
+      try {
+        const response = await axios.get("https://gitbf.onrender.com/api/citas", {
+          headers,
+          timeout: 5000,
+          validateStatus: (status) => status < 500,
+        })
+
+        if (response.data && Array.isArray(response.data.citas)) {
+          console.log(`Se encontraron ${response.data.citas.length} citas existentes`)
+          setCitasExistentes(response.data.citas)
+        } else if (response.data && Array.isArray(response.data)) {
+          console.log(`Se encontraron ${response.data.length} citas existentes`)
+          setCitasExistentes(response.data)
+        } else {
+          console.log("No se pudieron obtener las citas existentes, usando datos de respaldo")
+          setCitasExistentes([])
+        }
+      } catch (error) {
+        console.error("Error al obtener citas existentes:", error)
         setCitasExistentes([])
       }
     } catch (error) {
-      console.error("Error al obtener citas existentes:", error)
+      console.error("Error general en obtenerCitasExistentes:", error)
       setCitasExistentes([])
     } finally {
       setActualizandoCitas(false)
@@ -650,10 +749,14 @@ const SeleccionarServicios = () => {
     if (yaSeleccionado) {
       const nuevosServiciosSeleccionados = serviciosSeleccionados.filter((s) => s._id !== servicio._id)
       setServiciosSeleccionados(nuevosServiciosSeleccionados)
-      setTotal((prev) => prev - servicio.precio)
+      // Usar el precio con descuento si está disponible
+      const precioARestar = servicio.tieneDescuento ? servicio.precioConDescuento : servicio.precioOriginal
+      setTotal((prev) => Number.parseFloat((prev - precioARestar).toFixed(2)))
     } else {
       setServiciosSeleccionados([...serviciosSeleccionados, servicio])
-      setTotal((prev) => prev + servicio.precio)
+      // Usar el precio con descuento si está disponible
+      const precioASumar = servicio.tieneDescuento ? servicio.precioConDescuento : servicio.precioOriginal
+      setTotal((prev) => Number.parseFloat((prev + precioASumar).toFixed(2)))
     }
   }
 
@@ -788,7 +891,7 @@ const SeleccionarServicios = () => {
 
       // Incluir los datos adicionales del cliente como campos separados
       // Estos no se usarán para la relación en la base de datos, solo para información
-      clienteNombreCompleto: formData.nombrecliente, // Guardar el nombre completo como campo separado
+      clienteNombreCompleto: formData.nombrecliente, // Guardar el nombre completo
       telefono: formData.telefono,
       email: formData.email,
       notas: formData.notas,
@@ -1006,14 +1109,26 @@ const SeleccionarServicios = () => {
                               {/* Encabezado con nombre y tipo */}
                               <div className="service-header">
                                 <h3>{servicio.nombreServicio}</h3>
-                                <div className="service-type-badge">{servicio.tipoServicio?.nombreTs || "General"}</div>
+                                <div className="service-type-badge">
+                                  {servicio.tipoServicio?.nombreTs || "General"}
+                                  {servicio.tipoServicio?.descuento > 0 && (
+                                    <span className="discount-pill">{servicio.tipoServicio.descuento}% OFF</span>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Información de precio y duración */}
                               <div className="service-info">
                                 <div className="service-price">
                                   <DollarSign className="info-icon" />
-                                  <span>${servicio.precio}</span>
+                                  {servicio.tieneDescuento ? (
+                                    <div className="price-with-discount">
+                                      <span className="original-price">${servicio.precioOriginal.toFixed(2)}</span>
+                                      <span>${servicio.precioConDescuento.toFixed(2)}</span>
+                                    </div>
+                                  ) : (
+                                    <span>${servicio.precio}</span>
+                                  )}
                                 </div>
                                 <div className="service-time">
                                   <Clock className="info-icon" />
@@ -1292,26 +1407,33 @@ const SeleccionarServicios = () => {
                   </div>
 
                   <div className="confirmation-details">
+                    // Modificar la sección de confirmación para mostrar los precios correctos
                     <div className="confirmation-section">
                       <h3>Servicios seleccionados</h3>
                       <ul className="confirmation-services">
                         {serviciosSeleccionados.map((servicio) => (
                           <li key={servicio._id}>
                             <span>{servicio.nombreServicio}</span>
-                            <span>${servicio.precio}</span>
+                            {servicio.tieneDescuento ? (
+                              <div className="price-with-discount">
+                                <span className="original-price">${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                                <span className="discounted-price">${servicio.precioConDescuento.toFixed(2)}</span>
+                              </div>
+                            ) : (
+                              <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                            )}
                           </li>
                         ))}
                       </ul>
                       <div className="confirmation-total">
                         <span>Total:</span>
-                        <span>${total}</span>
+                        <span>${total.toFixed(2)}</span>
                       </div>
                       <div className="confirmation-duration">
                         <span>Duración total:</span>
                         <span>{duracionTotal} minutos</span>
                       </div>
                     </div>
-
                     <div className="confirmation-section">
                       <h3>Detalles de la cita</h3>
                       <div className="confirmation-detail">
@@ -1339,7 +1461,6 @@ const SeleccionarServicios = () => {
                         <span>{formData.hora}</span>
                       </div>
                     </div>
-
                     <div className="confirmation-section">
                       <h3>Tus datos</h3>
                       <div className="confirmation-detail">
@@ -1400,7 +1521,16 @@ const SeleccionarServicios = () => {
                             <span className="item-time">{servicio.tiempo} min</span>
                           </div>
                         </div>
-                        <span className="item-price">${servicio.precio}</span>
+                        <div className="item-price">
+                          {servicio.tieneDescuento ? (
+                            <div className="price-with-discount">
+                              <span className="original-price">${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                              <span className="discounted-price">${servicio.precioConDescuento.toFixed(2)}</span>
+                            </div>
+                          ) : (
+                            <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                          )}
+                        </div>
                       </motion.div>
                     ))}
                   </div>
@@ -1802,6 +1932,13 @@ const SeleccionarServicios = () => {
         }
 
         .info-badge-icon {
+          background-color: #e8f4fd;
+          border-radius: 8px;
+          color: #3498db;
+          font-size: 0.9rem;
+        }
+
+        .info-badge-icon {
           width: 18px;
           height: 18px;
         }
@@ -1941,10 +2078,53 @@ const SeleccionarServicios = () => {
           font-size: 0.85rem;
           color: #856404;
         }
+
+        /* Estilos para el precio con descuento */
+        .price-with-discount {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .original-price {
+          text-decoration: line-through;
+          color: #777;
+          font-size: 0.9em;
+        }
+
+        .discount-pill {
+          background-color: #e74c3c;
+          color: white;
+          padding: 2px 5px;
+          border-radius: 5px;
+          font-size: 0.7em;
+        }
       `}
       </style>
     </div>
   )
+}
+
+// Función para obtener empleados de respaldo
+function obtenerEmpleadosRespaldo() {
+  console.log("Usando datos de empleados de respaldo")
+  return [
+    {
+      _id: "emp1",
+      nombreempleado: "Ana Martínez",
+      especialidades: ["Manicura", "Pedicura"],
+    },
+    {
+      _id: "emp2",
+      nombreempleado: "Carlos Rodríguez",
+      especialidades: ["Uñas Acrílicas", "Diseño de Uñas"],
+    },
+    {
+      _id: "emp3",
+      nombreempleado: "Laura Sánchez",
+      especialidades: ["Manicura", "Pedicura", "Uñas Acrílicas"],
+    },
+  ]
 }
 
 export default SeleccionarServicios

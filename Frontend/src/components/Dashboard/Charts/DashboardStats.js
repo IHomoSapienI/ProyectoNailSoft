@@ -257,7 +257,7 @@ const DashboardStats = () => {
       change: `${stats.ingresosTotales.cambio}%`,
       icon: <DollarSign className="h-5 w-5 text-pink-600 dark:text-black" />,
       trend: Number.parseFloat(stats.ingresosTotales.cambio) >= 0 ? "up" : "down",
-      className: "card-gradient-1 text-black dark:card-gradient-33 dark:text-black ",
+      className: "card-gradient-1 text-black dark:card-gradient-33 dark:text-foreground ",
       details: [
         {
           label: "Productos",
