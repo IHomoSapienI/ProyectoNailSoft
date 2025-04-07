@@ -218,8 +218,8 @@ export default function TablaTipoServicios() {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Tipos de Servicios</h2>
+    <div className="tabla-container transition-all duration-500 w-full max-w-full  dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">Gestión de Tipos de Servicios</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
@@ -235,21 +235,21 @@ export default function TablaTipoServicios() {
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar tipos de servicios..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 w-full">
-        <table className="tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Descuento</th>
-              <th>Tipo</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full">
+        <table className="tiposerv-tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
+          <thead className="bg-pink-200 dark:card-gradient-4 ">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-800">Nombre</th>
+              <th className="dark:hover:bg-gray-800">Descuento</th>
+              <th className="dark:hover:bg-gray-800">Tipo</th>
+              <th className="dark:hover:bg-gray-800">Estado</th>
+              <th className="dark:hover:bg-gray-800 text-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody>

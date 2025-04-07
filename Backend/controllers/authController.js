@@ -88,75 +88,85 @@ const login = async (req, res) => {
 }
 
 const register = async (req, res) => {
-  const { nombre, email, password, confirmPassword, rol, estado } = req.body
+  const { nombre, apellido, email, password, confirmPassword, rol, estado, celular } = req.body;
 
-  console.log("Registro - Datos recibidos:", { nombre, email, rol, estado })
+  console.log("Registro - Datos recibidos:", { nombre, email, rol, estado });
 
   try {
-    if (!nombre || !email || !password || !confirmPassword) {
-      console.log("Faltan campos obligatorios")
+    // Validar campos obligatorios
+    if (!nombre || !apellido || !email || !password || !confirmPassword || !celular) {
+      console.log("Faltan campos obligatorios");
       return res.status(400).json({
-        msg: "Faltan campos obligatorios (nombre, email, password, confirmPassword)",
-      })
+        msg: "Faltan campos obligatorios (nombre, apellido, email, password, confirmPassword, celular)",
+      });
     }
 
     if (password !== confirmPassword) {
-      console.log("Las contraseñas no coinciden")
+      console.log("Las contraseñas no coinciden");
       return res.status(400).json({
         msg: "Las contraseñas no coinciden",
-      })
+      });
     }
 
-    const userExists = await User.findOne({ email })
+    const userExists = await User.findOne({ email });
     if (userExists) {
-      console.log("El usuario ya existe:", email)
-      return res.status(400).json({ message: "El usuario ya existe" })
+      console.log("El usuario ya existe:", email);
+      return res.status(400).json({ message: "El usuario ya existe" });
     }
 
-    let rolId
+    let rolId;
     if (rol) {
-      const existeRol = await Rol.findById(rol)
+      const existeRol = await Rol.findById(rol);
       if (!existeRol) {
-        console.log("El rol especificado no es válido:", rol)
+        console.log("El rol especificado no es válido:", rol);
         return res.status(400).json({
           msg: "El rol especificado no es válido",
-        })
+        });
       }
 
       // Verificar si el rol está activo
       if (!existeRol.estadoRol) {
-        console.log("Rol desactivado:", existeRol.nombreRol)
+        console.log("Rol desactivado:", existeRol.nombreRol);
         return res.status(403).json({
           msg: "El rol seleccionado está desactivado. Por favor, selecciona otro rol.",
           rolDesactivado: true,
-        })
+        });
       }
 
-      rolId = rol
+      rolId = rol;
     } else {
-      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" })
+      const defaultRol = await Rol.findOne({ nombreRol: "Cliente" });
 
       // Verificar si el rol por defecto está activo
       if (!defaultRol.estadoRol) {
-        console.log("Rol por defecto desactivado:", defaultRol.nombreRol)
+        console.log("Rol por defecto desactivado:", defaultRol.nombreRol);
         return res.status(403).json({
           msg: "El rol por defecto está desactivado. Por favor, contacta al administrador.",
           rolDesactivado: true,
-        })
+        });
       }
 
-      rolId = defaultRol._id
+      rolId = defaultRol._id;
     }
 
-    const newUser = await createUser({ nombre, email, password, rol: rolId, estado })
-    console.log("Usuario guardado en la base de datos:", JSON.stringify(newUser, null, 2))
+    const newUser = await createUser({
+      nombre,
+      apellido,
+      email,
+      password,
+      rol: rolId,
+      estado,
+      celular,
+    });
+
+    console.log("Usuario guardado en la base de datos:", JSON.stringify(newUser, null, 2));
 
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.rol.nombreRol },
       process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "1h" },
-    )
-    console.log("Token generado:", token)
+      { expiresIn: "1h" }
+    );
+    console.log("Token generado:", token);
 
     res.json({
       token,
@@ -166,12 +176,12 @@ const register = async (req, res) => {
         email: newUser.email,
         name: newUser.nombre,
       },
-    })
+    });
   } catch (error) {
-    console.error("Error en el registro:", error)
-    res.status(500).json({ message: "Error en el servidor" })
+    console.error("Error en el registro:", error);
+    res.status(500).json({ message: "Error en el servidor" });
   }
-}
+};
 
 // Solicitar restablecimiento de contraseña
 const requestPasswordReset = async (req, res) => {

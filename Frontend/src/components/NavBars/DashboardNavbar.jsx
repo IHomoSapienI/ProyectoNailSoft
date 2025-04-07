@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Bell, ChevronDown, Heart, LogOut, Search, Settings, User } from 'lucide-react'
 
 import { cn } from "../../libs/util"
-import { useSidebar } from ".././Sidebar/Sidebar"
+import { useSidebar } from "../Sidebar/Sidebar"
 import ThemeToggle from "../ThemeToggle" // Importar el componente ThemeToggle
 import './dashboardNavBar.css'
 

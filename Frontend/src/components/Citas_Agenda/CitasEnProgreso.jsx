@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FaPlay, FaEdit, FaSpinner, FaExclamationTriangle } from "react-icons/fa"
+import "./CitasEnProgreso.css";
 
 const CitasEnProgreso = () => {
   const [citas, setCitas] = useState([])
@@ -22,7 +23,6 @@ const CitasEnProgreso = () => {
     try {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
-
       // Obtener citas confirmadas y en progreso
       try {
         const citasResponse = await axios.get(`${API_URL}/citas`, { headers })

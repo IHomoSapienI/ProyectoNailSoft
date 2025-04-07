@@ -30,7 +30,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa"
-import { Md10K, MdOutlineSpa } from "react-icons/md"
+import { Md10K, MdAdUnits, MdAirlineSeatLegroomReduced, MdOutlineSpa, MdOutlineVrpano,MdOutlineRoomPreferences,MdOutlineMonetizationOn } from "react-icons/md"
 import "./sidebar.css"
 
 // Crear contexto para el estado del sidebar
@@ -312,7 +312,7 @@ const Sidebar = () => {
                     Ventas de servicios
                   </MenuItem> */}
                   <MenuItem
-                  icon={FaShoppingCart}
+                  icon={MdOutlineMonetizationOn }
                   to="/ventas-unificadas"
                   isActive={location.pathname === "/ventas"}
                   collapsed={isCollapsed}
@@ -339,7 +339,7 @@ const Sidebar = () => {
                     Servicios
                   </MenuItem>
                   <MenuItem
-                    icon={Md10K}
+                    icon={MdOutlineRoomPreferences}
                     to="/tiposervicios"
                     isActive={location.pathname === "/tiposervicios"}
                     collapsed={isCollapsed}
@@ -347,7 +347,7 @@ const Sidebar = () => {
                     Tipo Servicios
                   </MenuItem>
                   <MenuItem
-                    icon={FaTags}
+                    icon={MdOutlineVrpano}
                     to="/articles"
                     isActive={location.pathname === "/articles"}
                     collapsed={isCollapsed}

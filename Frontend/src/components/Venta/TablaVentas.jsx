@@ -35,6 +35,7 @@ const TablaVentas = () => {
           Authorization: `Bearer ${token}`,
         },
       })
+      console.log(ventas)
       setVentas(response.data.ventas || [])
     } catch (error) {
       console.error("Error al obtener las ventas:", error)
@@ -43,6 +44,7 @@ const TablaVentas = () => {
       setIsLoading(false)
     }
   }
+  
 
   useEffect(() => {
     fetchVentas()

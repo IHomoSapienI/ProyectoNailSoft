@@ -7,7 +7,7 @@
     transition: all 0.3s ease;
   }
   
-  .tabla-moderna {
+  .tiposerv-tabla-moderna {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -16,9 +16,9 @@
     overflow: hidden;
   }
   
-  .tabla-moderna th {
-    background-color: #f3f4f6;
-    color: #374151;
+  .tiposerv-tabla-moderna th {
+    /* background-color: #f3f4f6; */
+    /* color: #374151; */
     font-weight: 600;
     text-align: left;
     padding: 12px 16px;
@@ -26,20 +26,23 @@
     border-bottom: 1px solid #e5e7eb;
   }
   
-  .tabla-moderna td {
+  .tiposerv-tabla-moderna td {
     padding: 12px 16px;
     border-bottom: 1px solid #e5e7eb;
     color: #4b5563;
     font-size: 0.9rem;
   }
   
-  .tabla-moderna tr:last-child td {
+  .tiposerv-tabla-moderna tr:last-child td {
     border-bottom: none;
   }
   
-  .tabla-moderna tr:hover {
+  /* .tiposerv-tabla-moderna th:hover {
+    background-color: #5b5b5b;
+  } */
+  /* .tiposerv-tabla-moderna tr:hover {
     background-color: #f9fafb;
-  }
+  } */
   
   /* Botones de acción */
   .btn-add {
