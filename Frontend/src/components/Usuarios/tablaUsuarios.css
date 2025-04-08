@@ -18,9 +18,9 @@
   table-layout: fixed;
 }
 
-.usuario-tabla-moderna thead {
+/* .usuario-tabla-moderna thead {
   background-color: #f9fafb;
-}
+} */
 
 .usuario-tabla-moderna th {
   padding: 1rem;
@@ -37,23 +37,23 @@
   white-space: nowrap;
 }
 
-.usuario-tabla-moderna th:hover {
+/* .usuario-tabla-moderna th:hover {
   background-color: #5b5b5b;
-}
+} */
 
 .usuario-tabla-moderna td {
   padding: 1rem;
   font-size: 0.875rem;
-  color: #374151;
+  /* color: #374151; */
   border-bottom: 1px solid #e5e7eb;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.usuario-tabla-moderna tbody tr:hover {
+/* .usuario-tabla-moderna tbody tr:hover {
   background-color: #f9fafb;
-}
+} */
 
 .usuario-tabla-moderna tbody tr:last-child td {
   border-bottom: none;
@@ -180,7 +180,7 @@
   cursor: pointer;
 }
 
-.usuario-btn-toggle.active {
+/* .usuario-btn-toggle.active {
   background-color: #f97316;
   color: white;
 }
@@ -196,7 +196,7 @@
 
 .usuario-btn-toggle.inactive:hover {
   background-color: #059669;
-}
+} */
 
 /* Buscador */
 .usuario-search-container {
@@ -301,7 +301,7 @@
   font-weight: 500;
 }
 
-.usuario-estado-badge.activo {
+/* .usuario-estado-badge.activo {
   background-color: #dcfce7;
   color: #16a34a;
 }
@@ -309,7 +309,7 @@
 .usuario-estado-badge.inactivo {
   background-color: #fee2e2;
   color: #dc2626;
-}
+} */
 
 /* Modal */
 .usuario-modal-overlay {

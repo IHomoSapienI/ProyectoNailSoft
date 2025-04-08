@@ -438,7 +438,7 @@ export default function TablaPermisos() {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
         <table className="permiso-tabla-moderna w-full">
           <thead className="dark:card-gradient-4"  >
             <tr className="text-foreground">

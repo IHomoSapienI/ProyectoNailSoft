@@ -182,7 +182,7 @@ const TablaUsuarios = () => {
         // Mostrar indicador de carga
         const loadingToast = Swal.fire({
           title: "Procesando...",
-          html: '<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mx-auto"></div><p class="mt-4">Por favor espere</p>',
+          html: '<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 mx-auto border-pink-500 "></div><p class="mt-4">Por favor espere</p>',
           showConfirmButton: false,
           allowOutsideClick: false,
         })
@@ -236,7 +236,7 @@ const TablaUsuarios = () => {
 
   if (cargando) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando usuarios...</p>
@@ -268,7 +268,7 @@ const TablaUsuarios = () => {
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Usuarios</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
-        <button className="usuario-btn-add" onClick={manejarAgregarNuevo}>
+        <button className="btn-add" onClick={manejarAgregarNuevo}>
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           Nuevo Usuario
         </button>
@@ -285,53 +285,53 @@ const TablaUsuarios = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 ">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto ">
         <table className="usuario-tabla-moderna w-full">
-          <thead className=" text-black dark:card-gradient-4">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th style={{ width: "14%" }}>Nombre</th>
-              <th style={{ width: "14%" }}>Apellido</th>
-              <th style={{ width: "18%" }}>Email</th>
-              <th style={{ width: "12%" }}>Celular</th>
-              <th style={{ width: "12%" }}>Rol</th>
-              <th style={{ width: "12%" }}>Estado</th>
-              <th style={{ width: "12%" }}>Acciones</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "14%" }}>Nombre</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "14%" }}>Apellido</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "18%" }}>Email</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Celular</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Rol</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Estado</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {usuariosActuales.length > 0 ? (
               usuariosActuales.map((usuario) => (
-                <tr key={usuario._id}>
+                <tr className="dark:hover:bg-gray-500/50 text-foreground" key={usuario._id}>
                   <td className="font-medium">{usuario.nombre}</td>
-                  <td>{usuario.apellido}</td>
+                  <td >{usuario.apellido}</td>
                   <td>{usuario.email}</td>
                   <td>{usuario.celular}</td>
                   <td>
                     {typeof usuario.rol === "object" ? usuario.rol.nombreRol : usuario.rolNombre || "Desconocido"}
                   </td>
                   <td>
-                    <span className={`usuario-estado-badge ${usuario.estado ? "activo" : "inactivo"}`}>
+                    <span className={`usuario-estado-badge ${usuario.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                       {usuario.estado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     <div className="flex space-x-2">
                       <button
-                        className="usuario-btn-edit"
+                        className="usuario btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
                         onClick={() => manejarEditar(usuario)}
                         title="Editar usuario"
                       >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="usuario-btn-delete"
+                        className="usuario btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminar(usuario._id)}
                         title="Eliminar usuario"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                       <button
-                        className={`usuario-btn-toggle ${usuario.estado ? "active" : "inactive"}`}
+                        className={`usuario btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${usuario.estado ? "active bg-amber-500/80" : "inactive bg-emerald-500/50 dark:bg-emerald-500 "}`}
                         onClick={() => manejarToggleEstado(usuario._id, usuario.estado)}
                         title={usuario.estado ? "Desactivar usuario" : "Activar usuario"}
                       >

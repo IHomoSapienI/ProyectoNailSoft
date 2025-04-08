@@ -177,7 +177,7 @@
   }
   
   /* Badges de estado */
-  .estado-badge {
+  .estado-badge1 {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 9999px;
@@ -186,7 +186,7 @@
     text-align: center;
   }
   
-  .estado-badge.activo {
+  /* .estado-badge.activo {
     background-color: #d1fae5;
     color: #065f46;
   }
@@ -194,7 +194,7 @@
   .estado-badge.inactivo {
     background-color: #fee2e2;
     color: #991b1b;
-  }
+  } */
   
   /* Badge para tipo promocional */
   .tipo-badge {
@@ -207,13 +207,13 @@
   }
   
   .tipo-badge.promocional {
-    background-color: #fef3c7;
-    color: #92400e;
+    /* background-color: #e9be16; */
+    /* color: #92400e; */
   }
   
   .tipo-badge.normal {
-    background-color: #e0e7ff;
-    color: #4338ca;
+    /* background-color: #e0e7ff; */
+    /* color: #4338ca; */
   }
   
   /* Buscador */

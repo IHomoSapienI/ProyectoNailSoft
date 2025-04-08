@@ -367,7 +367,7 @@ export default function TablaRoles() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full">
+      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full mx-auto">
         <table className="rol-tabla-moderna w-full dark:bg-foreground" style={{ width: "100%", tableLayout: "fixed" }}>
           <thead className="dark:card-gradient-4">
             <tr>

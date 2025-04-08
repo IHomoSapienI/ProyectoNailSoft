@@ -241,21 +241,21 @@ export default function TablaTipoServicios() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full">
+      <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
         <table className="tiposerv-tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
           <thead className="bg-pink-200 dark:card-gradient-4 ">
             <tr className="text-foreground">
-              <th className="dark:hover:bg-gray-800">Nombre</th>
-              <th className="dark:hover:bg-gray-800">Descuento</th>
-              <th className="dark:hover:bg-gray-800">Tipo</th>
-              <th className="dark:hover:bg-gray-800">Estado</th>
-              <th className="dark:hover:bg-gray-800 text-foreground">Acciones</th>
+              <th className="dark:hover:bg-gray-500/50">Nombre</th>
+              <th className="dark:hover:bg-gray-500/50">Descuento</th>
+              <th className="dark:hover:bg-gray-500/50">Tipo</th>
+              <th className="dark:hover:bg-gray-500/50">Estado</th>
+              <th className="dark:hover:bg-gray-500/50 text-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody className="dark:bg-zinc-900/80 ">
             {tipoServiciosActuales.length > 0 ? (
               tipoServiciosActuales.map((tipoServicio) => (
-                <tr key={tipoServicio._id} className="dark:hover:bg-gray-800 text-foreground">
+                <tr key={tipoServicio._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium ">{tipoServicio.nombreTs}</td>
                   <td>
                     <div className="flex items-center">
@@ -264,27 +264,27 @@ export default function TablaTipoServicios() {
                     </div>
                   </td>
                   <td>
-                    <span className={`tipo-badge ${tipoServicio.esPromocional ? "promocional" : "normal"}`}>
+                    <span className={`tipo-badge bg-indigo-500/50 dark:bg-indigo-500 dark:text-foreground ${tipoServicio.esPromocional ?  "promocional bg-amber-500/50 dark:bg-amber-500" : "normal"}`}>
                       {tipoServicio.esPromocional ? "Promocional" : "Normal"}
                     </span>
                   </td>
                   <td>
-                    <span className={`estado-badge ${tipoServicio.activo ? "activo" : "inactivo"}`}>
+                    <span className={`estado-badge1  text-foreground ${tipoServicio.activo ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                       {tipoServicio.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     <div className="flex space-x-2 center">
-                      <button className="btn-edit-1 dark:bg-indigo-900/100 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(tipoServicio)} title="Editar">
+                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(tipoServicio)} title="Editar">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
 
-                      <button className="btn-delete-1 dark:bg-rose-900/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(tipoServicio._id)} title="Eliminar">
+                      <button className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(tipoServicio._id)} title="Eliminar">
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
                       <button
-                        className={`btn-toggle-1 dark:bg-amber-500/100 dark:hover:bg-amber-400/90 ${tipoServicio.activo ? "active" : "inactive"}`}
+                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${tipoServicio.activo ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(tipoServicio._id, tipoServicio.activo)}
                         title={tipoServicio.activo ? "Desactivar" : "Activar"}
                       >

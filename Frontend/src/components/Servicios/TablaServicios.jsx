@@ -387,7 +387,7 @@ const TablaServicios = () => {
 
   if (state.isLoading)
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando servicios...</p>
@@ -424,7 +424,7 @@ const TablaServicios = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
         {/* Modificar la tabla para mostrar información de descuento */}
         <table className="serv-tabla-moderna w-full">
           <thead className=" dark:card-gradient-4 ">
