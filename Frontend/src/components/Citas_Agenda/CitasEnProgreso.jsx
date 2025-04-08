@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FaPlay, FaEdit, FaSpinner, FaExclamationTriangle } from "react-icons/fa"
-import "./CitasEnProgreso.css";
+import "./CitasEnProgreso.css"
 
 const CitasEnProgreso = () => {
   const [citas, setCitas] = useState([])
@@ -210,9 +210,47 @@ const CitasEnProgreso = () => {
       const citaResponse = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
 
       if (citaResponse.data && citaResponse.data.cita) {
-        // Verificar si ya existe una venta para esta cita - CORREGIDO: Usar la ruta correcta
+        // Intentar obtener servicios con descuentos y guardarlos en localStorage
         try {
-          // Cambiado de /ventas a /ventaservicios
+          const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+          const serviciosConDescuento = await obtenerServiciosConDescuento()
+
+          // Si la cita tiene servicios, guardarlos con información de descuento
+          if (citaResponse.data.cita.servicios && citaResponse.data.cita.servicios.length > 0) {
+            const serviciosFormateados = citaResponse.data.cita.servicios.map((servicio) => {
+              const servicioId = servicio._id || servicio.servicio
+              const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
+
+              if (servicioCompleto) {
+                return {
+                  servicio: servicioId,
+                  nombreServicio: servicioCompleto.nombreServicio,
+                  precio: servicioCompleto.precio,
+                  tiempo: servicioCompleto.tiempo,
+                  tieneDescuento: servicioCompleto.tieneDescuento,
+                  precioOriginal: servicioCompleto.precioOriginal,
+                  precioConDescuento: servicioCompleto.precioConDescuento,
+                  porcentajeDescuento: servicioCompleto.porcentajeDescuento,
+                }
+              }
+
+              return {
+                servicio: servicioId,
+                nombreServicio: servicio.nombreServicio || "Servicio",
+                precio: servicio.precio || 0,
+                tiempo: servicio.tiempo || 0,
+              }
+            })
+
+            localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
+            console.log("Servicios con descuento guardados en localStorage antes de iniciar venta")
+          }
+        } catch (error) {
+          console.error("Error al preparar servicios con descuento:", error)
+        }
+
+        // Verificar si ya existe una venta para esta cita
+        try {
           const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
           const ventasData = ventasResponse.data.ventaservicios || []
 

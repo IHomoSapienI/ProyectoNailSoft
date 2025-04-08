@@ -38,6 +38,14 @@
    
 
   }
+  .border-gradient {
+    border: 2px solid transparent;
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    background-image: 
+      linear-gradient(to right, hsl(var(--background)), hsl(var(--background))), 
+      linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  }
 
   .dark {
     --background: 240 10% 3.9%;
@@ -69,11 +77,7 @@
     --ring: 330 81% 60%;
     
   }
-
-  .card-gradient-333 {
-    background: linear-gradient(135deg, #000000 0%, #080005 50%, #000000 100%);
-    color: white;
-  }
+  
   .card-gradient-33 {
     background:linear-gradient(135deg, #ceb6c4 0%, #671447 10%, #ceb6c4 100%,#671447 50%);
     color: white;
@@ -89,7 +93,7 @@
     color: white;
   }
   .card-gradient-5 {
-    background: linear-gradient(135deg, #4a464a 0%, #8e97b598 50%, #6c6c6c 100%);
+    background: #3c3c3c;
     color: white;
   }
   

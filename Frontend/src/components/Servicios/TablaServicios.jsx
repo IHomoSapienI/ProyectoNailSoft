@@ -427,22 +427,22 @@ const TablaServicios = () => {
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
         {/* Modificar la tabla para mostrar información de descuento */}
         <table className="serv-tabla-moderna w-full">
-          <thead className="dark:card-gradient-4 ">
+          <thead className=" dark:card-gradient-4 ">
             <tr className="text-foreground">
-              <th onClick={() => handleSort("nombreServicio")} className="cursor-pointer">
+              <th onClick={() => handleSort("nombreServicio")} className="cursor-pointer dark:hover:bg-gray-800">
                 Nombre del Servicio {getSortIcon("nombreServicio")}
               </th>
-              <th onClick={() => handleSort("tipoServicio")} className="cursor-pointer">
+              <th onClick={() => handleSort("tipoServicio")} className="cursor-pointer dark:hover:bg-gray-800">
                 Tipo {getSortIcon("tipoServicio")}
               </th>
-              <th onClick={() => handleSort("tiempo")} className="cursor-pointer">
+              <th onClick={() => handleSort("tiempo")} className="cursor-pointer dark:hover:bg-gray-800">
                 Tiempo {getSortIcon("tiempo")}
               </th>
-              <th onClick={() => handleSort("precio")} className="cursor-pointer">
+              <th onClick={() => handleSort("precio")} className="cursor-pointer dark:hover:bg-gray-800">
                 Precio {getSortIcon("precio")}
               </th>
               <th>Precio con Descuento</th>
-              <th onClick={() => handleSort("estado")} className="cursor-pointer">
+              <th onClick={() => handleSort("estado")} className="cursor-pointer dark:hover:bg-gray-800">
                 Estado {getSortIcon("estado")}
               </th>
               <th>Acciones</th>
@@ -485,14 +485,14 @@ const TablaServicios = () => {
                     </td>
                     <td>
                       <div className="flex space-x-2">
-                        <button className="btn-edit" onClick={() => manejarEditar(servicio)} title="Editar">
+                        <button className="btn-edit-1" onClick={() => manejarEditar(servicio)} title="Editar">
                           <FontAwesomeIcon icon={faEdit} />
                         </button>
-                        <button className="btn-delete" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
+                        <button className="btn-delete-1" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
                         <button
-                          className={`btn-toggle ${servicio.estado ? "active" : "inactive"}`}
+                          className={`btn-toggle-1 ${servicio.estado ? "active" : "inactive"}`}
                           onClick={() => manejarToggleEstado(servicio._id, servicio.estado)}
                           title={servicio.estado ? "Desactivar servicio" : "Activar servicio"}
                         >

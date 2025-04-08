@@ -559,7 +559,10 @@ const SeleccionarServicios = () => {
       const fechaCita = new Date(cita.fechacita).toISOString().split("T")[0]
 
       // Obtener el ID del empleado (puede ser un objeto o un string)
-      const citaEmpleadoId = typeof cita.nombreempleado === "object" ? cita.nombreempleado._id : cita.nombreempleado
+      const citaEmpleadoId =
+        typeof cita.nombreempleado === "object" && cita.nombreempleado !== null
+          ? cita.nombreempleado._id
+          : cita.nombreempleado
 
       // Solo considerar citas no canceladas
       return fechaCita === fechaFormateada && citaEmpleadoId === empleadoId && cita.estadocita !== "Cancelada"

@@ -190,7 +190,7 @@ export default function TablaTipoServicios() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando tipos de servicios...</p>
@@ -252,11 +252,11 @@ export default function TablaTipoServicios() {
               <th className="dark:hover:bg-gray-800 text-foreground">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80 ">
             {tipoServiciosActuales.length > 0 ? (
               tipoServiciosActuales.map((tipoServicio) => (
-                <tr key={tipoServicio._id} className="hover:bg-gray-50">
-                  <td className="font-medium">{tipoServicio.nombreTs}</td>
+                <tr key={tipoServicio._id} className="dark:hover:bg-gray-800 text-foreground">
+                  <td className="font-medium ">{tipoServicio.nombreTs}</td>
                   <td>
                     <div className="flex items-center">
                       <FontAwesomeIcon icon={faPercent} className="text-pink-500 mr-2" />
@@ -275,16 +275,16 @@ export default function TablaTipoServicios() {
                   </td>
                   <td>
                     <div className="flex space-x-2 center">
-                      <button className="btn-edit" onClick={() => manejarEditar(tipoServicio)} title="Editar">
+                      <button className="btn-edit-1 dark:bg-indigo-900/100 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(tipoServicio)} title="Editar">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
 
-                      <button className="btn-delete" onClick={() => manejarEliminar(tipoServicio._id)} title="Eliminar">
+                      <button className="btn-delete-1 dark:bg-rose-900/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(tipoServicio._id)} title="Eliminar">
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
                       <button
-                        className={`btn-toggle ${tipoServicio.activo ? "active" : "inactive"}`}
+                        className={`btn-toggle-1 dark:bg-amber-500/100 dark:hover:bg-amber-400/90 ${tipoServicio.activo ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(tipoServicio._id, tipoServicio.activo)}
                         title={tipoServicio.activo ? "Desactivar" : "Activar"}
                       >

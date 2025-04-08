@@ -39,16 +39,30 @@ const GestionVentaServicio = () => {
 
         // Cargar todos los servicios y productos disponibles primero
         try {
-          const [serviciosResponse, productosResponse] = await Promise.all([
-            axios.get(`${API_URL}/servicios`, { headers }),
-            axios.get(`${API_URL}/productos`, { headers }),
-          ])
+          // Importar la función para obtener servicios con descuentos
+          const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
 
-          setServicios(serviciosResponse.data.servicios || [])
+          // Obtener servicios con información de descuento
+          const serviciosConDescuento = await obtenerServiciosConDescuento()
+          setServicios(serviciosConDescuento || [])
+
+          // Cargar productos normalmente
+          const productosResponse = await axios.get(`${API_URL}/productos`, { headers })
           setProductos(productosResponse.data.productos || [])
         } catch (error) {
           console.error("Error al cargar servicios o productos:", error)
-          // No interrumpimos el flujo si no se pueden cargar los servicios o productos
+          // Intentar cargar de forma tradicional si falla el método con descuentos
+          try {
+            const [serviciosResponse, productosResponse] = await Promise.all([
+              axios.get(`${API_URL}/servicios`, { headers }),
+              axios.get(`${API_URL}/productos`, { headers }),
+            ])
+
+            setServicios(serviciosResponse.data.servicios || [])
+            setProductos(productosResponse.data.productos || [])
+          } catch (fallbackError) {
+            console.error("Error al cargar servicios o productos (fallback):", fallbackError)
+          }
         }
 
         // Intentar cargar servicios y productos guardados en localStorage primero
@@ -1301,18 +1315,26 @@ const GestionVentaServicio = () => {
                     <option value="">Selecciona un servicio</option>
                     {servicios.map((servicio) => {
                       const tieneDescuento =
-                        servicio.tipoServicio && servicio.tipoServicio.descuento && servicio.tipoServicio.descuento > 0
+                        servicio.tieneDescuento ||
+                        (servicio.tipoServicio &&
+                          servicio.tipoServicio.descuento &&
+                          servicio.tipoServicio.descuento > 0)
 
-                      const precioOriginal = Number.parseFloat(servicio.precio || 0)
+                      const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
                       const precioConDescuento = tieneDescuento
-                        ? precioOriginal - (precioOriginal * servicio.tipoServicio.descuento) / 100
+                        ? servicio.precioConDescuento ||
+                          precioOriginal - (precioOriginal * servicio.tipoServicio.descuento) / 100
                         : precioOriginal
+
+                      const porcentajeDescuento = tieneDescuento
+                        ? servicio.porcentajeDescuento || servicio.tipoServicio.descuento
+                        : 0
 
                       return (
                         <option key={servicio._id} value={servicio._id}>
                           {servicio.nombreServicio} -
                           {tieneDescuento
-                            ? `$${precioConDescuento.toFixed(2)} (${servicio.tipoServicio.descuento}% OFF)`
+                            ? `$${precioConDescuento.toFixed(2)} (${porcentajeDescuento}% OFF)`
                             : `$${precioOriginal.toFixed(2)}`}
                           ({servicio.tiempo} min)
                         </option>

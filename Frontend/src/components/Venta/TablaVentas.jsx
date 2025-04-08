@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import FormularioVenta from "./FormularioVenta"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import Modal from "react-modal"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faInfoCircle, faSearch, faCheck } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faEdit, faTrash, faInfoCircle, faSearch, faCheck, faTag } from "@fortawesome/free-solid-svg-icons"
 import "./tablaVentaServicio.css"
 
 Modal.setAppElement("#root")
@@ -25,6 +25,7 @@ const TablaVentas = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
   const fetchVentas = async () => {
     setIsLoading(true)
@@ -44,7 +45,6 @@ const TablaVentas = () => {
       setIsLoading(false)
     }
   }
-  
 
   useEffect(() => {
     fetchVentas()
@@ -178,9 +178,97 @@ const TablaVentas = () => {
     }
   }
 
-  const mostrarDetallesVenta = (venta) => {
-    setDetallesVenta(venta)
-    setModalDetallesAbierto(true)
+  const mostrarDetallesVenta = async (venta) => {
+    setIsLoading(true)
+    try {
+      const token = localStorage.getItem("token")
+
+      // Obtener detalles completos de la venta
+      const response = await axios.get(`https://gitbf.onrender.com/api/ventas/${venta._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.data && response.data.venta) {
+        const ventaCompleta = response.data.venta
+
+        // Procesar servicios para asegurar que la información de descuento esté correcta
+        if (ventaCompleta.servicios && ventaCompleta.servicios.length > 0) {
+          try {
+            // Intentar obtener servicios con descuentos
+            const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+            const serviciosConDescuento = await obtenerServiciosConDescuento()
+
+            ventaCompleta.servicios = ventaCompleta.servicios.map((servicio) => {
+              // Obtener el ID del servicio
+              const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+
+              // Buscar el servicio en la lista de servicios con descuento
+              const servicioConDescuento = serviciosConDescuento.find((s) => s._id === servicioId)
+
+              // Si encontramos el servicio con información de descuento, usamos esa información
+              if (servicioConDescuento) {
+                return {
+                  ...servicio,
+                  nombreServicio: servicio.nombreServicio || servicioConDescuento.nombreServicio,
+                  tieneDescuento: servicioConDescuento.tieneDescuento || false,
+                  precioOriginal: servicioConDescuento.precioOriginal || Number.parseFloat(servicio.precio || 0),
+                  precioConDescuento:
+                    servicioConDescuento.precioConDescuento || Number.parseFloat(servicio.precio || 0),
+                  porcentajeDescuento: servicioConDescuento.porcentajeDescuento || 0,
+                  tipoServicioNombre: servicioConDescuento.tipoServicio?.nombreTs || "No especificado",
+                  esPromocional: servicioConDescuento.esPromocional || false,
+                }
+              }
+
+              // Si ya tiene información de descuento, la mantenemos
+              if (servicio.tieneDescuento !== undefined) {
+                return {
+                  ...servicio,
+                  precioOriginal: Number.parseFloat(servicio.precioOriginal || servicio.precio || 0),
+                  precioConDescuento: Number.parseFloat(servicio.precioConDescuento || servicio.precio || 0),
+                }
+              }
+
+              // Verificar si hay indicios de descuento en el servicio
+              const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+              const precioFinal = Number.parseFloat(servicio.precioConDescuento || servicio.precio || 0)
+
+              const tieneDescuento =
+                (servicio.porcentajeDescuento && servicio.porcentajeDescuento > 0) || precioOriginal > precioFinal
+
+              let porcentajeDescuento = servicio.porcentajeDescuento || 0
+
+              // Si tiene descuento pero no tenemos el porcentaje, calcularlo
+              if (tieneDescuento && porcentajeDescuento === 0 && precioOriginal > 0) {
+                porcentajeDescuento = Math.round(((precioOriginal - precioFinal) / precioOriginal) * 100)
+              }
+
+              return {
+                ...servicio,
+                tieneDescuento,
+                precioOriginal,
+                precioConDescuento: precioFinal,
+                porcentajeDescuento,
+              }
+            })
+          } catch (error) {
+            console.error("Error al procesar servicios con descuentos:", error)
+          }
+        }
+
+        setDetallesVenta(ventaCompleta)
+        setModalDetallesAbierto(true)
+      } else {
+        throw new Error("Formato de respuesta inválido")
+      }
+    } catch (error) {
+      console.error("Error al obtener detalles de la venta:", error)
+      Swal.fire("Error", "No se pudieron cargar los detalles de la venta", "error")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Filtrar ventas por tipo y búsqueda
@@ -267,10 +355,18 @@ const TablaVentas = () => {
               className="form-select text-sm dark:card-gradient-4 text-foreground "
               disabled={isProcessing}
             >
-              <option value="todos" className="dark:bg-gray-600 hover:bg-gray-500">Todos</option>
-              <option value="productos" className="dark:bg-gray-600 hover:bg-gray-500">Solo Productos</option>
-              <option value="servicios" className="dark:bg-gray-600 hover:bg-gray-500">Solo Servicios</option>
-              <option value="mixta" className="dark:bg-gray-600 hover:bg-gray-500 hover:bg-gray-300">Mixta</option>
+              <option value="todos" className="dark:bg-gray-600 hover:bg-gray-500">
+                Todos
+              </option>
+              <option value="productos" className="dark:bg-gray-600 hover:bg-gray-500">
+                Solo Productos
+              </option>
+              <option value="servicios" className="dark:bg-gray-600 hover:bg-gray-500">
+                Solo Servicios
+              </option>
+              <option value="mixta" className="dark:bg-gray-600 hover:bg-gray-500 hover:bg-gray-300">
+                Mixta
+              </option>
             </select>
           </div>
 
@@ -504,9 +600,9 @@ const TablaVentas = () => {
                       {detallesVenta.productos.map((producto, index) => (
                         <tr key={`producto-${index}`}>
                           <td>{producto.nombreProducto}</td>
-                          <td className="text-right">${producto.precio.toFixed(2)}</td>
+                          <td className="text-right">${Number.parseFloat(producto.precio).toFixed(2)}</td>
                           <td className="text-right">{producto.cantidad}</td>
-                          <td className="text-right">${producto.subtotal.toFixed(2)}</td>
+                          <td className="text-right">${Number.parseFloat(producto.subtotal).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -528,39 +624,102 @@ const TablaVentas = () => {
                     <thead>
                       <tr>
                         <th>Nombre</th>
-                        <th className="text-right">Precio</th>
+                        <th className="text-right">Precio Original</th>
+                        <th className="text-center">Descuento</th>
+                        <th className="text-right">Precio Final</th>
                         <th className="text-right">Tiempo</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {detallesVenta.servicios.map((servicio, index) => (
-                        <tr key={`servicio-${index}`}>
-                          <td>{servicio.nombreServicio}</td>
-                          <td className="text-right">
-                            {servicio.tieneDescuento ? (
-                              <div className="price-with-discount">
-                                <span className="original-price">
-                                  ${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}
+                      {detallesVenta.servicios.map((servicio, index) => {
+                        // Asegurar que los valores sean números
+                        const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+                        const precioFinal = servicio.tieneDescuento
+                          ? Number.parseFloat(servicio.precioConDescuento || 0)
+                          : precioOriginal
+
+                        return (
+                          <tr key={`servicio-${index}`}>
+                            <td>{servicio.nombreServicio}</td>
+                            <td className="text-right">${precioOriginal.toFixed(2)}</td>
+                            <td className="text-center">
+                              {servicio.tieneDescuento && servicio.porcentajeDescuento > 0 ? (
+                                <span className="discount-badge">
+                                  <FontAwesomeIcon icon={faTag} className="mr-1" />
+                                  {servicio.porcentajeDescuento || 0}% OFF
                                 </span>
-                                <span>
-                                  ${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
-                            )}
-                          </td>
-                          <td className="text-right">{servicio.tiempo} min</td>
-                        </tr>
-                      ))}
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td className="text-right">
+                              {servicio.tieneDescuento ? (
+                                <span className="discounted-price">${precioFinal.toFixed(2)}</span>
+                              ) : (
+                                <span>${precioFinal.toFixed(2)}</span>
+                              )}
+                            </td>
+                            <td className="text-right">{servicio.tiempo} min</td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td colSpan="2">Subtotal Servicios</td>
+                        <td colSpan="4">Subtotal Servicios</td>
                         <td className="text-right">${detallesVenta.subtotalServicios.toFixed(2)}</td>
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+              )}
+
+              {/* Resumen de Descuentos */}
+              {detallesVenta.servicios && detallesVenta.servicios.some((s) => s.tieneDescuento) && (
+                <div className="form-group">
+                  <p className="text-sm font-medium text-gray-500">Resumen de Descuentos:</p>
+                  <div className="p-4 bg-pink-50 rounded-md mt-2">
+                    <ul className="space-y-2">
+                      {detallesVenta.servicios
+                        .filter((s) => s.tieneDescuento)
+                        .map((servicio, index) => {
+                          const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+                          const precioFinal = Number.parseFloat(servicio.precioConDescuento || servicio.precio || 0)
+                          const ahorro = precioOriginal - precioFinal
+
+                          return (
+                            <li key={`descuento-${index}`} className="flex justify-between border-b pb-2">
+                              <div>
+                                <span className="font-medium">{servicio.nombreServicio}</span>
+                                <span className="discount-badge ml-2 text-black">{servicio.porcentajeDescuento || 0}% OFF</span>
+                              </div>
+                              <div className="text-right">
+                                <div>
+                                  <span className="original-price">${precioOriginal.toFixed(2)}</span>
+                                </div>
+                                <div>
+                                  <span className="discounted-price">${precioFinal.toFixed(2)}</span>
+                                </div>
+                                <div className="text-green-600 font-semibold">Ahorro: ${ahorro.toFixed(2)}</div>
+                              </div>
+                            </li>
+                          )
+                        })}
+                    </ul>
+                    <div className="mt-4 text-right">
+                      <p className="text-lg font-bold text-green-600">
+                        Total ahorrado: $
+                        {detallesVenta.servicios
+                          .filter((s) => s.tieneDescuento)
+                          .reduce((total, servicio) => {
+                            const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+                            const precioFinal = Number.parseFloat(servicio.precioConDescuento || servicio.precio || 0)
+                            return total + (precioOriginal - precioFinal)
+                          }, 0)
+                          .toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -601,4 +760,3 @@ const TablaVentas = () => {
 }
 
 export default TablaVentas
-

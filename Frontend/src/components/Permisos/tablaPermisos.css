@@ -34,9 +34,9 @@
     transition: background-color 0.2s;
   }
   
-  .permiso-tabla-moderna th:hover {
+  /* .permiso-tabla-moderna th:hover {
     background-color: #5b5b5b;
-  }
+  } */
   
   .permiso-tabla-moderna td {
     padding: 1rem;

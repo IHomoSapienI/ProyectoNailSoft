@@ -442,19 +442,19 @@ export default function TablaPermisos() {
         <table className="permiso-tabla-moderna w-full">
           <thead className="dark:card-gradient-4"  >
             <tr className="text-foreground">
-              <th onClick={() => handleSort("nombrePermiso")} className="text-foreground">
+              <th onClick={() => handleSort("nombrePermiso")} className="text-foreground dark:hover:card-gradient-0">
                 Nombre {getSortIcon("nombrePermiso")}
               </th>
-              <th onClick={() => handleSort("descripcion")}>
+              <th onClick={() => handleSort("descripcion")} className="dark:hover:card-gradient-0">
                 Descripción {getSortIcon("descripcion")}
               </th>
-              <th onClick={() => handleSort("categoria")} >
+              <th onClick={() => handleSort("categoria")} className="dark:hover:card-gradient-0">
                 Categoría {getSortIcon("categoria")}
               </th>
-              <th onClick={() => handleSort("nivel")} >
+              <th onClick={() => handleSort("nivel")} className="dark:hover:card-gradient-0">
                 Nivel {getSortIcon("nivel")}
               </th>
-              <th onClick={() => handleSort("activo")} className="text-center">
+              <th onClick={() => handleSort("activo")} className="text-center " >
                 Estado {getSortIcon("activo")}
               </th>
               <th className="text-center">Acciones</th>
@@ -475,11 +475,11 @@ export default function TablaPermisos() {
                   </td>
                   <td>
                     <div className="flex justify-center space-x-2">
-                      <button className="btn-edit" onClick={() => manejarEditar(permiso)} title="Editar permiso">
+                      <button className="btn-edit-1" onClick={() => manejarEditar(permiso)} title="Editar permiso">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-delete"
+                        className="btn-delete-1"
                         onClick={() => manejarEliminar(permiso._id)}
                         title="Eliminar permiso"
                       >
@@ -489,7 +489,7 @@ export default function TablaPermisos() {
                         <FontAwesomeIcon icon={faInfoCircle} />
                       </button>
                       <button
-                        className={`btn-toggle ${permiso.activo ? "active" : "inactive"}`}
+                        className={`btn-toggle-1 ${permiso.activo ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(permiso._id, permiso.activo)}
                         title={permiso.activo ? "Desactivar permiso" : "Activar permiso"}
                       >

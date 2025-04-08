@@ -18,9 +18,9 @@
   table-layout: fixed;
 }
 
-.serv-tabla-moderna thead {
+/* .serv-tabla-moderna thead {
   background-color: #f9fafb;
-}
+} */
 
 .serv-tabla-moderna th {
   padding: 1rem;
@@ -34,9 +34,9 @@
   transition: background-color 0.2s;
 }
 
-.serv-tabla-moderna th:hover {
+/* .serv-tabla-moderna th:hover {
   background-color: #5b5b5b;
-}
+} */
 
 .serv-tabla-moderna td {
   padding: 1rem;

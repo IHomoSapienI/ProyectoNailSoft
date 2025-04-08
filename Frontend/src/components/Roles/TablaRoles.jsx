@@ -371,9 +371,9 @@ export default function TablaRoles() {
         <table className="rol-tabla-moderna w-full dark:bg-foreground" style={{ width: "100%", tableLayout: "fixed" }}>
           <thead className="dark:card-gradient-4">
             <tr>
-              <th>Nombre del Rol</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th className="dark:hover:card-gradient-0">Nombre del Rol</th>
+              <th className="dark:hover:card-gradient-0">Estado</th>
+              <th className="dark:hover:card-gradient-0">Acciones</th>
             </tr>
           </thead>
           <tbody>

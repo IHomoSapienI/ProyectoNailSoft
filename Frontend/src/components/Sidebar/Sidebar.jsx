@@ -290,17 +290,18 @@ const Sidebar = () => {
             {/* Menú para administradores */}
             {userRole === "admin" && (
               <>
-                <MenuGroup title="Principal" defaultExpanded={true} collapsed={isCollapsed}>
-                  <MenuItem
+              <MenuItem
                   
-                    icon={FaTachometerAlt}
-                    to="/dashboard"
-                    isActive={location.pathname === "/dashboard"}
-                    collapsed={isCollapsed}
-                  >
-                    Dashboard
-                  </MenuItem>
-                </MenuGroup>
+                  icon={FaTachometerAlt}
+                  to="/dashboard"
+                  isActive={location.pathname === "/dashboard"}
+                  collapsed={isCollapsed}
+                >
+                  Dashboard
+                </MenuItem>
+                {/* <MenuGroup title="Principal" defaultExpanded={true} collapsed={isCollapsed}>
+                  
+                </MenuGroup> */}
 
                 <MenuGroup title="Gestión de Ventas" collapsed={isCollapsed}>
                   {/* <MenuItem

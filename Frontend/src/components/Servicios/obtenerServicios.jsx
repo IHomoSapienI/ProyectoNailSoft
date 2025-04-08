@@ -1,4 +1,4 @@
-// Función para obtener servicios con información de descuento
+// Optimizar la función para obtener servicios con descuento
 export const obtenerServiciosConDescuento = async () => {
   try {
     // Obtener el token de autenticación del localStorage
@@ -51,15 +51,6 @@ export const obtenerServiciosConDescuento = async () => {
         // Si no hay tipo de servicio, no hay descuento
         const precioOriginal = Number.parseFloat(servicio.precio || 0)
 
-        console.log(
-          `Servicio: ${servicio.nombreServicio}, ` +
-            `Tipo: Sin tipo (null/undefined), ` +
-            `Precio original: ${precioOriginal.toFixed(2)}, ` +
-            `Tiene descuento: No, ` +
-            `Descuento: 0%, ` +
-            `Precio con descuento: ${precioOriginal.toFixed(2)}`,
-        )
-
         return {
           ...servicio,
           tieneDescuento: false,
@@ -88,17 +79,6 @@ export const obtenerServiciosConDescuento = async () => {
       const precioConDescuento = tieneDescuento
         ? precioOriginal - (precioOriginal * tipoServicioCompleto.descuento) / 100
         : precioOriginal
-
-      // Información de depuración
-      console.log(
-        `Servicio: ${servicio.nombreServicio}, ` +
-          `Tipo ID: ${tipoServicioId}, ` +
-          `Tipo Nombre: ${tipoServicioCompleto ? tipoServicioCompleto.nombreTs : "Sin tipo"}, ` +
-          `Precio original: ${precioOriginal.toFixed(2)}, ` +
-          `Tiene descuento: ${tieneDescuento ? "Sí" : "No"}, ` +
-          `Descuento: ${tieneDescuento ? tipoServicioCompleto.descuento : 0}%, ` +
-          `Precio con descuento: ${precioConDescuento.toFixed(2)}`,
-      )
 
       // Devolver el objeto con toda la información necesaria
       return {

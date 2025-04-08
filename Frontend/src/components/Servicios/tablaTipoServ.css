@@ -29,7 +29,7 @@
   .tiposerv-tabla-moderna td {
     padding: 12px 16px;
     border-bottom: 1px solid #e5e7eb;
-    color: #4b5563;
+    /* color: #4b5563; */
     font-size: 0.9rem;
   }
   
@@ -63,9 +63,9 @@
     background-color: #be185d;
   }
   
-  .btn-edit,
-  .btn-delete,
-  .btn-toggle {
+  .btn-edit-1,
+  .btn-delete-1,
+  .btn-toggle-1 {
     width: 32px;
     height: 32px;
     border-radius: 6px;
@@ -76,14 +76,75 @@
     transition: all 0.2s;
   }
   
-  .btn-edit {
-    background-color: #3b82f6;
+  .btn-edit-1 {
+    background-color: #8bb1ee;
     color: white;
   }
   
-  .btn-edit:hover {
-    background-color: #2563eb;
+  .btn-delete-1 {
+    background-color: #f35f81;
+    color: white;
   }
+
+  .btn-toggle-1 {
+    background-color: #f9d39a;
+    color: white;
+  }
+
+
+
+    
+/* Botón con efecto de línea animada */
+.btn-edit-1,
+.btn-delete-1,
+.btn-info,
+.btn-success,
+.btn-toggle-1 {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Efecto de línea animada que funciona con cualquier color de fondo */
+.btn-edit-1::before,
+.btn-delete-1::before,
+.btn-info::before,
+.btn-success::before,
+.btn-toggle-1::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  z-index: -1;
+  transition: none;
+  transform: skewX(-30deg);
+}
+
+.btn-edit-1:hover::before,
+.btn-delete-1:hover::before,
+.btn-info:hover::before,
+.btn-success:hover::before,
+.btn-toggle-1:hover::before {
+  left: 100%;
+  transition: all 0.5s ease;
+}
+
+/* Puedes personalizar el color de fondo sin perder la animación */
+.btn-edit {
+  background-color: #000000; /* Puedes cambiar este color */
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #070b13; /* Y también este color */
+}
+
+
+
+
   
   .btn-delete {
     background-color: #ef4444;
@@ -301,11 +362,11 @@
   
   /* Botones del formulario */
   .btn-primary {
-    background-color: #db2777;
+    background-color: #d24787;
     color: white;
     border: none;
     border-radius: 6px;
-    padding: 8px 16px;
+    padding: 8px 10px;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
