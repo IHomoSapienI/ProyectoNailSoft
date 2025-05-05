@@ -24,6 +24,12 @@ const CitaSchema = Schema({
         type: Number,
         required: true
     },
+    motivo: { 
+        type: String
+    },
+    fechacancelacion: {  
+        type: Date
+    },
     montototal: {
         type: Number,
         required: true

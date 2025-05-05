@@ -147,7 +147,25 @@ const AgendaEmpleado = () => {
       }
 
       const citasFormateadas = citasFiltradas.map((cita) => {
-        const fechaInicio = new Date(cita.fechacita)
+        // SOLUCIÓN CORREGIDA: Crear fecha correctamente sin conversión de zona horaria
+        let fechaInicio
+
+        // Si tenemos horacita como campo separado, usarlo para construir la fecha
+        if (cita.horacita) {
+          // Extraer solo la parte de fecha de fechacita (YYYY-MM-DD)
+          const fechaBase =
+            typeof cita.fechacita === "string"
+              ? cita.fechacita.split("T")[0]
+              : new Date(cita.fechacita).toISOString().split("T")[0]
+
+          // Construir fecha combinando fecha base y hora exacta
+          fechaInicio = new Date(`${fechaBase}T${cita.horacita}`)
+          console.log(`Cita ${cita._id}: Usando fecha ${fechaBase} y hora ${cita.horacita}`)
+        } else {
+          // Fallback al comportamiento anterior si no hay horacita
+          fechaInicio = new Date(cita.fechacita)
+          console.log(`Cita ${cita._id}: Usando fecha original ${fechaInicio}`)
+        }
 
         // Calcular fecha fin basada en la duración de los servicios
         const duracionTotal =
@@ -179,7 +197,7 @@ const AgendaEmpleado = () => {
             colorEvento = "#3b82f6" // Rosa
             borderColor = "#2563eb"
             break
-          
+
           default:
             break
         }
@@ -226,8 +244,8 @@ const AgendaEmpleado = () => {
             (servicio) =>
               `<div class="swal-service-item">
                 <span>${servicio.nombreServicio || "Sin nombre"}</span>
-                <span>$${servicio.precio || 0} (${servicio.tiempo || 0} min)</span>
-              </div>`
+                <span>${servicio.precio || 0} (${servicio.tiempo || 0} min)</span>
+              </div>`,
           )
           .join("")
       : "<div class='swal-service-item'>No hay servicios registrados</div>"
@@ -261,7 +279,7 @@ const AgendaEmpleado = () => {
           
           <div class="swal-info-row">
             <strong>Hora:</strong>
-            <span>${moment(event.start).format("LT")} - ${moment(event.end).format("LT")}</span>
+            <span>${event.cita.horacita || moment(event.start).format("LT")} - ${moment(event.end).format("LT")}</span>
           </div>
           
           <div class="swal-info-row">
@@ -271,7 +289,7 @@ const AgendaEmpleado = () => {
           
           <div class="swal-info-row">
             <strong>Monto:</strong>
-            <span>$${event.cita.montototal?.toFixed(2) || "0.00"}</span>
+            <span>${event.cita.montototal?.toFixed(2) || "0.00"}</span>
           </div>
         </div>
         
@@ -313,7 +331,7 @@ const AgendaEmpleado = () => {
         }
         .swal-appointment-status.pendiente {
           background-color: #3b82f6;
-       
+        }
         .swal-appointment-status.en.progreso {
           background-color: #f59e0b;
           color: #333;
@@ -632,7 +650,7 @@ const AgendaEmpleado = () => {
               <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className="agenda-select">
                 <option value="">Todos los estados</option>
                 <option value="Pendiente">Pendiente</option>
-                {/* <option value="Confirmada">Confirmada</option> */}
+                <option value="Confirmada">Confirmada</option>
                 <option value="En Progreso">En Progreso</option>
                 <option value="Completada">Completada</option>
                 <option value="Cancelada">Cancelada</option>
@@ -698,7 +716,7 @@ const AgendaEmpleado = () => {
                 <div className="agenda-legend-color" style={{ backgroundColor: "#3b82f6" }}></div>
                 <span className="agenda-legend-text">Pendiente</span>
               </div>
-              
+
               <div className="agenda-legend-item">
                 <div className="agenda-legend-color" style={{ backgroundColor: "#f59e0b" }}></div>
                 <span className="agenda-legend-text">En Progreso</span>

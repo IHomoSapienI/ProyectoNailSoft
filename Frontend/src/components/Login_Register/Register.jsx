@@ -4,47 +4,23 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
-import "./register.css"
+import "./Register.css"
 
 export default function Register() {
   const [formData, setFormData] = useState({
     nombre: "",
-    apellido: "", // Añadido campo de apellido
+    apellido: "",
     email: "",
-    celular: "", // Añadido campo de celular
+    celular: "",
     password: "",
-    confirmPassword: "",
-    tipoUsuario: "cliente", // Por defecto es cliente
-    rol: "", // Se asignará automáticamente según el tipo de usuario
+    confirmPassword: ""
   })
-  const [roles, setRoles] = useState([])
+
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [passwordStrength, setPasswordStrength] = useState(0)
   const navigate = useNavigate()
-
-  // Cargar roles disponibles al iniciar
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const response = await axios.get("https://gitbf.onrender.com/api/roles")
-        setRoles(response.data.roles || [])
-
-        // Asignar rol por defecto (cliente) si hay roles disponibles
-        if (response.data.roles && response.data.roles.length > 0) {
-          const clienteRole = response.data.roles.find((r) => r.nombre === "CLIENTE_ROLE")
-          if (clienteRole) {
-            setFormData((prev) => ({ ...prev, rol: clienteRole._id }))
-          }
-        }
-      } catch (error) {
-        console.error("Error al cargar roles:", error)
-      }
-    }
-
-    fetchRoles()
-  }, [])
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -57,30 +33,17 @@ export default function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }))
 
-    // Si cambia el tipo de usuario, actualizar automáticamente el rol
-    if (name === "tipoUsuario") {
-      const rolCliente = roles.find((r) => r.nombre === "CLIENTE_ROLE")
-      const rolEmpleado = roles.find((r) => r.nombre === "EMPLEADO_ROLE")
-
-      if (value === "cliente" && rolCliente) {
-        setFormData((prev) => ({ ...prev, rol: rolCliente._id }))
-      } else if (value === "empleado" && rolEmpleado) {
-        setFormData((prev) => ({ ...prev, rol: rolEmpleado._id }))
-      }
-    }
-
     if (name === "password") {
-      // Calcular la fortaleza de la contraseña
       let strength = 0
       if (value.length >= 8) strength += 25
-      if (value.match(/[A-Z]/)) strength += 25
-      if (value.match(/[0-9]/)) strength += 25
-      if (value.match(/[^A-Za-z0-9]/)) strength += 25
+      if (/[A-Z]/.test(value)) strength += 25
+      if (/[0-9]/.test(value)) strength += 25
+      if (/[^A-Za-z0-9]/.test(value)) strength += 25
       setPasswordStrength(strength)
     }
   }
@@ -89,54 +52,74 @@ export default function Register() {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+  
+    // Validaciones
+    if (!formData.nombre || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError("Todos los campos marcados con * son obligatorios")
+      setLoading(false)
+      return
+    }
+  
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden")
       setLoading(false)
       return
     }
-
-    if (!formData.rol) {
-      setError("Debe seleccionar un rol válido")
+  
+    if (passwordStrength < 50) {
+      setError("La contraseña debe contener al menos 8 caracteres, una mayúscula y un número")
       setLoading(false)
       return
     }
-
-    const payload = {
-      nombre: formData.nombre.trim(),
-      apellido: formData.apellido.trim(),
-      correo: formData.email.trim(),
-      celular: formData.celular.trim(),
-      password: formData.password,
-      rol: formData.rol,
-      tipoUsuario: formData.tipoUsuario,
-      estado: true,
-    }
-
+  
     try {
-      // Usar la ruta correcta para el registro de usuarios
-      const response = await axios.post("https://gitbf.onrender.com/api/usuarios", payload)
-      const { token, usuario } = response.data
-
-      if (usuario && usuario.rol) {
-        localStorage.setItem("userRole", formData.tipoUsuario.toLowerCase())
-      }
-      localStorage.setItem("token", token)
-
-      // Redirigir según el tipo de usuario
-      if (formData.tipoUsuario === "cliente") {
-        navigate("/dashboard-cliente")
-      } else {
-        navigate("/dashboard-empleado")
-      }
-    } catch (error) {
-      console.error("Error de registro:", error)
-      const message = error.response?.data?.msg || error.response?.data?.message
-      setError(
-        message === "El correo ya está registrado" || message === "El usuario ya existe"
-          ? "Este correo electrónico ya está registrado. Intenta con otro."
-          : message || "Error al registrar, intenta nuevamente",
+      const response = await axios.post(
+        "https://gitbf.onrender.com/api/auth/register",
+        {
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          email: formData.email.trim(),
+          celular: formData.celular.trim(),
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
+        },
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
       )
+  
+      const { token, role, user } = response.data
+      localStorage.setItem("token", token)
+      localStorage.setItem("userRole", role.toLowerCase()) // Almacenar en minúsculas
+      if (user?.id) {
+        localStorage.setItem("userId", user.id)
+      }
+      
+      // Redirigir según el rol (comparando en minúsculas)
+      if (role.toLowerCase() === "admin") {
+        navigate("/dashboard")
+      } else {
+        navigate("/") // Redirige a la página principal para clientes
+      }
+  
+    } catch (error) {
+      console.error("Registration error:", error)
+      
+      let errorMessage = "Error al registrar. Por favor intente nuevamente."
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = error.response.data.msg || "Datos inválidos"
+        } else if (error.response.status === 409) {
+          errorMessage = "El correo electrónico ya está registrado"
+        }
+      } else if (error.request) {
+        errorMessage = "No se pudo conectar al servidor. Verifique su conexión."
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -153,7 +136,7 @@ export default function Register() {
               transform: `translate(
                 ${Math.sin((mousePosition.x + i * 100) * 0.01) * 20}px,
                 ${Math.cos((mousePosition.y + i * 100) * 0.01) * 20}px
-              )`,
+              )`
             }}
           />
         ))}
@@ -172,14 +155,26 @@ export default function Register() {
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
             className="logo-container"
           >
-            <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
+            <img 
+              src="https://gitbf.onrender.com/uploads/logo1.png" 
+              alt="NailsSoft Logo" 
+              className="logo-image" 
+              onError={(e) => {
+                e.target.src = '/default-logo.png'
+              }}
+            />
             <h1 className="logo-text">NailsSoft</h1>
           </motion.div>
 
           <div className="form-container">
             <h2 className="welcome-text">Crear una cuenta</h2>
+            
             {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className="error-message"
+              >
                 {error}
               </motion.div>
             )}
@@ -194,8 +189,9 @@ export default function Register() {
                   required
                   className="form-input"
                   placeholder=" "
+                  maxLength={50}
                 />
-                <label className="input-label">Nombre</label>
+                <label className="input-label">Nombre *</label>
               </div>
 
               <div className="input-group">
@@ -204,9 +200,9 @@ export default function Register() {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
-                  required
                   className="form-input"
                   placeholder=" "
+                  maxLength={50}
                 />
                 <label className="input-label">Apellido</label>
               </div>
@@ -220,8 +216,9 @@ export default function Register() {
                   required
                   className="form-input"
                   placeholder=" "
+                  maxLength={100}
                 />
-                <label className="input-label">Correo electrónico</label>
+                <label className="input-label">Correo electrónico *</label>
               </div>
 
               <div className="input-group">
@@ -232,22 +229,9 @@ export default function Register() {
                   onChange={handleChange}
                   className="form-input"
                   placeholder=" "
+                  maxLength={15}
                 />
                 <label className="input-label">Celular</label>
-              </div>
-
-              <div className="input-group">
-                <select
-                  name="tipoUsuario"
-                  value={formData.tipoUsuario}
-                  onChange={handleChange}
-                  required
-                  className="form-input"
-                >
-                  <option value="cliente">Cliente</option>
-                  <option value="empleado">Empleado</option>
-                </select>
-                <label className="input-label select-label">Tipo de usuario</label>
               </div>
 
               <div className="input-group">
@@ -259,8 +243,9 @@ export default function Register() {
                   required
                   className="form-input"
                   placeholder=" "
+                  minLength={8}
                 />
-                <label className="input-label">Contraseña</label>
+                <label className="input-label">Contraseña *</label>
                 {formData.password && (
                   <div className="password-strength">
                     <div className="strength-bar">
@@ -268,7 +253,7 @@ export default function Register() {
                         className="strength-fill"
                         style={{
                           width: `${passwordStrength}%`,
-                          backgroundColor: `hsl(${passwordStrength}, 70%, 45%)`,
+                          backgroundColor: `hsl(${passwordStrength}, 70%, 45%)`
                         }}
                       />
                     </div>
@@ -291,8 +276,9 @@ export default function Register() {
                   required
                   className="form-input"
                   placeholder=" "
+                  minLength={8}
                 />
-                <label className="input-label">Confirmar contraseña</label>
+                <label className="input-label">Confirmar contraseña *</label>
               </div>
 
               <motion.button
@@ -301,6 +287,7 @@ export default function Register() {
                 className="register-button"
                 type="submit"
                 disabled={loading}
+                aria-busy={loading}
               >
                 {loading ? (
                   <div className="loader">
@@ -315,11 +302,19 @@ export default function Register() {
             <div className="terms-privacy">
               <p>
                 Al registrarte, aceptas nuestros{" "}
-                <motion.a whileHover={{ scale: 1.05 }} href="#" className="terms-link">
+                <motion.a 
+                  whileHover={{ scale: 1.05 }} 
+                  href="/terminos" 
+                  className="terms-link"
+                >
                   Términos de servicio
                 </motion.a>{" "}
                 y{" "}
-                <motion.a whileHover={{ scale: 1.05 }} href="#" className="terms-link">
+                <motion.a 
+                  whileHover={{ scale: 1.05 }} 
+                  href="/privacidad" 
+                  className="terms-link"
+                >
                   Política de privacidad
                 </motion.a>
               </p>
@@ -328,7 +323,11 @@ export default function Register() {
             <div className="login-option">
               <p>
                 ¿Ya tienes una cuenta?{" "}
-                <motion.a whileHover={{ scale: 1.05 }} href="/login" className="login-link">
+                <motion.a 
+                  whileHover={{ scale: 1.05 }} 
+                  href="/login" 
+                  className="login-link"
+                >
                   Iniciar sesión
                 </motion.a>
               </p>
@@ -360,4 +359,3 @@ export default function Register() {
     </div>
   )
 }
-

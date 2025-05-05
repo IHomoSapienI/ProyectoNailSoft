@@ -194,8 +194,8 @@ const TablaBajaInsumo = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Bajas de Insumos</h2>
+    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Bajas de Insumos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
@@ -220,26 +220,26 @@ const TablaBajaInsumo = () => {
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar bajas..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
-              <th>Insumo</th>
-              <th>Fecha de Baja</th>
-              <th>Cantidad</th>
-              <th>Observaciones</th>
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
+        <table className="insumo-tabla-adecuada w-full">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Insumo</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Fecha de Baja</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Cantidad</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Observaciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {bajasActuales.length > 0 ? (
               bajasActuales.map((baja) => (
-                <tr key={baja._id} className="hover:bg-gray-50">
+                <tr key={baja._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{baja.producto}</td>
                   <td>{new Date(baja.fechaBaja).toLocaleDateString()}</td>
                   <td>{baja.cantidad}</td>

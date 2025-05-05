@@ -165,6 +165,14 @@ const rolesDelete = async (req, res = response) => {
     })
   }
 
+  // Verificar si es un rol de Admin
+  if (rol.nombreRol.toLowerCase() === "admin" || rol.esAdmin) {
+    return res.status(403).json({
+      msg: "No se puede eliminar el rol de Administrador",
+      isAdminRole: true,
+    })
+  }
+
   await Rol.findByIdAndDelete(id)
 
   res.json({
@@ -243,4 +251,3 @@ module.exports = {
   rolesToggleEstado,
   rolesExportExcel,
 }
-

@@ -24,6 +24,8 @@ import {
   faCalendarWeek,
   faCalendar,
   faListAlt,
+  faInfoCircle,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 
@@ -40,6 +42,7 @@ const TablaCitas = () => {
   const [citas, setCitas] = useState([])
   const [citaSeleccionada, setCitaSeleccionada] = useState(null)
   const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [detalleModalIsOpen, setDetalleModalIsOpen] = useState(false)
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [filtroEstado, setFiltroEstado] = useState("")
@@ -120,7 +123,26 @@ const TablaCitas = () => {
           ? cita.servicios.reduce((total, servicio) => total + (servicio.tiempo || 0), 0)
           : 60
 
-        const fechaInicio = new Date(cita.fechacita)
+        // SOLUCIÓN CORREGIDA: Crear fecha correctamente sin conversión de zona horaria
+        let fechaInicio
+
+        // Si tenemos horacita como campo separado, usarlo para construir la fecha
+        if (cita.horacita) {
+          // Extraer solo la parte de fecha de fechacita (YYYY-MM-DD)
+          const fechaBase =
+            typeof cita.fechacita === "string"
+              ? cita.fechacita.split("T")[0]
+              : new Date(cita.fechacita).toISOString().split("T")[0]
+
+          // Construir fecha combinando fecha base y hora exacta
+          fechaInicio = new Date(`${fechaBase}T${cita.horacita}`)
+          console.log(`Cita ${cita._id}: Usando fecha ${fechaBase} y hora ${cita.horacita}`)
+        } else {
+          // Fallback al comportamiento anterior si no hay horacita
+          fechaInicio = new Date(cita.fechacita)
+          console.log(`Cita ${cita._id}: Usando fecha original ${fechaInicio}`)
+        }
+
         const fechaFin = new Date(fechaInicio.getTime() + duracionTotal * 60000)
 
         // Determinar el color según el estado
@@ -186,9 +208,20 @@ const TablaCitas = () => {
     }
   }
 
+  const abrirDetallesCita = (cita) => {
+    setCitaSeleccionada(cita)
+    setDetalleModalIsOpen(true)
+  }
+
+  const cerrarDetallesCita = () => {
+    setDetalleModalIsOpen(false)
+    setCitaSeleccionada(null)
+  }
+
   const manejarCitaActualizada = () => {
     obtenerCitas()
     cerrarFormulario()
+    cerrarDetallesCita()
   }
 
   const manejarSeleccionFecha = ({ start }) => {
@@ -196,7 +229,7 @@ const TablaCitas = () => {
   }
 
   const manejarSeleccionCita = (event) => {
-    abrirFormulario(event.start, event.cita)
+    abrirDetallesCita(event.cita)
   }
 
   const eventStyleGetter = (event) => {
@@ -298,6 +331,11 @@ const TablaCitas = () => {
     setTimeout(() => {
       obtenerCitas()
     }, 100)
+  }
+
+  // Función para formatear la fecha
+  const formatearFecha = (fecha) => {
+    return moment(fecha).format("DD/MM/YYYY HH:mm")
   }
 
   return (
@@ -448,6 +486,7 @@ const TablaCitas = () => {
           </div>
         )}
 
+        {/* Modal para editar citas */}
         <Modal
           isOpen={formModalIsOpen}
           onRequestClose={cerrarFormulario}
@@ -465,10 +504,137 @@ const TablaCitas = () => {
             />
           </div>
         </Modal>
+
+        {/* Modal para ver detalles de citas */}
+        <Modal
+          isOpen={detalleModalIsOpen}
+          onRequestClose={cerrarDetallesCita}
+          className="react-modal-content"
+          overlayClassName="react-modal-overlay"
+          contentLabel="Detalles de Cita"
+        >
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">
+                <FontAwesomeIcon icon={faInfoCircle} className="mr-2" />
+                Detalles de la Cita
+              </h2>
+              <button onClick={cerrarDetallesCita} className="text-gray-500 hover:text-gray-700 transition-colors">
+                <FontAwesomeIcon icon={faTimes} size="lg" />
+              </button>
+            </div>
+
+            {citaSeleccionada && (
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Cliente</h3>
+                      <p className="text-base">
+                        {citaSeleccionada.nombrecliente
+                          ? `${citaSeleccionada.nombrecliente.nombrecliente} ${citaSeleccionada.nombrecliente.apellidocliente}`
+                          : "Cliente no disponible"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Empleado</h3>
+                      <p className="text-base">
+                        {citaSeleccionada.nombreempleado
+                          ? citaSeleccionada.nombreempleado.nombreempleado
+                          : "Empleado no disponible"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Fecha y Hora</h3>
+                      <p className="text-base">{citaSeleccionada.fechacita.substring(0, 10)} {citaSeleccionada.horacita}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Estado</h3>
+                      <p
+                        className={`text-base font-medium ${
+                          citaSeleccionada.estadocita === "Cancelada"
+                            ? "text-red-600"
+                            : citaSeleccionada.estadocita === "Completada"
+                              ? "text-green-600"
+                              : citaSeleccionada.estadocita === "En Progreso"
+                                ? "text-amber-600"
+                                : "text-blue-600"
+                        }`}
+                      >
+                        {citaSeleccionada.estadocita}
+                      </p>
+                    </div>
+
+                    {citaSeleccionada.estadocita === "Cancelada" && (
+                      <>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Motivo de Cancelación</h3>
+                          <p className="text-base">{citaSeleccionada.motivoCancelacion || "No se especificó motivo"}</p>
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Fecha de Cancelación</h3>
+                          <p className="text-base">
+                            {citaSeleccionada.fechaCancelacion
+                              ? formatearFecha(citaSeleccionada.fechaCancelacion)
+                              : "No registrada"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Servicios Solicitados</h3>
+                  {citaSeleccionada.servicios && citaSeleccionada.servicios.length > 0 ? (
+                    <ul className="list-disc pl-5 space-y-1">
+                      {citaSeleccionada.servicios.map((servicio, index) => (
+                        <li key={index} className="text-sm">
+                          {servicio.nombreServicio || servicio.nombreservicio} - $
+                          {servicio.precio ? `${servicio.precio}` : "Precio no disponible"}
+                          {servicio.tiempo ? ` (${servicio.tiempo} min)` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">No hay servicios registrados</p>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">Notas</h3>
+                  <p className="text-sm bg-white p-2 rounded border border-gray-200 min-h-[60px]">
+                    {citaSeleccionada.notas || "No hay notas adicionales"}
+                  </p>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  {citaSeleccionada.estadocita !== "Cancelada" && (
+                    <button
+                      onClick={() => {
+                        cerrarDetallesCita()
+                        abrirFormulario(new Date(citaSeleccionada.fechacita), citaSeleccionada)
+                      }}
+                      className="tabla-citas-btn tabla-citas-btn-primary"
+                    >
+                      <FontAwesomeIcon icon={faEdit} className="tabla-citas-btn-icon" />
+                      <span>Editar Cita</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
       </div>
     </div>
   )
 }
 
 export default TablaCitas
-

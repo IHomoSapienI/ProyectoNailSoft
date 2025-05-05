@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import axios from "axios"
 import Modal from "react-modal"
@@ -360,8 +358,8 @@ const TablaCompras = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Compras</h2>
+    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Compras</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
@@ -406,29 +404,29 @@ const TablaCompras = () => {
             type="text"
             value={busqueda}
             onChange={handleBusquedaChange}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar compras..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
-              <th>Proveedor</th>
-              <th>Recibo</th>
-              <th>Fecha Compra</th>
-              <th>Fecha Registro</th>
-              <th>Monto</th>
-              <th>Insumos</th>
-              <th>Acciones</th>
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
+        <table className="compras-tabla-moderna w-full ">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>Proveedor</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>Recibo</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>Fecha Compra</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>Fecha Registro</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "10%" }}>Monto</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "10%" }}>Insumos</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {comprasActuales.length > 0 ? (
               comprasActuales.map((compra) => (
-                <tr key={compra._id} className="hover:bg-gray-50">
+                <tr key={compra._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{compra.proveedor ? compra.proveedor.nombreProveedor : "N/A"}</td>
                   <td>{compra.recibo}</td>
                   <td>{new Date(compra.fechaCompra).toLocaleDateString()}</td>
@@ -537,8 +535,8 @@ const TablaCompras = () => {
           <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">Detalles de la Compra</h2>
 
           {compraSeleccionada ? (
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="p-4 ">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 ">
                 <div className="form-group">
                   <p className="text-sm font-medium text-gray-500">Proveedor:</p>
                   <p className="text-base font-semibold">{compraSeleccionada?.proveedor?.nombreProveedor || "N/A"}</p>

@@ -480,8 +480,8 @@ const TablaInsumos = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4">Gestión de Insumos</h2>
+    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Insumos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
@@ -526,27 +526,27 @@ const TablaInsumos = () => {
             type="text"
             value={busqueda}
             onChange={handleBusquedaChange}
-            className="search-input"
+            className="search-input dark:card-gradient-4"
             placeholder="Buscar insumos..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="tabla-moderna w-full">
-          <thead>
-            <tr>
-              <th>Nombre del Insumo</th>
-              <th>Stock</th>
-              <th>Precio</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
+        <table className="insumos-tabla-moderna w-full">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Nombre del Insumo</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Stock</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Precio</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Estado</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "20%" }}>Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {insumosActuales.length > 0 ? (
               insumosActuales.map((insumo) => (
-                <tr key={insumo._id} className="hover:bg-gray-50">
+                <tr key={insumo._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{insumo.nombreInsumo}</td>
                   <td>{insumo.stock}</td>
                   <td>${insumo.precio}</td>

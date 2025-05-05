@@ -1,14 +1,13 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
 import { Calendar, momentLocalizer } from "react-big-calendar"
 import moment from "moment"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import "moment/locale/es"
 import Swal from "sweetalert2"
 import "./client-dashboard.css"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
 
 // Importar íconos
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -31,6 +30,7 @@ import {
   faGift,
   faCog,
   faMagicWandSparkles,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons"
 
 // Configurar moment en español
@@ -98,7 +98,7 @@ const BarChart = ({ data }) => {
 }
 
 // Componente de próxima cita
-const UpcomingAppointment = ({ appointment }) => {
+const UpcomingAppointment = ({ appointment, onCancelAppointment }) => {
   if (!appointment) {
     return (
       <div className="card bg-white rounded-lg shadow-md p-4">
@@ -116,6 +116,37 @@ const UpcomingAppointment = ({ appointment }) => {
   const hora = moment(appointment.start).format("HH:mm")
   const empleado = appointment.cita?.nombreempleado?.nombreempleado || appointment.title || "Sin asignar"
   const servicios = appointment.cita?.servicios || []
+
+  const handleCancelClick = () => {
+    Swal.fire({
+      title: "Cancelar Cita",
+      html: `
+        <div class="text-left">
+          <p>¿Estás seguro que deseas cancelar esta cita?</p>
+          <p class="mt-2 mb-1 font-semibold">Motivo de cancelación:</p>
+          <textarea id="cancelReason" class="w-full border border-gray-300 rounded p-2" 
+            placeholder="Por favor, indica el motivo de la cancelación" rows="3"></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, volver",
+      preConfirm: () => {
+        const reason = Swal.getPopup().querySelector("#cancelReason").value
+        if (!reason) {
+          Swal.showValidationMessage("Por favor indica el motivo de la cancelación")
+          return false
+        }
+        return reason
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onCancelAppointment(appointment.id, result.value)
+      }
+    })
+  }
 
   return (
     <div className="card bg-white rounded-lg shadow-md p-4">
@@ -140,7 +171,9 @@ const UpcomingAppointment = ({ appointment }) => {
         </div>
       </div>
       <div className="flex justify-between">
-        <button className="btn-outline">Cancelar</button>
+        <button className="btn-outline" onClick={handleCancelClick}>
+          Cancelar
+        </button>
         <button className="btn-primary">Modificar</button>
       </div>
     </div>
@@ -213,13 +246,44 @@ const LoyaltyPoints = ({ points }) => {
 }
 
 // Componente de citas recientes
-const RecentAppointments = ({ appointments }) => {
+const RecentAppointments = ({ appointments, onCancelAppointment }) => {
   if (!appointments || appointments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <p className="text-gray-500">No hay citas recientes</p>
       </div>
     )
+  }
+
+  const handleCancelClick = (appointment) => {
+    Swal.fire({
+      title: "Cancelar Cita",
+      html: `
+        <div class="text-left">
+          <p>¿Estás seguro que deseas cancelar esta cita?</p>
+          <p class="mt-2 mb-1 font-semibold">Motivo de cancelación:</p>
+          <textarea id="cancelReason" class="w-full border border-gray-300 rounded p-2" 
+            placeholder="Por favor, indica el motivo de la cancelación" rows="3"></textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, volver",
+      preConfirm: () => {
+        const reason = Swal.getPopup().querySelector("#cancelReason").value
+        if (!reason) {
+          Swal.showValidationMessage("Por favor indica el motivo de la cancelación")
+          return false
+        }
+        return reason
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onCancelAppointment(appointment.id, result.value)
+      }
+    })
   }
 
   return (
@@ -245,6 +309,9 @@ const RecentAppointments = ({ appointments }) => {
           .toUpperCase()
           .substring(0, 2)
 
+        // Solo mostrar botón de cancelar si la cita no está cancelada o completada
+        const canCancel = appointment.estado !== "Cancelada" && appointment.estado !== "Completada"
+
         return (
           <div key={appointment.id} className="flex items-center">
             <div className="avatar-circle mr-4 flex items-center justify-center bg-pink-100 text-pink-600">
@@ -261,7 +328,21 @@ const RecentAppointments = ({ appointments }) => {
               {servicios.length > 0 && (
                 <p className="text-xs text-gray-500">{servicios.map((s) => s.nombreServicio).join(", ")}</p>
               )}
+              {appointment.motivoCancelacion && (
+                <p className="text-xs italic text-red-500">
+                  <strong>Motivo de cancelación:</strong> {appointment.motivoCancelacion}
+                </p>
+              )}
             </div>
+            {canCancel && (
+              <button
+                className="ml-2 text-red-500 hover:text-red-700"
+                onClick={() => handleCancelClick(appointment)}
+                title="Cancelar cita"
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            )}
           </div>
         )
       })}
@@ -341,6 +422,80 @@ const ClientDashboard = () => {
       localStorage.setItem(STORAGE_KEYS.LAST_FETCH, lastFetchTime.toISOString())
     }
   }, [userData, citas, ventas, lastFetchTime])
+
+  // Función para cancelar una cita
+  const handleCancelAppointment = async (citaId, motivoCancelacion) => {
+    try {
+      setIsLoading(true)
+      const token = localStorage.getItem("token")
+
+      if (!token) {
+        Swal.fire("Error", "Debes iniciar sesión para realizar esta acción", "error")
+        navigate("/login")
+        return
+      }
+
+      // Fix the API endpoint URL to match your backend route
+      // The correct endpoint should be /api/citas/{id}/cancelar
+      await axios.put(
+        `https://gitbf.onrender.com/api/citas/${citaId}/cancelar`,
+        { motivo: motivoCancelacion }, // Send the cancellation reason in the request body
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+
+      // Actualizar el estado local de las citas
+      setCitas((prevCitas) =>
+        prevCitas.map((cita) => {
+          if (cita.id === citaId) {
+            return {
+              ...cita,
+              estado: "Cancelada",
+              backgroundColor: "#d9534f", // Rojo para citas canceladas
+              motivoCancelacion,
+            }
+          }
+          return cita
+        }),
+      )
+
+      // Añadir esta línea para forzar la actualización de la próxima cita
+      const citasActualizadas = citas.map((cita) =>
+        cita.id === citaId ? { ...cita, estado: "Cancelada", backgroundColor: "#d9534f", motivoCancelacion } : cita,
+      )
+      const citasOrdenadas = [...citasActualizadas].sort(
+        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+      )
+      const nuevaProximaCita =
+        citasOrdenadas.find((cita) => new Date(cita.start) > new Date() && cita.estado !== "Cancelada") || null
+
+      Swal.fire({
+        icon: "success",
+        title: "Cita cancelada",
+        text: "La cita ha sido cancelada exitosamente",
+      })
+    } catch (error) {
+      console.error("Error al cancelar la cita:", error)
+
+      // Add more detailed error information
+      let errorMessage = "No se pudo cancelar la cita. Por favor, intenta nuevamente."
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        errorMessage += ` (${error.response.status}: ${error.response.data?.message || "Error desconocido"})`
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage += " (No se recibió respuesta del servidor)"
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Función para comparar IDs
   const areIdsSimilar = (id1, id2) => {
@@ -504,6 +659,7 @@ const ClientDashboard = () => {
               estado: cita.estadocita,
               cita: cita,
               backgroundColor: colorEvento,
+              motivoCancelacion: cita.motivoCancelacion,
             }
           })
 
@@ -707,6 +863,20 @@ const ClientDashboard = () => {
   }
 
   const handleSelectCita = (event) => {
+    // Determinar si la cita puede ser cancelada (no está cancelada o completada)
+    const canCancel = event.estado !== "Cancelada" && event.estado !== "Completada"
+
+    let footerHtml = ""
+    if (canCancel) {
+      footerHtml = `
+        <div class="mt-4 text-right">
+          <button id="cancelAppointmentBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+            Cancelar Cita
+          </button>
+        </div>
+      `
+    }
+
     Swal.fire({
       title: "Detalles de la Cita",
       html: `
@@ -724,10 +894,50 @@ const ClientDashboard = () => {
             }
           </ul>
           <p><strong>Total:</strong> $${event.cita.montototal || 0}</p>
+          ${event.motivoCancelacion ? `<p class="text-red-500 mt-2"><strong>Motivo de cancelación:</strong> ${event.motivoCancelacion}</p>` : ""}
         </div>
+        ${footerHtml}
       `,
+      showConfirmButton: true,
       confirmButtonText: "Cerrar",
       showCancelButton: false,
+      didOpen: () => {
+        const cancelBtn = Swal.getPopup().querySelector("#cancelAppointmentBtn")
+        if (cancelBtn) {
+          cancelBtn.addEventListener("click", () => {
+            Swal.close()
+            // Mostrar el diálogo de cancelación
+            Swal.fire({
+              title: "Cancelar Cita",
+              html: `
+                <div class="text-left">
+                  <p>¿Estás seguro que deseas cancelar esta cita?</p>
+                  <p class="mt-2 mb-1 font-semibold">Motivo de cancelación:</p>
+                  <textarea id="cancelReason" class="w-full border border-gray-300 rounded p-2" 
+                    placeholder="Por favor, indica el motivo de la cancelación" rows="3"></textarea>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "Sí, cancelar",
+              cancelButtonText: "No, volver",
+              preConfirm: () => {
+                const reason = Swal.getPopup().querySelector("#cancelReason").value
+                if (!reason) {
+                  Swal.showValidationMessage("Por favor indica el motivo de la cancelación")
+                  return false
+                }
+                return reason
+              },
+            }).then((result) => {
+              if (result.isConfirmed) {
+                handleCancelAppointment(event.id, result.value)
+              }
+            })
+          })
+        }
+      },
     })
   }
 
@@ -764,7 +974,11 @@ const ClientDashboard = () => {
 
   // Obtener la próxima cita
   const citasOrdenadas = [...citas].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
-  const proximaCita = citasOrdenadas.find((cita) => new Date(cita.start) > new Date()) || null
+  // Cambiar esta línea:
+  //const proximaCita = citasOrdenadas.find((cita) => new Date(cita.start) > new Date()) || null
+  // Por esta línea que excluye las citas canceladas:
+  const proximaCita =
+    citasOrdenadas.find((cita) => new Date(cita.start) > new Date() && cita.estado !== "Cancelada") || null
 
   // Preparar datos para gráficos
   const ventasPorMes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] // Inicializar con ceros para cada mes
@@ -903,7 +1117,7 @@ const ClientDashboard = () => {
             </div>
 
             <div className="space-y-6">
-              <UpcomingAppointment appointment={proximaCita} />
+              <UpcomingAppointment appointment={proximaCita} onCancelAppointment={handleCancelAppointment} />
               <LoyaltyPoints points={Math.floor(totalGastado / 10000)} />
             </div>
           </div>
@@ -911,7 +1125,7 @@ const ClientDashboard = () => {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="content-container p-6">
               <h2 className="text-xl font-semibold mb-4">Citas Recientes</h2>
-              <RecentAppointments appointments={citas.slice(0, 5)} />
+              <RecentAppointments appointments={citas.slice(0, 5)} onCancelAppointment={handleCancelAppointment} />
             </div>
 
             <div className="content-container p-6">
@@ -1070,4 +1284,3 @@ const ClientDashboard = () => {
 }
 
 export default ClientDashboard
-

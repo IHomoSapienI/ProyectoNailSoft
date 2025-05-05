@@ -18,9 +18,9 @@
     table-layout: fixed;
   }
   
-  .permiso-tabla-moderna thead {
+  /* .permiso-tabla-moderna thead {
     background-color: #f9fafb;
-  }
+  } */
   
   .permiso-tabla-moderna th {
     padding: 1rem;
@@ -41,16 +41,16 @@
   .permiso-tabla-moderna td {
     padding: 1rem;
     font-size: 0.875rem;
-    color: #374151;
+    /* color: #374151; */
     border-bottom: 1px solid #e5e7eb;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   
-  .permiso-tabla-moderna tbody tr:hover {
+  /* .permiso-tabla-moderna tbody tr:hover {
     background-color: #f9fafb;
-  }
+  } */
   
   .permiso-tabla-moderna tbody tr:last-child td {
     border-bottom: none;

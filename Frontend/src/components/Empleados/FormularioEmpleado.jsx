@@ -1,138 +1,210 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Swal from 'sweetalert2'; // Importar SweetAlert2
+import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSave, faTimes } from "@fortawesome/free-solid-svg-icons";
 
-const FormularioEmpleado = ({ empleado, onClose }) => {
-    const [nombre, setNombre] = useState('');
-    const [apellido, setApellido] = useState('');
-    const [correo, setCorreo] = useState('');
-    const [telefono, setTelefono] = useState('');
-    const [estado, setEstado] = useState('Activo');
+const FormularioEmpleado = ({ empleado, onClose, onEmpleadoActualizado = () => {} }) => {
+    const [formData, setFormData] = useState({
+        nombreempleado: '',
+        apellidoempleado: '',
+        correoempleado: '',
+        telefonoempleado: '',
+        estadoempleado: 'Activo'
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (empleado) {
-            setNombre(empleado.nombreempleado);
-            setApellido(empleado.apellidoempleado);
-            setCorreo(empleado.correoempleado);
-            setTelefono(empleado.telefonoempleado);
-            setEstado(empleado.estadoempleado);
+            setFormData({
+                nombreempleado: empleado.nombreempleado || '',
+                apellidoempleado: empleado.apellidoempleado || '',
+                correoempleado: empleado.correoempleado || '',
+                telefonoempleado: empleado.telefonoempleado || '',
+                estadoempleado: empleado.estadoempleado || 'Activo'
+            });
         }
     }, [empleado]);
 
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+    };
+
     const manejarSubmit = async (e) => {
         e.preventDefault();
-
-        const nuevoEmpleado = {
-            nombreempleado: nombre,
-            apellidoempleado: apellido,
-            correoempleado: correo,
-            telefonoempleado: telefono,
-            estadoempleado: estado,
-        };
+        setLoading(true);
+        setError(null);
 
         try {
-            if (empleado) {
-                await axios.put(`https://gitbf.onrender.com/api/empleados/${empleado._id}`, nuevoEmpleado);
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Empleado actualizado con éxito!',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-            } else {
-                await axios.post('https://gitbf.onrender.com/api/empleados', nuevoEmpleado);
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Empleado agregado con éxito!',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-            }
-            onClose(); // Cerrar el formulario después de guardar
-        } catch (error) {
-            console.error('Error al guardar el empleado:', error);
-            let mensajeError = 'Hubo un problema al guardar el empleado. Por favor, inténtalo de nuevo.';
-            if (error.response && error.response.data.message) {
-                mensajeError = error.response.data.message;
-            }
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: mensajeError,
+            const token = localStorage.getItem("token");
+            const url = empleado
+                ? `https://gitbf.onrender.com/api/empleados/${empleado._id}`
+                : "https://gitbf.onrender.com/api/empleados";
+            const method = empleado ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg || "Error al guardar el empleado");
+            }
+
+            const data = await response.json();
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: empleado
+                    ? "Empleado actualizado correctamente"
+                    : "Empleado creado correctamente",
+                confirmButtonColor: "#db2777",
+            });
+
+            onEmpleadoActualizado(data.empleado || data);
+            onClose();
+        } catch (error) {
+            console.error("Error:", error);
+            setError(error.message);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message,
+                confirmButtonColor: "#db2777",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={manejarSubmit} className="space-y-4 max-w-md mx-auto p-4 bg-white rounded shadow">
-            <div>
-                <label className="block text-gray-700">Nombre:</label>
-                <input
-                    type="text"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                />
-            </div>
-            <div>
-                <label className="block text-gray-700">Apellido:</label>
-                <input
-                    type="text"
-                    value={apellido}
-                    onChange={(e) => setApellido(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                />
-            </div>
-            <div>
-                <label className="block text-gray-700">Correo:</label>
-                <input
-                    type="email"
-                    value={correo}
-                    onChange={(e) => setCorreo(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                />
-            </div>
-            <div>
-                <label className="block text-gray-700">Teléfono:</label>
-                <input
-                    type="tel"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                />
-            </div>
-            <div>
-                <label className="block text-gray-700">Estado:</label>
-                <select
-                    value={estado}
-                    onChange={(e) => setEstado(e.target.value)}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                    required
-                >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                </select>
-            </div>
-            <div className="flex justify-end space-x-2">
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    Cancelar
-                </button>
-                <button
-                    type="submit"
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    {empleado ? 'Actualizar' : 'Agregar'}
-                </button>
-            </div>
-        </form>
+        <div className="p-6 w-full max-w-2xl mx-auto"> {/* Changed width here */}
+            <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+                {empleado ? "Editar Empleado" : "Nuevo Empleado"}
+            </h2>
+
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
+
+            <form onSubmit={manejarSubmit} className="space-y-4 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Added grid layout */}
+                    <div className="form-group">
+                        <label htmlFor="nombreempleado" className="form-label">
+                            Nombre del Empleado
+                        </label>
+                        <input
+                            type="text"
+                            id="nombreempleado"
+                            name="nombreempleado"
+                            value={formData.nombreempleado}
+                            onChange={handleInputChange}
+                            className="form-input w-full"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="apellidoempleado" className="form-label">
+                            Apellido del Empleado
+                        </label>
+                        <input
+                            type="text"
+                            id="apellidoempleado"
+                            name="apellidoempleado"
+                            value={formData.apellidoempleado}
+                            onChange={handleInputChange}
+                            className="form-input w-full"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="correoempleado" className="form-label">
+                            Correo Electrónico
+                        </label>
+                        <input
+                            type="email"
+                            id="correoempleado"
+                            name="correoempleado"
+                            value={formData.correoempleado}
+                            onChange={handleInputChange}
+                            className="form-input w-full"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="telefonoempleado" className="form-label">
+                            Número de Teléfono
+                        </label>
+                        <input
+                            type="tel"
+                            id="telefonoempleado"
+                            name="telefonoempleado"
+                            value={formData.telefonoempleado}
+                            onChange={handleInputChange}
+                            className="form-input w-full"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group md:col-span-2"> {/* Span full width on mobile */}
+                        <label htmlFor="estadoempleado" className="form-label">
+                            Estado
+                        </label>
+                        <select
+                            id="estadoempleado"
+                            name="estadoempleado"
+                            value={formData.estadoempleado}
+                            onChange={handleInputChange}
+                            className="form-input w-full"
+                            required
+                        >
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                    <button 
+                        type="button" 
+                        onClick={onClose} 
+                        className="btn-secondary flex items-center" 
+                        disabled={loading}
+                    >
+                        <FontAwesomeIcon icon={faTimes} className="mr-2" />
+                        Cancelar
+                    </button>
+                    <button 
+                        type="submit" 
+                        className="btn-primary flex items-center" 
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <div className="animate-spin h-5 w-5 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+                        ) : (
+                            <FontAwesomeIcon icon={faSave} className="mr-2" />
+                        )}
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 

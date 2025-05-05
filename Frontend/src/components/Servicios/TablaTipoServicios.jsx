@@ -219,13 +219,13 @@ export default function TablaTipoServicios() {
 
   return (
     <div className="tabla-container transition-all duration-500 w-full max-w-full  dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">Gestión de Tipos de Servicios</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">Gestión de Tipos de Descuentos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
           <button className="btn-add" onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Nuevo Tipo de Servicio
+            Nuevo Tipo de Descuento
           </button>
         </div>
 

@@ -1,151 +1,209 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2'; // Importa SweetAlert2
-import axios from 'axios';
+import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSave, faTimes } from "@fortawesome/free-solid-svg-icons";
 
-const FormularioCliente = ({ cliente, onClose }) => {
-    const [documento, setDocumento] = useState('');
-    const [nombre, setNombre] = useState('');
-    const [direccion, setDireccion] = useState('');
-    const [celular, setCelular] = useState('');
-    const [estado, setEstado] = useState('Activo');
-    const [mensaje, setMensaje] = useState('');
+const FormularioCliente = ({ cliente, onClose, onClienteActualizado = () => {} }) => {
+    const [formData, setFormData] = useState({
+        nombrecliente: '',
+        apellidocliente: '',
+        correocliente: '',
+        celularcliente: '',
+        estadocliente: true
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (cliente) {
-            setDocumento(cliente.documentocliente);
-            setNombre(cliente.nombrecliente);
-            setDireccion(cliente.direccioncliente);
-            setCelular(cliente.celularcliente);
-            setEstado(cliente.estadocliente);
+            setFormData({
+                nombrecliente: cliente.nombrecliente || '',
+                apellidocliente: cliente.apellidocliente || '',
+                correocliente: cliente.correocliente || '',
+                celularcliente: cliente.celularcliente || '',
+                estadocliente: cliente.estadocliente !== undefined ? cliente.estadocliente : true
+            });
         }
     }, [cliente]);
 
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+    };
+
     const manejarSubmit = async (e) => {
         e.preventDefault();
-
-        const nuevoCliente = {
-            documentocliente: documento,
-            nombrecliente: nombre,
-            direccioncliente: direccion,
-            celularcliente: celular,
-            estadocliente: estado,
-        };
+        setLoading(true);
+        setError(null);
 
         try {
-            let response;
-            if (cliente) {
-                // Si el cliente existe, actualizar
-                response = await axios.put(`https://gitbf.onrender.com/api/clientes/${cliente._id}`, nuevoCliente);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Cliente actualizado exitosamente',
-                    confirmButtonText: 'Ok',
-                });
-            } else {
-                // Si no, crear nuevo cliente
-                response = await axios.post('https://gitbf.onrender.com/api/clientes', nuevoCliente);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Cliente creado exitosamente',
-                    confirmButtonText: 'Ok',
-                });
-            }
-            onClose(); // Cerrar el modal después de agregar o actualizar
-        } catch (error) {
-            console.error('Error al guardar el cliente:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Error al guardar el cliente',
+            const token = localStorage.getItem("token");
+            const url = cliente
+                ? `https://gitbf.onrender.com/api/clientes/${cliente._id}`
+                : "https://gitbf.onrender.com/api/clientes";
+            const method = cliente ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.msg || "Error al guardar el cliente");
+            }
+
+            const data = await response.json();
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: cliente
+                    ? "Cliente actualizado correctamente"
+                    : "Cliente creado correctamente",
+                confirmButtonColor: "#db2777",
+            });
+
+            onClienteActualizado(data.cliente || data);
+            onClose();
+        } catch (error) {
+            console.error("Error:", error);
+            setError(error.message);
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message,
+                confirmButtonColor: "#db2777",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <form onSubmit={manejarSubmit} className="space-y-4 max-w-md mx-auto p-4 bg-white rounded shadow">
-            {/* Documento del cliente */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Documento:</label>
-                <input
-                    type="text"
-                    value={documento}
-                    onChange={(e) => setDocumento(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    required
-                    disabled={cliente ? true : false} // Deshabilitar si es edición
-                />
-            </div>
+        <div className="p-6">
+            <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+                {cliente ? "Editar Cliente" : "Nuevo Cliente"}
+            </h2>
 
-            {/* Nombre del cliente */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Nombre:</label>
-                <input
-                    type="text"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
-            </div>
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                    <strong className="font-bold">Error: </strong>
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
 
-            {/* Dirección */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Dirección:</label>
-                <input
-                    type="text"
-                    value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
-            </div>
+            <form onSubmit={manejarSubmit} className="space-y-4">
+                <div className="form-group">
+                    <label htmlFor="nombrecliente" className="form-label">
+                        Nombre del Cliente
+                    </label>
+                    <input
+                        type="text"
+                        id="nombrecliente"
+                        name="nombrecliente"
+                        value={formData.nombrecliente}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        required
+                    />
+                </div>
 
-            {/* Celular */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Celular:</label>
-                <input
-                    type="tel"
-                    value={celular}
-                    onChange={(e) => setCelular(e.target.value)}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                />
-            </div>
+                <div className="form-group">
+                    <label htmlFor="apellidocliente" className="form-label">
+                        Apellido del Cliente
+                    </label>
+                    <input
+                        type="text"
+                        id="apellidocliente"
+                        name="apellidocliente"
+                        value={formData.apellidocliente}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        required
+                    />
+                </div>
 
-            {/* Estado */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Estado:</label>
-                <select
-                    value={estado}
-                    onChange={(e) => setEstado(e.target.value)}
-                    required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                </select>
-            </div>
+                <div className="form-group">
+                    <label htmlFor="correocliente" className="form-label">
+                        Correo Electrónico
+                    </label>
+                    <input
+                        type="email"
+                        id="correocliente"
+                        name="correocliente"
+                        value={formData.correocliente}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        required
+                    />
+                </div>
 
-            {/* Botones de Acción */}
-            <div className="flex justify-between">
-                <button
-                    type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    {cliente ? 'Actualizar Cliente' : 'Agregar Cliente'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-                >
-                    Cerrar
-                </button>
-            </div>
+                <div className="form-group">
+                    <label htmlFor="celularcliente" className="form-label">
+                        Número de Celular
+                    </label>
+                    <input
+                        type="tel"
+                        id="celularcliente"
+                        name="celularcliente"
+                        value={formData.celularcliente}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        required
+                    />
+                </div>
 
-            {/* Mensaje de estado */}
-            {mensaje && <div className="mt-4 p-2 text-red-600">{mensaje}</div>}
-        </form>
+                <div className="form-group">
+                    <div className="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="estadocliente"
+                            name="estadocliente"
+                            checked={formData.estadocliente}
+                            onChange={handleInputChange}
+                            className="form-checkbox h-5 w-5 text-pink-600"
+                        />
+                        <label htmlFor="estadocliente" className="ml-2 form-label">
+                            Activo
+                        </label>
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1 ml-7">
+                        Desactiva esta opción para ocultar este cliente en el sistema.
+                    </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6">
+                    <button 
+                        type="button" 
+                        onClick={onClose} 
+                        className="btn-secondary flex items-center" 
+                        disabled={loading}
+                    >
+                        <FontAwesomeIcon icon={faTimes} className="mr-2" />
+                        Cancelar
+                    </button>
+                    <button 
+                        type="submit" 
+                        className="btn-primary flex items-center" 
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <div className="animate-spin h-5 w-5 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+                        ) : (
+                            <FontAwesomeIcon icon={faSave} className="mr-2" />
+                        )}
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 

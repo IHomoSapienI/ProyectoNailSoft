@@ -1,243 +1,399 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Modal from 'react-modal';
-import FormularioCategoriaProducto from './FormularioCategoriaProducto';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Swal from 'sweetalert2'; // Importa SweetAlert2
+"use client"
+
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Modal from "react-modal"
+import FormularioCategoriaProducto from "./FormularioCategoriaProducto"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faPlus, faEdit, faTrash, faSearch, faSync, faPowerOff } from "@fortawesome/free-solid-svg-icons"
+import Swal from "sweetalert2"
+import "./TablaCategorias.css" 
 
 // Configura el contenedor del modal
-Modal.setAppElement('#root');
+Modal.setAppElement("#root")
 
 const TablaCategorias = () => {
-    const [categorias, setCategorias] = useState([]);
-    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
-    const [formModalIsOpen, setFormModalIsOpen] = useState(false);
+  const [categorias, setCategorias] = useState([])
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null)
+  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-    // Estado para paginación
-    const [paginaActual, setPaginaActual] = useState(1);
-    const categoriasPorPagina = 5; // Cantidad de categorías a mostrar por página
+  // Estado para paginación
+  const [paginaActual, setPaginaActual] = useState(1)
+  const categoriasPorPagina = 5 // Cantidad de categorías a mostrar por página
 
-    useEffect(() => {
-        obtenerCategorias();
-    }, []);
+  useEffect(() => {
+    obtenerCategorias()
+  }, [])
 
-    const obtenerCategorias = async () => {
-        const token = localStorage.getItem('token'); // Obtener el token del localStorage
-        if (!token) {
-            await Swal.fire('Error', 'No se encontró el token de autenticación. Por favor, inicia sesión.', 'error');
-            return;
+  const obtenerCategorias = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    const token = localStorage.getItem("token")
+    if (!token) {
+      await Swal.fire({
+        title: "Error",
+        text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const respuesta = await axios.get("https://gitbf.onrender.com/api/categoriaproductos", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setCategorias(respuesta.data.categorias || [])
+    } catch (error) {
+      console.error("Error al obtener las categorías:", error)
+      setError("No se pudieron cargar las categorías. Por favor, intenta de nuevo.")
+      Swal.fire({
+        title: "Error",
+        text: "No tienes permiso para estar aquí. Tu token no es válido.",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const manejarAgregarNuevo = () => {
+    setCategoriaSeleccionada(null)
+    setFormModalIsOpen(true)
+  }
+
+  const manejarCerrarModal = () => {
+    setFormModalIsOpen(false)
+    setCategoriaSeleccionada(null)
+  }
+
+  const manejarCategoriaAgregadaOActualizada = () => {
+    obtenerCategorias()
+    manejarCerrarModal()
+  }
+
+  const manejarEditar = (categoria) => {
+    setCategoriaSeleccionada(categoria)
+    setFormModalIsOpen(true)
+  }
+
+  const manejarEliminarCategoria = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminarlo!",
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        await Swal.fire({
+          title: "Error",
+          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+        return
+      }
+
+      try {
+        await axios.delete(`https://gitbf.onrender.com/api/categoriaproductos/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        obtenerCategorias()
+        Swal.fire({
+          title: "Eliminado!",
+          text: "La categoría ha sido eliminada.",
+          icon: "success",
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error("Error al eliminar la categoría:", error)
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo eliminar la categoría.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
+
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
+
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} esta categoría?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        await Swal.fire({
+          title: "Error",
+          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+        return
+      }
+
+      try {
+        const categoriaActualizada = {
+          ...categorias.find((categoria) => categoria._id === id),
+          activo: nuevoEstado,
         }
 
-        try {
-            const respuesta = await axios.get('https://gitbf.onrender.com/api/categoriaproductos', {
-                headers: {
-                    'Authorization': `Bearer ${token}` // Incluir el token en el encabezado
-                }
-            });
-            setCategorias(respuesta.data.categorias || []);
-        } catch (error) {
-            console.error('Error al obtener las categorías:', error);
-            Swal.fire('Error', 'No tienes permiso para estar aqui :) post: tu token no es válido', 'error');
-        }
-    };
+        await axios.put(`https://gitbf.onrender.com/api/categoriaproductos/${id}`, categoriaActualizada, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-    const manejarAgregarNuevo = () => {
-        setCategoriaSeleccionada(null);
-        setFormModalIsOpen(true);
-    };
+        // Actualizar el estado local
+        setCategorias(
+          categorias.map((categoria) => (categoria._id === id ? { ...categoria, activo: nuevoEstado } : categoria)),
+        )
 
-    const manejarCerrarModal = () => {
-        setFormModalIsOpen(false);
-    };
+        Swal.fire({
+          icon: "success",
+          title: `${nuevoEstado ? "Activada" : "Desactivada"}!`,
+          text: `La categoría ha sido ${nuevoEstado ? "activada" : "desactivada"}.`,
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error(`Error al ${accion} la categoría:`, error)
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: `No se pudo ${accion} la categoría`,
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
 
-    const manejarCategoriaAgregadaOActualizada = () => {
-        obtenerCategorias(); // Recargar las categorías después de agregar o editar
-        manejarCerrarModal();
-    };
+  // Funciones de búsqueda
+  const handleBusquedaChange = (e) => {
+    setBusqueda(e.target.value)
+  }
 
-    const manejarEditar = (categoria) => {
-        setCategoriaSeleccionada(categoria);
-        setFormModalIsOpen(true);
-    };
+  const categoriasFiltradas = categorias.filter(
+    (categoria) =>
+      categoria.nombreCp.toLowerCase().includes(busqueda.toLowerCase()) ||
+      categoria.descripcionCp.toLowerCase().includes(busqueda.toLowerCase()),
+  )
 
-    const manejarEliminarCategoria = async (id) => {
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminarlo!',
-            cancelButtonText: 'Cancelar'
-        });
+  // Funciones de paginación
+  const indiceUltimaCategoria = paginaActual * categoriasPorPagina
+  const indicePrimeraCategoria = indiceUltimaCategoria - categoriasPorPagina
+  const categoriasActuales = categoriasFiltradas.slice(indicePrimeraCategoria, indiceUltimaCategoria)
 
-        if (result.isConfirmed) {
-            const token = localStorage.getItem('token'); // Obtener el token del localStorage
-            if (!token) {
-                await Swal.fire('Error', 'No se encontró el token de autenticación. Por favor, inicia sesión.', 'error');
-                return;
-            }
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina)
+  }
 
-            try {
-                await axios.delete(`https://gitbf.onrender.com/api/categoriaproductos/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}` // Incluir el token en el encabezado
-                    }
-                });
-                setCategorias(categorias.filter(categoria => categoria._id !== id));
-                Swal.fire(
-                    'Eliminado!',
-                    'La categoría ha sido eliminada.',
-                    'success'
-                );
-            } catch (error) {
-                console.error('Error al eliminar la categoría:', error);
-                Swal.fire('Error', 'No se pudo eliminar la categoría.', 'error');
-            }
-        }
-    };
+  const paginasTotales = Math.ceil(categoriasFiltradas.length / categoriasPorPagina)
 
-    // Funciones de paginación
-    const indiceUltimaCategoria = paginaActual * categoriasPorPagina;
-    const indicePrimeraCategoria = indiceUltimaCategoria - categoriasPorPagina;
-    const categoriasActuales = categorias.slice(indicePrimeraCategoria, indiceUltimaCategoria);
+  const paginaAnterior = () => {
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
+  }
 
-    const cambiarPagina = (numeroPagina) => {
-        setPaginaActual(numeroPagina);
-    };
+  const paginaSiguiente = () => {
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
+  }
 
-    const paginasTotales = Math.ceil(categorias.length / categoriasPorPagina);
-
-    const paginaAnterior = () => {
-        if (paginaActual > 1) setPaginaActual(paginaActual - 1);
-    };
-
-    const paginaSiguiente = () => {
-        if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
-    };
-
+  if (isLoading) {
     return (
-        <div className="p-6 flex flex-col items-center">
-            <h2 className="text-3xl font-semibold mb-8">Gestión de Categorías</h2>
-
-            {/* Botones y buscador */}
-            <div className="flex justify-between mb-5 w-full h-7 max-w-4xl">
-                <button
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                    onClick={manejarAgregarNuevo}
-                >
-                    <FontAwesomeIcon icon={faPlus} /> {/* Icono de agregar */}
-                </button>
-
-                <input
-                    type="text"
-                    id="searchInput"
-                    className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Buscar en la tabla"
-                />
-            </div>
-
-            {/* Tabla de categorías */}
-            <div className="w-full max-w-4xl">
-                <table className="table min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre de la Categoría</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activo</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {categoriasActuales.map((categoria) => (
-                            <tr key={categoria._id}>
-                                {/* Cambié 'nombreCategoria' por 'nombreCp', 'descripcionCp' y 'activo' */}
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{categoria.nombreCp}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{categoria.descripcionCp}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {categoria.activo ? 'Activo' : 'Inactivo'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-2">
-                                    <button
-                                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={() => manejarEditar(categoria)}
-                                    >
-                                        <FontAwesomeIcon icon={faEdit} /> {/* Icono de editar */}
-                                    </button>
-                                    <button
-                                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                                        onClick={() => manejarEliminarCategoria(categoria._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} /> {/* Icono de eliminar */}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Paginación */}
-            <div className="mt-4">
-                <nav className="flex justify-center">
-                    <ul className="inline-flex items-center">
-                        <li>
-                            <button
-                                onClick={paginaAnterior}
-                                disabled={paginaActual === 1}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === 1 ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &lt;
-                            </button>
-                        </li>
-                        {Array.from({ length: paginasTotales }, (_, index) => (
-                            <li key={index}>
-                                <button
-                                    onClick={() => cambiarPagina(index + 1)}
-                                    className={`px-3 py-1 mx-1 rounded ${
-                                        paginaActual === index + 1
-                                            ? 'bg-gray-300 text-gray-700'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {index + 1}
-                                </button>
-                            </li>
-                        ))}
-                        <li>
-                            <button
-                                onClick={paginaSiguiente}
-                                disabled={paginaActual === paginasTotales}
-                                className={`px-3 py-1 mx-1 rounded ${
-                                    paginaActual === paginasTotales ? 'bg-gray-200 text-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                &gt;
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-
-            {/* El Modal */}
-            <Modal
-                isOpen={formModalIsOpen}
-                onRequestClose={manejarCerrarModal}
-                contentLabel="Formulario de Categoría Producto"
-                className="w-1/2 mx-auto bg-white p-4 rounded-lg shadow-lg"
-            >
-                <FormularioCategoriaProducto
-                    categoria={categoriaSeleccionada}
-                    onFormClose={manejarCerrarModal}
-                    onCategoriaAgregadaOActualizada={manejarCategoriaAgregadaOActualizada}
-                />
-            </Modal>
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando categorías...</p>
         </div>
-    );
-};
+      </div>
+    )
+  }
 
-export default TablaCategorias;
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+        <button
+          className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => obtenerCategorias()}
+        >
+          <FontAwesomeIcon icon={faSync} className="mr-2" />
+          Reintentar
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Categorías</h2>
+
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <div className="flex space-x-2">
+          <button className="btn-add" onClick={manejarAgregarNuevo} title="Agregar nueva categoría">
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Nueva Categoría
+          </button>
+        </div>
+
+        <div className="search-container">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={handleBusquedaChange}
+            className="search-input dark:card-gradient-4"
+            placeholder="Buscar categorías..."
+          />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
+        <table className="categoria-tabla-moderna w-full">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Nombre de la Categoría</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Descripción</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Estado</th>
+              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="dark:bg-zinc-900/80">
+            {categoriasActuales.length > 0 ? (
+              categoriasActuales.map((categoria) => (
+                <tr key={categoria._id} className="dark:hover:bg-gray-500/50 text-foreground">
+                  <td className="font-medium">{categoria.nombreCp}</td>
+                  <td>{categoria.descripcionCp}</td>
+                  <td>
+                    <span className={`estado-badge ${categoria.activo ? "activo" : "inactivo"}`}>
+                      {categoria.activo ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex space-x-2 center">
+                      <button className="btn-edit" onClick={() => manejarEditar(categoria)} title="Editar categoría">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button
+                        className="btn-delete"
+                        onClick={() => manejarEliminarCategoria(categoria._id)}
+                        title="Eliminar categoría"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        className={`btn-toggle ${categoria.activo ? "active" : "inactive"}`}
+                        onClick={() => manejarToggleEstado(categoria._id, categoria.activo)}
+                        title={categoria.activo ? "Desactivar categoría" : "Activar categoría"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="text-center py-4 text-gray-500">
+                  No se encontraron categorías con ese criterio de búsqueda
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Paginación */}
+      {categorias.length > 0 && (
+        <div className="pagination-container mt-6">
+          <button
+            onClick={paginaAnterior}
+            disabled={paginaActual === 1}
+            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+          >
+            &lt;
+          </button>
+
+          <div className="pagination-pages">
+            {Array.from({ length: paginasTotales }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => cambiarPagina(index + 1)}
+                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={paginaSiguiente}
+            disabled={paginaActual === paginasTotales}
+            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+          >
+            &gt;
+          </button>
+        </div>
+      )}
+
+      {/* Modal para agregar/editar categoría */}
+      <Modal
+        isOpen={formModalIsOpen}
+        onRequestClose={manejarCerrarModal}
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={manejarCerrarModal}
+          >
+            &times;
+          </button>
+          <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">
+            {categoriaSeleccionada ? "Actualizar Categoría" : "Nueva Categoría"}
+          </h2>
+          <FormularioCategoriaProducto
+            categoria={categoriaSeleccionada}
+            onClose={manejarCerrarModal}
+            onCategoriaAgregadaOActualizada={manejarCategoriaAgregadaOActualizada}
+          />
+        </div>
+      </Modal>
+    </div>
+  )
+}
+
+export default TablaCategorias
+

@@ -5,6 +5,7 @@ import React from "react"
 import { useState, useEffect, useRef, createContext, useContext } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
+import { BiSolidDiscount } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FaUsers,
@@ -340,12 +341,12 @@ const Sidebar = () => {
                     Servicios
                   </MenuItem>
                   <MenuItem
-                    icon={MdOutlineRoomPreferences}
+                    icon={BiSolidDiscount}
                     to="/tiposervicios"
                     isActive={location.pathname === "/tiposervicios"}
                     collapsed={isCollapsed}
                   >
-                    Tipo Servicios
+                    Tipo De Descuentos
                   </MenuItem>
                   <MenuItem
                     icon={MdOutlineVrpano}

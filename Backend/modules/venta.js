@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose")
+const { Schema, model } = require("mongoose");
 
 const VentaSchema = Schema(
   {
@@ -20,7 +20,6 @@ const VentaSchema = Schema(
       ref: "Empleado",
       required: [true, "El empleado es obligatorio"],
     },
-    // Array de productos incluidos en la venta
     productos: [
       {
         producto: {
@@ -51,7 +50,6 @@ const VentaSchema = Schema(
         },
       },
     ],
-    // Array de servicios incluidos en la venta
     servicios: [
       {
         servicio: {
@@ -64,12 +62,58 @@ const VentaSchema = Schema(
           required: true,
           trim: true,
         },
-        precio: {
+        precio: { // Precio original
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        precioFinal: { // Precio después de descuento
           type: Number,
           required: true,
           min: 0,
         },
         tiempo: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        descuentoAplicado: { // Monto descontado
+          type: Number,
+          default: 0,
+        },
+        tipoDescuento: { // Tipo de descuento aplicado
+          type: String,
+          enum: ["promocional", "manual", "tipo-servicio", null],
+          default: null,
+        },
+      },
+    ],
+    // Descuentos aplicados a la venta
+    descuentos: [
+      {
+        tipo: {
+          type: String,
+          enum: ["servicio", "global", "promocional"],
+          required: true,
+        },
+        servicioId: { // Solo para descuentos por servicio
+          type: Schema.Types.ObjectId,
+          ref: "Servicio",
+        },
+        nombre: {
+          type: String,
+          required: true,
+        },
+        valor: { // Puede ser porcentaje o monto fijo
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        esPorcentaje: {
+          type: Boolean,
+          default: true,
+        },
+        montoDescontado: { // Monto real descontado
           type: Number,
           required: true,
           min: 0,
@@ -84,7 +128,15 @@ const VentaSchema = Schema(
       type: Number,
       default: 0,
     },
-    total: {
+    precioOriginal: { // Total antes de descuentos
+      type: Number,
+      default: 0,
+    },
+    descuentoTotal: { // Suma de todos los descuentos
+      type: Number,
+      default: 0,
+    },
+    total: { // Precio final después de descuentos
       type: Number,
       required: true,
       min: 0,
@@ -96,7 +148,7 @@ const VentaSchema = Schema(
     },
     estado: {
       type: Boolean,
-      default: true, // true = completada, false = pendiente
+      default: false, // Cambiado a false para que por defecto esté pendiente
     },
     fechaCreacion: {
       type: Date,
@@ -113,34 +165,59 @@ const VentaSchema = Schema(
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
-)
+  }
+);
 
 // Middleware para calcular subtotales y total antes de guardar
 VentaSchema.pre("save", function (next) {
   // Calcular subtotal de productos
   if (this.productos && this.productos.length > 0) {
     this.subtotalProductos = this.productos.reduce((total, item) => {
-      return total + (item.subtotal || 0)
-    }, 0)
+      return total + (item.subtotal || 0);
+    }, 0);
   } else {
-    this.subtotalProductos = 0
+    this.subtotalProductos = 0;
   }
 
-  // Calcular subtotal de servicios
+  // Calcular subtotal de servicios (usando precioFinal)
   if (this.servicios && this.servicios.length > 0) {
     this.subtotalServicios = this.servicios.reduce((total, item) => {
-      return total + (item.precio || 0)
-    }, 0)
+      return total + (item.precioFinal || item.precio || 0);
+    }, 0);
+    
+    // Calcular descuentos totales en servicios
+    const descuentosServicios = this.servicios.reduce((total, item) => {
+      return total + (item.descuentoAplicado || 0);
+    }, 0);
+    
+    this.descuentoTotal = descuentosServicios;
   } else {
-    this.subtotalServicios = 0
+    this.subtotalServicios = 0;
   }
 
-  // Calcular total general
-  this.total = this.subtotalProductos + this.subtotalServicios
+  // Calcular descuentos globales
+  if (this.descuentos && this.descuentos.length > 0) {
+    const descuentosGlobales = this.descuentos
+      .filter(d => d.tipo === 'global')
+      .reduce((total, descuento) => total + (descuento.montoDescontado || 0), 0);
+    
+    this.descuentoTotal += descuentosGlobales;
+  }
 
-  next()
-})
+  // Calcular precio original (sin descuentos)
+  this.precioOriginal = this.subtotalProductos + 
+    this.servicios.reduce((total, item) => total + (item.precio || 0), 0);
+
+  // Calcular total general (con descuentos)
+  this.total = this.precioOriginal - this.descuentoTotal;
+
+  // Asegurar que el total no sea negativo
+  if (this.total < 0) {
+    this.total = 0;
+  }
+
+  next();
+});
 
 // Virtuals para información del cliente
 VentaSchema.virtual("clienteNombre").get(function () {

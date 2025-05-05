@@ -76,19 +76,18 @@ const DashboardNavbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative hidden md:block">
+          {/* <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
             <input
               type="search"
               placeholder="Buscar..."
               className="h-9 w-64 rounded-full bg-pink-50/50 pl-10 pr-4 text-sm outline-none ring-pink-200 transition-all focus:ring-2 dark:bg-gray-800 dark:text-gray-200 dark:ring-pink-800"
             />
-          </div>
+          </div> */}
 
-          {/* Añadir el botón de cambio de tema */}
-          <ThemeToggle />
+          
 
-          <div className="relative">
+          {/* <div className="relative">
             <button className="flex h-9 w-9 items-center justify-center rounded-full border border-pink-200/20 transition-colors hover:bg-pink-50/50 dark:border-pink-800/20 dark:hover:bg-pink-900/20">
               <Bell className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               {notifications > 0 && (
@@ -97,8 +96,10 @@ const DashboardNavbar = () => {
                 </span>
               )}
             </button>
-          </div>
+          </div> */}
 
+              {/* Añadir el botón de cambio de tema */}
+          <ThemeToggle />
           <div className="relative">
             <button className="flex items-center gap-2" onClick={() => setShowUserMenu(!showUserMenu)}>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 text-xs font-semibold text-pink-600 dark:bg-pink-900 dark:text-pink-300">

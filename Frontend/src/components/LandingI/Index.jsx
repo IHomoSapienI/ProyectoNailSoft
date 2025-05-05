@@ -855,7 +855,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* NUEVA SECCIÓN: Contacto y Redes Sociales */}
+      {/* NUEVA SECCIÓN: Contacto y Redes Sociales
       <section className="w-full py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -961,7 +961,7 @@ const Index = () => {
             </motion.div>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }

@@ -9,14 +9,14 @@
     margin: 0 auto;
   }
   
-  .compras-tabla-moderna {
+  .insumo-tabla-adecuada {
     width: 100%;
     border-collapse: collapse;
   }
   
-  .compras-tabla-moderna th {
-    /* background-color: #f3f4f6;
-    color: #374151; */
+  .insumo-tabla-adecuada th {
+    /* background-color: #f3f4f6; */
+    /* color: #374151; */
     font-weight: 600;
     padding: 0.75rem 1rem;
     text-align: left;
@@ -26,12 +26,13 @@
     border-bottom: 1px solid #e5e7eb;
   }
   
-  .compras-tabla-moderna td {
+  .insumo-tabla-adecuada td {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid #e5e7eb;
     /* color: #4b5563; */
   }
   
+
   /* Estilos para los botones */
   .btn-add {
     display: flex;

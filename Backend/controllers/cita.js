@@ -31,6 +31,9 @@ const crearCita = async (req, res) => {
             return res.status(400).json({ message: 'Debe proporcionar al menos un servicio' });
         }
 
+        // Crear fecha y hora combinadas
+        // const fechaHoraCompleta = new Date(`${fechacita}T${horacita}`);
+
         // Crear una nueva instancia de Cita
         const nuevaCita = new Cita({
             nombreempleado,
@@ -115,6 +118,59 @@ const actualizarCita = async (req, res) => {
     }
 };
 
+const cancelarCita = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { motivo } = req.body;
+
+        // Validar que se proporcione un motivo de cancelación
+        if (!motivo) {
+            return res.status(400).json({ 
+                message: 'Debe proporcionar un motivo de cancelación' 
+            });
+        }
+
+        // Buscar y actualizar la cita, incluyendo motivo y fecha de cancelación
+        const cita = await Cita.findByIdAndUpdate(
+            id,
+            {
+                estadocita: 'Cancelada',
+                motivo: motivo,
+                fechacancelacion: new Date() // Fecha actual automáticamente
+            },
+            { new: true }
+        )
+        .populate('nombreempleado', 'nombreempleado')
+        .populate('nombrecliente', 'nombrecliente')
+        .populate('servicios', 'nombreServicio precio');
+
+        if (!cita) {
+            return res.status(404).json({ message: 'Cita no encontrada' });
+        }
+
+        // Verificar que la cita no esté ya completada o cancelada
+        if (cita.estadocita === 'Completada') {
+            return res.status(400).json({ 
+                message: 'No se puede cancelar una cita ya completada' 
+            });
+        }
+
+        res.json({ 
+            message: 'Cita cancelada con éxito',
+            cita: {
+                ...cita._doc,
+                motivo: motivo,
+                fechacancelacion: new Date()
+            }
+        });
+    } catch (error) {
+        console.error('Error al cancelar la cita:', error);
+        res.status(500).json({ 
+            message: 'Error al cancelar la cita', 
+            error: error.message 
+        });
+    }
+};
 // Eliminar una cita por ID
 const eliminarCita = async (req, res) => {
     try {
@@ -371,6 +427,7 @@ const obtenerCitasPorCliente = async (req, res) => {
 
 module.exports = {
     crearCita,
+    cancelarCita,
     obtenerCitas,
     obtenerCitaPorId,
     actualizarCita,

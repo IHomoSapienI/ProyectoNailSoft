@@ -39,11 +39,15 @@ const GestionVentaServicio = () => {
 
         // Cargar todos los servicios y productos disponibles primero
         try {
-          // Importar la función para obtener servicios con descuentos
+          // Cargar servicios con descuentos directamente usando la función importada
           const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+          console.log("Importando función obtenerServiciosConDescuento...")
 
           // Obtener servicios con información de descuento
           const serviciosConDescuento = await obtenerServiciosConDescuento()
+          console.log("Servicios obtenidos con descuentos:", serviciosConDescuento)
+
+          // Guardar los servicios en el estado
           setServicios(serviciosConDescuento || [])
 
           // Cargar productos normalmente
@@ -58,7 +62,63 @@ const GestionVentaServicio = () => {
               axios.get(`${API_URL}/productos`, { headers }),
             ])
 
-            setServicios(serviciosResponse.data.servicios || [])
+            // Intentar procesar los servicios para añadir información de descuento manualmente
+            const serviciosData = serviciosResponse.data.servicios || []
+
+            // Obtener tipos de servicio para calcular descuentos
+            const tiposResponse = await axios.get(`${API_URL}/tiposervicios`, { headers })
+            const tiposServicio = tiposResponse.data.tiposervicios || []
+
+            // Crear un mapa de tipos de servicio para búsqueda rápida
+            const tiposMap = {}
+            tiposServicio.forEach((tipo) => {
+              tiposMap[tipo._id] = tipo
+            })
+
+            // Procesar servicios para añadir información de descuento
+            const serviciosProcesados = serviciosData.map((servicio) => {
+              // Si no hay tipo de servicio, no hay descuento
+              if (!servicio.tipoServicio) {
+                return {
+                  ...servicio,
+                  tieneDescuento: false,
+                  precioOriginal: Number.parseFloat(servicio.precio || 0),
+                  precioConDescuento: Number.parseFloat(servicio.precio || 0),
+                  porcentajeDescuento: 0,
+                  esPromocional: false,
+                }
+              }
+
+              // Obtener el ID del tipo de servicio
+              const tipoServicioId =
+                typeof servicio.tipoServicio === "object" ? servicio.tipoServicio._id : servicio.tipoServicio
+
+              // Buscar el tipo de servicio completo
+              const tipoServicioCompleto = tiposMap[tipoServicioId]
+
+              // Verificar si tiene descuento
+              const tieneDescuento =
+                tipoServicioCompleto && tipoServicioCompleto.descuento && tipoServicioCompleto.descuento > 0
+
+              // Calcular precio con descuento
+              const precioOriginal = Number.parseFloat(servicio.precio || 0)
+              const precioConDescuento = tieneDescuento
+                ? precioOriginal - (precioOriginal * tipoServicioCompleto.descuento) / 100
+                : precioOriginal
+
+              return {
+                ...servicio,
+                tieneDescuento,
+                precioOriginal,
+                precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+                porcentajeDescuento: tieneDescuento ? tipoServicioCompleto.descuento : 0,
+                esPromocional: tipoServicioCompleto ? tipoServicioCompleto.esPromocional : false,
+                tipoServicio: tipoServicioCompleto || servicio.tipoServicio,
+              }
+            })
+
+            console.log("Servicios procesados manualmente con descuentos:", serviciosProcesados)
+            setServicios(serviciosProcesados)
             setProductos(productosResponse.data.productos || [])
           } catch (fallbackError) {
             console.error("Error al cargar servicios o productos (fallback):", fallbackError)
@@ -75,144 +135,57 @@ const GestionVentaServicio = () => {
 
             if (serviciosLocalStorage) {
               serviciosGuardados = JSON.parse(serviciosLocalStorage)
-              console.log("Servicios recuperados de localStorage:", serviciosGuardados)
+              console.log("Servicios recuperados de localStorage (sin procesar):", serviciosGuardados)
 
-              if (Array.isArray(serviciosGuardados) && serviciosGuardados.length > 0) {
+              // Asegurar que los servicios recuperados tengan la estructura correcta
+              if (Array.isArray(serviciosGuardados)) {
                 // Intentar obtener información de descuentos para los servicios guardados
                 try {
-                  const serviciosConInfo = await Promise.all(
-                    serviciosGuardados.map(async (servicio) => {
-                      // Si el servicio ya tiene información de descuento, usarla
-                      if (servicio.tieneDescuento !== undefined) {
-                        return servicio
-                      }
+                  // Importar la función para obtener servicios con descuentos
+                  const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+                  console.log("Importando función obtenerServiciosConDescuento para procesar localStorage...")
 
-                      // Intentar obtener el servicio completo con información de descuento
-                      try {
-                        const servicioId =
-                          typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+                  // Obtener todos los servicios con información de descuento
+                  const serviciosConDescuento = await obtenerServiciosConDescuento()
+                  console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
 
-                        // Buscar el servicio en la lista de servicios ya cargados primero
-                        const servicioEnLista = servicios.find((s) => s._id === servicioId)
+                  // Procesar cada servicio guardado para asegurar que tenga información de descuento
+                  serviciosGuardados = serviciosGuardados.map((servicio) => {
+                    // Obtener el ID del servicio
+                    const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
 
-                        if (servicioEnLista) {
-                          // Verificar si el servicio tiene tipo de servicio con descuento
-                          const tieneDescuento =
-                            servicioEnLista.tipoServicio &&
-                            servicioEnLista.tipoServicio.descuento &&
-                            servicioEnLista.tipoServicio.descuento > 0
+                    // Buscar el servicio completo en la lista de servicios con descuento
+                    const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
 
-                          const precioOriginal = Number.parseFloat(servicio.precio || servicioEnLista.precio || 0)
+                    if (servicioCompleto) {
+                      console.log(
+                        `Servicio ${servicioId} encontrado con descuentos. Nombre: ${servicioCompleto.nombreServicio}, Tiene descuento: ${servicioCompleto.tieneDescuento}`,
+                      )
 
-                          // Calcular precio con descuento si aplica
-                          const precioConDescuento = tieneDescuento
-                            ? precioOriginal - (precioOriginal * servicioEnLista.tipoServicio.descuento) / 100
-                            : precioOriginal
-
-                          console.log(
-                            `Servicio ${servicioEnLista.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioEnLista.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
-                          )
-
-                          return {
-                            ...servicio,
-                            tieneDescuento,
-                            precioOriginal,
-                            precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
-                            porcentajeDescuento: tieneDescuento ? servicioEnLista.tipoServicio.descuento : 0,
-                            nombreServicio: servicio.nombreServicio || servicioEnLista.nombreServicio,
-                            tiempo: servicio.tiempo || servicioEnLista.tiempo,
-                          }
-                        }
-
-                        // Si no se encuentra en la lista, intentar obtenerlo de la API
-                        const token = localStorage.getItem("token")
-                        const headers = { Authorization: `Bearer ${token}` }
-
-                        const response = await axios.get(`${API_URL}/servicios/${servicioId}`, { headers })
-
-                        if (response.data && response.data.servicio) {
-                          const servicioCompleto = response.data.servicio
-
-                          // Verificar si el servicio tiene tipo de servicio con descuento
-                          const tieneDescuento =
-                            servicioCompleto.tipoServicio &&
-                            servicioCompleto.tipoServicio.descuento &&
-                            servicioCompleto.tipoServicio.descuento > 0
-
-                          const precioOriginal = Number.parseFloat(servicio.precio || servicioCompleto.precio || 0)
-
-                          // Calcular precio con descuento si aplica
-                          const precioConDescuento = tieneDescuento
-                            ? precioOriginal - (precioOriginal * servicioCompleto.tipoServicio.descuento) / 100
-                            : precioOriginal
-
-                          console.log(
-                            `Servicio ${servicioCompleto.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
-                          )
-
-                          return {
-                            ...servicio,
-                            tieneDescuento,
-                            precioOriginal,
-                            precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
-                            porcentajeDescuento: tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0,
-                            nombreServicio: servicio.nombreServicio || servicioCompleto.nombreServicio,
-                            tiempo: servicio.tiempo || servicioCompleto.tiempo,
-                          }
-                        }
-                      } catch (error) {
-                        console.error(
-                          `Error al obtener información de descuento para servicio ${servicio.nombreServicio}:`,
-                          error,
-                        )
-                        // Usar la función de obtenerServiciosConDescuento para intentar obtener la información
-                        try {
-                          const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
-                          const serviciosConDescuento = await obtenerServiciosConDescuento()
-                          const servicioConDescuento = serviciosConDescuento.find(
-                            (s) =>
-                              s._id ===
-                              (typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio),
-                          )
-
-                          if (servicioConDescuento) {
-                            console.log(
-                              `Servicio encontrado con obtenerServiciosConDescuento: ${servicioConDescuento.nombreServicio}`,
-                            )
-                            return {
-                              ...servicio,
-                              tieneDescuento: servicioConDescuento.tieneDescuento || false,
-                              precioOriginal:
-                                servicioConDescuento.precioOriginal || Number.parseFloat(servicio.precio || 0),
-                              precioConDescuento:
-                                servicioConDescuento.precioConDescuento || Number.parseFloat(servicio.precio || 0),
-                              porcentajeDescuento: servicioConDescuento.porcentajeDescuento || 0,
-                              nombreServicio: servicio.nombreServicio || servicioConDescuento.nombreServicio,
-                              tiempo: servicio.tiempo || servicioConDescuento.tiempo,
-                            }
-                          }
-                        } catch (importError) {
-                          console.error("Error al importar obtenerServiciosConDescuento:", importError)
-                        }
-                      }
-
-                      // Si no se pudo obtener información adicional, devolver el servicio original
                       return {
                         ...servicio,
-                        tieneDescuento: false,
-                        precioOriginal: Number.parseFloat(servicio.precio || 0),
-                        precioConDescuento: Number.parseFloat(servicio.precio || 0),
-                        porcentajeDescuento: 0,
+                        nombreServicio: servicio.nombreServicio || servicioCompleto.nombreServicio,
+                        tieneDescuento: servicioCompleto.tieneDescuento || false,
+                        precioOriginal: servicioCompleto.precioOriginal || Number.parseFloat(servicio.precio || 0),
+                        precioConDescuento:
+                          servicioCompleto.precioConDescuento || Number.parseFloat(servicio.precio || 0),
+                        porcentajeDescuento: servicioCompleto.porcentajeDescuento || 0,
+                        tiempo: servicio.tiempo || servicioCompleto.tiempo || 0,
                       }
-                    }),
-                  )
+                    }
 
-                  console.log("Servicios con información de descuento:", serviciosConInfo)
-                  setServiciosSeleccionados(serviciosConInfo)
+                    console.log(`Servicio ${servicioId} no encontrado en la lista de servicios con descuento`)
+                    return servicio
+                  })
+
+                  console.log("Servicios procesados con información de descuento:", serviciosGuardados)
                 } catch (error) {
-                  console.error("Error al procesar servicios con descuentos:", error)
-                  setServiciosSeleccionados(serviciosGuardados)
+                  console.error("Error al procesar servicios con descuentos desde localStorage:", error)
                 }
+              }
+
+              if (Array.isArray(serviciosGuardados) && serviciosGuardados.length > 0) {
+                setServiciosSeleccionados(serviciosGuardados)
               }
             }
 
@@ -389,11 +362,19 @@ const GestionVentaServicio = () => {
             let ventaExistente = null
             try {
               console.log(`Buscando ventas existentes para la cita: ${citaId}`)
-              const ventasResponse = await axios.get(`${API_URL}/venta/cita/${citaId}`, { headers })
+              // Intentar obtener todas las ventas y filtrar por cita
+              const ventasResponse = await axios.get(`${API_URL}/ventas`, { headers })
+              const todasLasVentas = ventasResponse.data.ventas || []
+              // Filtrar las ventas que corresponden a esta cita
+              const ventasDeCita = todasLasVentas.filter((venta) => {
+                const ventaCitaId = venta.cita?._id || venta.cita
+                return ventaCitaId === citaId
+              })
+              console.log(`Encontradas ${ventasDeCita.length} ventas para la cita ${citaId}`)
 
-              if (ventasResponse.data && Array.isArray(ventasResponse.data) && ventasResponse.data.length > 0) {
+              if (ventasDeCita.length > 0) {
                 // Encontramos una venta existente para esta cita
-                ventaExistente = ventasResponse.data[0]
+                ventaExistente = ventasDeCita[0]
                 console.log("Venta existente encontrada:", ventaExistente)
 
                 // Establecer la venta existente
@@ -414,13 +395,18 @@ const GestionVentaServicio = () => {
                 ventaExistente.servicios.length > 0
               ) {
                 const serviciosVenta = ventaExistente.servicios.map((servicio) => {
+                  // Asegurarnos de obtener el ID correcto del servicio, no el ID del registro
                   const servicioId = servicio.servicio?._id || servicio.servicio
 
                   // Buscar el servicio completo en la lista de servicios disponibles
                   const servicioCompleto = servicios.find((s) => s._id === servicioId)
 
+                  console.log(
+                    `Procesando servicio de venta existente: ID=${servicioId}, Nombre=${servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio")}`,
+                  )
+
                   return {
-                    servicio: servicioId,
+                    servicio: servicioId, // Usar el ID real del servicio
                     nombreServicio:
                       servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
                     precio: servicio.precio || (servicioCompleto ? servicioCompleto.precio : 0),
@@ -442,31 +428,130 @@ const GestionVentaServicio = () => {
               // Si no hay venta o no tiene servicios, usamos los de la cita
               else if (citaData && citaData.servicios && Array.isArray(citaData.servicios)) {
                 // Asegurarse de que cada servicio tenga la estructura correcta
-                const serviciosFormateados = citaData.servicios.map((servicio) => {
-                  // Determinar el ID del servicio
-                  const servicioId = servicio._id || servicio.servicio
-
-                  // Buscar información adicional del servicio si está disponible
-                  const servicioCompleto = servicios.find((s) => s._id === servicioId)
-
-                  return {
-                    servicio: servicioId,
-                    nombreServicio:
-                      servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
-                    precio: servicio.precio || (servicioCompleto ? servicioCompleto.precio : 0),
-                    tiempo: servicio.tiempo || (servicioCompleto ? servicioCompleto.tiempo : 0),
-                  }
-                })
-
-                console.log("Servicios formateados de la cita:", serviciosFormateados)
-                setServiciosSeleccionados(serviciosFormateados)
-
-                // Guardar estos servicios en localStorage para futuras visitas
                 try {
-                  localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
-                  console.log("Servicios de la cita guardados en localStorage")
-                } catch (storageError) {
-                  console.error("Error al guardar servicios en localStorage:", storageError)
+                  // Primero, obtener información completa de todos los servicios
+                  const serviciosIds = citaData.servicios.map((servicio) => {
+                    // Verificar si el servicio tiene un campo 'servicio' que contiene el ID real
+                    if (servicio.servicio) {
+                      return typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+                    }
+                    // Si no tiene campo 'servicio', puede ser que el ID del servicio esté directamente en el objeto
+                    return servicio._id
+                  })
+
+                  console.log("IDs de servicios extraídos de la cita:", serviciosIds)
+
+                  // Obtener información completa de los servicios
+                  const serviciosCompletos = await Promise.all(
+                    serviciosIds.map(async (servicioId) => {
+                      try {
+                        // Primero buscar en la lista de servicios ya cargados
+                        const servicioEnLista = servicios.find((s) => s._id === servicioId)
+                        if (servicioEnLista) {
+                          console.log(`Servicio ${servicioId} encontrado en la lista local`)
+                          return servicioEnLista
+                        }
+
+                        // Si no está en la lista, buscarlo en la API
+                        const response = await axios.get(`${API_URL}/servicios/${servicioId}`, { headers })
+                        console.log(`Servicio ${servicioId} obtenido de la API:`, response.data)
+                        return response.data.servicio
+                      } catch (error) {
+                        console.error(`Error al obtener información del servicio ${servicioId}:`, error)
+                        return null
+                      }
+                    }),
+                  )
+
+                  // Filtrar servicios nulos
+                  const serviciosValidos = serviciosCompletos.filter((servicio) => servicio !== null)
+                  console.log("Servicios válidos obtenidos:", serviciosValidos)
+
+                  // Mapear los servicios con información completa
+                  const serviciosFormateados = citaData.servicios.map((servicio) => {
+                    // Determinar el ID del servicio
+                    const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+
+                    // Buscar el servicio completo en los servicios obtenidos
+                    const servicioCompleto = serviciosValidos.find((s) => s._id === servicioId)
+
+                    if (!servicioCompleto) {
+                      console.warn(`No se encontró información completa para el servicio ${servicioId}`)
+                      return {
+                        servicio: servicioId,
+                        nombreServicio: servicio.nombreServicio || "Servicio",
+                        precio: servicio.precio || 0,
+                        tiempo: servicio.tiempo || 0,
+                        tieneDescuento: false,
+                        precioOriginal: Number.parseFloat(servicio.precio || 0),
+                        precioConDescuento: Number.parseFloat(servicio.precio || 0),
+                        porcentajeDescuento: 0,
+                      }
+                    }
+
+                    // Verificar si el servicio tiene tipo de servicio con descuento
+                    const tieneDescuento =
+                      servicioCompleto.tipoServicio &&
+                      servicioCompleto.tipoServicio.descuento &&
+                      servicioCompleto.tipoServicio.descuento > 0
+
+                    const precioOriginal = Number.parseFloat(servicio.precio || servicioCompleto.precio || 0)
+
+                    // Calcular precio con descuento si aplica
+                    const precioConDescuento = tieneDescuento
+                      ? precioOriginal - (precioOriginal * servicioCompleto.tipoServicio.descuento) / 100
+                      : precioOriginal
+
+                    console.log(
+                      `Servicio formateado: ${servicioCompleto.nombreServicio}, Precio: ${precioOriginal}, Descuento: ${tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0}%, Final: ${precioConDescuento}`,
+                    )
+
+                    return {
+                      servicio: servicioId,
+                      nombreServicio: servicioCompleto.nombreServicio || "Servicio",
+                      precio: precioOriginal,
+                      tiempo: servicio.tiempo || servicioCompleto.tiempo || 0,
+                      tieneDescuento,
+                      precioOriginal,
+                      precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+                      porcentajeDescuento: tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0,
+                    }
+                  })
+
+                  console.log("Servicios formateados de la cita con información completa:", serviciosFormateados)
+                  setServiciosSeleccionados(serviciosFormateados)
+
+                  // Guardar estos servicios en localStorage para futuras visitas
+                  try {
+                    localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
+                    console.log("Servicios de la cita guardados en localStorage con información completa")
+                  } catch (storageError) {
+                    console.error("Error al guardar servicios en localStorage:", storageError)
+                  }
+                } catch (error) {
+                  console.error("Error al procesar servicios de la cita:", error)
+
+                  // Fallback al método anterior si hay un error
+                  const serviciosFormateados = citaData.servicios.map((servicio) => {
+                    const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+                    const servicioCompleto = servicios.find((s) => s._id === servicioId)
+
+                    return {
+                      servicio: servicioId,
+                      nombreServicio:
+                        servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
+                      precio: servicio.precio || (servicioCompleto ? servicioCompleto.precio : 0),
+                      tiempo: servicio.tiempo || (servicioCompleto ? servicioCompleto.tiempo : 0),
+                    }
+                  })
+
+                  setServiciosSeleccionados(serviciosFormateados)
+
+                  try {
+                    localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
+                  } catch (storageError) {
+                    console.error("Error al guardar servicios en localStorage:", storageError)
+                  }
                 }
               }
             }
@@ -575,56 +660,87 @@ const GestionVentaServicio = () => {
     return "servicios" // Por defecto
   }
 
+  // Mejorar la función agregarServicio para asegurar que los descuentos se apliquen correctamente
+  // Reemplazar la función agregarServicio completa
+
   // Agregar un nuevo servicio
   const agregarServicio = async () => {
     if (nuevoServicio.id) {
       const servicioSeleccionado = servicios.find((s) => s._id === nuevoServicio.id)
-      if (servicioSeleccionado && !serviciosSeleccionados.some((s) => s.servicio === servicioSeleccionado._id)) {
-        // Verificar si el servicio tiene descuento
-        const tieneDescuento =
-          servicioSeleccionado.tipoServicio &&
+
+      if (!servicioSeleccionado) {
+        return Swal.fire("Error", "No se encontró el servicio seleccionado", "error")
+      }
+
+      if (serviciosSeleccionados.some((s) => s.servicio === servicioSeleccionado._id)) {
+        return Swal.fire("Advertencia", "Este servicio ya ha sido agregado", "warning")
+      }
+
+      console.log("Servicio seleccionado para agregar:", servicioSeleccionado)
+
+      // Verificar si el servicio tiene descuento
+      const tieneDescuento =
+        servicioSeleccionado.tieneDescuento ||
+        (servicioSeleccionado.tipoServicio &&
           servicioSeleccionado.tipoServicio.descuento &&
-          servicioSeleccionado.tipoServicio.descuento > 0
+          servicioSeleccionado.tipoServicio.descuento > 0)
 
-        const precioOriginal = Number.parseFloat(servicioSeleccionado.precio || 0)
+      const precioOriginal = Number.parseFloat(servicioSeleccionado.precio || 0)
 
-        // Calcular precio con descuento si aplica
-        const precioConDescuento = tieneDescuento
-          ? precioOriginal - (precioOriginal * servicioSeleccionado.tipoServicio.descuento) / 100
-          : precioOriginal
+      // Calcular precio con descuento si aplica
+      let precioConDescuento = precioOriginal
+      let porcentajeDescuento = 0
 
-        console.log(
-          `Agregando servicio ${servicioSeleccionado.nombreServicio}: Precio original: ${precioOriginal}, Tiene descuento: ${tieneDescuento}, Descuento: ${tieneDescuento ? servicioSeleccionado.tipoServicio.descuento : 0}%, Precio con descuento: ${precioConDescuento}`,
-        )
-
-        // Si llegamos aquí, agregamos el servicio con información de descuento
-        const nuevoServicioItem = {
-          servicio: servicioSeleccionado._id,
-          nombreServicio: servicioSeleccionado.nombreServicio,
-          precio: servicioSeleccionado.precio || 0,
-          tiempo: servicioSeleccionado.tiempo || 0,
-          tieneDescuento,
-          precioOriginal,
-          precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
-          porcentajeDescuento: tieneDescuento ? servicioSeleccionado.tipoServicio.descuento : 0,
+      if (tieneDescuento) {
+        // Si ya tiene precioConDescuento calculado, usarlo
+        if (servicioSeleccionado.precioConDescuento) {
+          precioConDescuento = servicioSeleccionado.precioConDescuento
+          porcentajeDescuento =
+            servicioSeleccionado.porcentajeDescuento ||
+            (servicioSeleccionado.tipoServicio ? servicioSeleccionado.tipoServicio.descuento : 0)
         }
-
-        const nuevosServicios = [...serviciosSeleccionados, nuevoServicioItem]
-        setServiciosSeleccionados(nuevosServicios)
-        setNuevoServicio({ id: "", nombre: "" })
-        setCambiosSinGuardar(true) // Marcar que hay cambios sin guardar
-
-        // Guardar en localStorage
-        if (cita && cita._id) {
-          try {
-            localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(nuevosServicios))
-            console.log("Servicios actualizados guardados en localStorage después de agregar")
-          } catch (storageError) {
-            console.error("Error al guardar servicios en localStorage:", storageError)
-          }
+        // Si no, calcularlo basado en el tipo de servicio
+        else if (servicioSeleccionado.tipoServicio && servicioSeleccionado.tipoServicio.descuento) {
+          porcentajeDescuento = servicioSeleccionado.tipoServicio.descuento
+          precioConDescuento = precioOriginal - (precioOriginal * porcentajeDescuento) / 100
         }
-      } else {
-        Swal.fire("Advertencia", "Este servicio ya ha sido agregado o no existe", "warning")
+      }
+
+      console.log(
+        `Agregando servicio ${servicioSeleccionado.nombreServicio}: ` +
+          `Precio original: ${precioOriginal}, ` +
+          `Tiene descuento: ${tieneDescuento}, ` +
+          `Descuento: ${porcentajeDescuento}%, ` +
+          `Precio con descuento: ${precioConDescuento}`,
+      )
+
+      // Si llegamos aquí, agregamos el servicio con información de descuento
+      const nuevoServicioItem = {
+        servicio: servicioSeleccionado._id,
+        nombreServicio: servicioSeleccionado.nombreServicio,
+        precio: precioOriginal,
+        tiempo: servicioSeleccionado.tiempo || 0,
+        tieneDescuento,
+        precioOriginal,
+        precioConDescuento: Number.parseFloat(precioConDescuento.toFixed(2)),
+        porcentajeDescuento,
+      }
+
+      const nuevosServicios = [...serviciosSeleccionados, nuevoServicioItem]
+      setServiciosSeleccionados(nuevosServicios)
+      setNuevoServicio({ id: "", nombre: "" })
+      setCambiosSinGuardar(true) // Marcar que hay cambios sin guardar
+
+      // Guardar en localStorage
+      if (cita && cita._id) {
+        try {
+          localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(nuevosServicios))
+          // Verificar que se guardó correctamente
+          const serviciosGuardados = JSON.parse(localStorage.getItem(`servicios_cita_${cita._id}`))
+          console.log("Servicios guardados en localStorage:", serviciosGuardados)
+        } catch (storageError) {
+          console.error("Error al guardar servicios en localStorage:", storageError)
+        }
       }
     } else {
       Swal.fire("Advertencia", "Por favor selecciona un servicio", "warning")
@@ -835,6 +951,7 @@ const GestionVentaServicio = () => {
             nombrecliente: clienteId,
             fechacita: cita.fechacita,
             horacita: cita.horacita || "00:00",
+            // horacita: cita.horacita || "00:00",
             duracionTotal: tiempoTotal,
             servicios: serviciosFormateados, // Guardar los servicios seleccionados en la cita
             productos: productosFormateados, // Guardar los productos seleccionados en la cita
@@ -964,12 +1081,15 @@ const GestionVentaServicio = () => {
         // Asegurarse de que estamos enviando el objeto completo con la estructura correcta
         const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
 
+        // Buscar el servicio completo en la lista de servicios disponibles para obtener el nombre correcto
+        const servicioCompleto = servicios.find((s) => s._id === servicioId)
+
         // Usar el precio con descuento si está disponible
         const precioFinal = servicio.tieneDescuento ? servicio.precioConDescuento : servicio.precio
 
         return {
           servicio: servicioId,
-          nombreServicio: servicio.nombreServicio || "",
+          nombreServicio: servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
           precio: precioFinal || 0,
           tiempo: servicio.tiempo || 0,
           tieneDescuento: servicio.tieneDescuento || false,
@@ -995,95 +1115,379 @@ const GestionVentaServicio = () => {
       console.log("Servicios formateados para finalizar venta:", serviciosFormateados)
       console.log("Productos formateados para finalizar venta:", productosFormateados)
 
-      // Calcular subtotales para la venta unificada
-      const subtotalServicios = precioTotalServicios
-      const subtotalProductos = precioTotalProductos
+      // Verificar que los IDs de servicio sean válidos y usar los IDs correctos
+      const serviciosFormateadosConIdsCorrectos = serviciosFormateados.map((servicio) => {
+        // El problema es que estamos usando el ID del registro en la cita, no el ID real del servicio
+        // Necesitamos obtener el ID real del servicio desde la lista de servicios disponibles
 
-      // Crear objeto de venta unificada
-      const ventaUnificadaData = {
-        cliente: clienteId,
-        empleado: empleadoId,
-        cita: cita._id,
-        servicios: serviciosFormateados,
-        productos: productosFormateados,
-        subtotalServicios: subtotalServicios,
-        subtotalProductos: subtotalProductos,
-        total: precioTotal,
-        metodoPago: metodoPago,
-        tipoVenta: getTipoVenta(),
-        estado: true, // Venta finalizada
-        fechaCreacion: new Date(),
-        observaciones: `Venta generada desde cita #${cita._id}`,
-      }
+        // Primero, obtener el ID que tenemos (puede ser el ID del registro en la cita)
+        const servicioIdActual = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
 
-      console.log("Creando venta unificada:", ventaUnificadaData)
+        // Buscar si este ID corresponde a un servicio real en la lista de servicios disponibles
+        const servicioEnLista = servicios.find((s) => s._id === servicioIdActual)
 
+        if (servicioEnLista) {
+          // Si encontramos el servicio en la lista, usamos su ID
+          console.log(
+            `Servicio encontrado en la lista: ${servicioEnLista.nombreServicio} con ID ${servicioEnLista._id}`,
+          )
+          return {
+            ...servicio,
+            servicio: servicioEnLista._id,
+          }
+        } else {
+          // Si no lo encontramos, puede ser que el ID que tenemos sea el ID del registro en la cita
+          // Intentamos buscar por nombre para encontrar el servicio real
+          const servicioNombre = servicio.nombreServicio || "Servicio"
+          const servicioEncontradoPorNombre = servicios.find(
+            (s) => s.nombreServicio && s.nombreServicio.toLowerCase() === servicioNombre.toLowerCase(),
+          )
+
+          if (servicioEncontradoPorNombre) {
+            console.log(`Servicio encontrado por nombre: ${servicioNombre} con ID ${servicioEncontradoPorNombre._id}`)
+            return {
+              ...servicio,
+              servicio: servicioEncontradoPorNombre._id,
+            }
+          }
+
+          // Si aún no lo encontramos, intentamos buscar en los servicios de la cita
+          if (cita && cita.servicios && Array.isArray(cita.servicios)) {
+            const servicioEnCita = cita.servicios.find((s) => s._id === servicioIdActual)
+            if (servicioEnCita && servicioEnCita.servicio) {
+              const idServicioReal =
+                typeof servicioEnCita.servicio === "object" ? servicioEnCita.servicio._id : servicioEnCita.servicio
+
+              console.log(`Servicio encontrado en la cita: ID ${idServicioReal}`)
+              return {
+                ...servicio,
+                servicio: idServicioReal,
+              }
+            }
+          }
+
+          // Si todo falla, mantenemos el ID original pero lo registramos
+          console.warn(`No se pudo encontrar el servicio real para: ${servicioIdActual}. Usando el ID original.`)
+          return {
+            ...servicio,
+            servicio: servicioIdActual,
+          }
+        }
+      })
+
+      // Importar la función de validación de IDs
       try {
-        // Crear la venta unificada
-        const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
-        console.log("Respuesta de creación de venta unificada:", createResponse.data)
+        const { validarIdServicio } = await import("../Servicios/obtenerServicios")
 
-        // Actualizar el estado de la cita a "Completada"
-        await axios.put(
-          `${API_URL}/citas/${cita._id}`,
-          {
-            nombreempleado: empleadoId,
-            nombrecliente: clienteId,
-            fechacita: cita.fechacita,
-            horacita: cita.horacita || "00:00",
-            duracionTotal: tiempoTotal,
-            servicios: serviciosFormateados,
-            productos: productosFormateados,
-            montototal: precioTotal,
-            estadocita: "Completada", // Cambiar estado a "Completada"
-          },
-          { headers },
-        )
+        // Crear una copia de los servicios formateados para no modificar los originales
+        const serviciosValidados = [...serviciosFormateadosConIdsCorrectos]
 
-        // Limpiar localStorage
-        try {
-          localStorage.removeItem(`servicios_cita_${cita._id}`)
-          localStorage.removeItem(`productos_cita_${cita._id}`)
-          console.log("Datos eliminados de localStorage después de finalizar venta")
-        } catch (storageError) {
-          console.error("Error al limpiar localStorage:", storageError)
+        // Validar los IDs de los servicios antes de enviarlos
+        for (let i = 0; i < serviciosValidados.length; i++) {
+          const servicio = serviciosValidados[i]
+          const idValidado = await validarIdServicio(servicio.servicio)
+          serviciosValidados[i] = {
+            ...servicio,
+            servicio: idValidado,
+          }
         }
 
-        // Marcar que no hay cambios sin guardar
-        setCambiosSinGuardar(false)
+        console.log("Servicios con IDs validados:", serviciosValidados)
 
-        Swal.fire({
-          title: "Éxito",
-          text: "Venta finalizada correctamente",
-          icon: "success",
-          confirmButtonText: "Ir a ventas",
-        }).then(() => {
-          navigate("/ventas-unificadas")
+        // Usar los servicios validados para el backend
+        const serviciosFormateadosParaBackend = serviciosValidados.map((servicio) => {
+          // Buscar el servicio completo en la lista de servicios disponibles
+          const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+          const servicioCompleto = servicios.find((s) => s._id === servicioId)
+
+          // Determinar si tiene descuento y calcular valores
+          const tieneDescuento = servicio.tieneDescuento || false
+          const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+          const precioConDescuento = tieneDescuento
+            ? Number.parseFloat(servicio.precioConDescuento || 0)
+            : precioOriginal
+          const descuentoAplicado = tieneDescuento ? precioOriginal - precioConDescuento : 0
+
+          console.log(
+            `Preparando servicio para backend - ID: ${servicioId}, Nombre: ${servicio.nombreServicio}, Precio original: ${precioOriginal}, Precio con descuento: ${precioConDescuento}, Descuento aplicado: ${descuentoAplicado}`,
+          )
+
+          // Crear el objeto con la estructura exacta que espera el backend
+          return {
+            servicio: servicioId,
+            nombreServicio:
+              servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
+            precio: precioOriginal,
+            precioFinal: precioConDescuento,
+            tiempo: servicio.tiempo || 0,
+            descuentoAplicado: descuentoAplicado,
+            tipoDescuento: tieneDescuento ? "tipo-servicio" : null,
+          }
         })
+
+        // Calcular subtotales para la venta unificada
+        const subtotalServicios = precioTotalServicios
+        const subtotalProductos = precioTotalProductos
+
+        // Verificar la estructura de datos antes de enviar
+        console.log("Verificando estructura de datos para el backend:")
+        console.log("Cliente ID:", clienteId)
+        console.log("Empleado ID:", empleadoId)
+        console.log("Cita ID:", cita._id)
+        console.log("Servicios formateados para backend:", serviciosFormateadosParaBackend)
+        console.log("Productos formateados:", productosFormateados)
+        console.log("Subtotal servicios:", subtotalServicios)
+        console.log("Subtotal productos:", subtotalProductos)
+        console.log("Total:", precioTotal)
+        console.log("Método de pago:", metodoPago)
+        console.log("Tipo de venta:", getTipoVenta())
+
+        // Validar que los servicios tengan la estructura correcta
+        const serviciosValidos = serviciosFormateadosParaBackend.every(
+          (s) =>
+            s.servicio &&
+            s.nombreServicio &&
+            typeof s.precio === "number" &&
+            typeof s.precioFinal === "number" &&
+            typeof s.descuentoAplicado === "number",
+        )
+
+        if (!serviciosValidos) {
+          console.error("ESTRUCTURA DE SERVICIOS INVÁLIDA:", serviciosFormateadosParaBackend)
+          setIsSaving(false)
+          return Swal.fire({
+            title: "Error de validación",
+            text: "La estructura de los servicios no es válida. Revise la consola para más detalles.",
+            icon: "error",
+          })
+        }
+
+        // Declare ventaUnificadaData before using it
+        const ventaUnificadaData = {
+          cliente: clienteId,
+          empleado: empleadoId,
+          cita: cita._id,
+          servicios: serviciosFormateadosParaBackend,
+          productos: productosFormateados,
+          subtotalServicios: subtotalServicios,
+          subtotalProductos: subtotalProductos,
+          total: precioTotal,
+          metodoPago: metodoPago,
+          tipoVenta: getTipoVenta(),
+        }
+
+        console.log("Creando venta unificada:", ventaUnificadaData)
+
+        try {
+          // Crear la venta unificada
+          const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
+          console.log("Respuesta de creación de venta unificada:", createResponse.data)
+
+          // Actualizar el estado de la cita a "Completada"
+          await axios.put(
+            `${API_URL}/citas/${cita._id}`,
+            {
+              nombreempleado: empleadoId,
+              nombrecliente: clienteId,
+              fechacita: cita.fechacita,
+              // horacita: cita.horacita || "00:00",
+              horacita: cita.horacita,
+              duracionTotal: tiempoTotal,
+              servicios: serviciosFormateados,
+              productos: productosFormateados,
+              montototal: precioTotal,
+              estadocita: "Completada", // Cambiar estado a "Completada"
+            },
+            { headers },
+          )
+
+          // Limpiar localStorage
+          try {
+            localStorage.removeItem(`servicios_cita_${cita._id}`)
+            localStorage.removeItem(`productos_cita_${cita._id}`)
+            console.log("Datos eliminados de localStorage después de finalizar venta")
+          } catch (storageError) {
+            console.error("Error al limpiar localStorage:", storageError)
+          }
+
+          // Marcar que no hay cambios sin guardar
+          setCambiosSinGuardar(false)
+
+          Swal.fire({
+            title: "Éxito",
+            text: "Venta finalizada correctamente",
+            icon: "success",
+            confirmButtonText: "Ir a ventas",
+          }).then(() => {
+            navigate("/ventas-unificadas")
+          })
+        } catch (error) {
+          console.error("Error al crear la venta unificada:", error)
+          depurarErrorRespuesta(error)
+          throw error
+        }
       } catch (error) {
-        console.error("Error al crear la venta unificada:", error)
-        throw error
+        console.error("Error al validar IDs de servicios:", error)
+
+        // Si hay error en la validación, usar los servicios sin validar
+        const serviciosFormateadosParaBackend = serviciosFormateadosConIdsCorrectos.map((servicio) => {
+          // Buscar el servicio completo en la lista de servicios disponibles
+          const servicioId = typeof servicio.servicio === "object" ? servicio.servicio._id : servicio.servicio
+          const servicioCompleto = servicios.find((s) => s._id === servicioId)
+
+          // Determinar si tiene descuento y calcular valores
+          const tieneDescuento = servicio.tieneDescuento || false
+          const precioOriginal = Number.parseFloat(servicio.precioOriginal || servicio.precio || 0)
+          const precioConDescuento = tieneDescuento
+            ? Number.parseFloat(servicio.precioConDescuento || 0)
+            : precioOriginal
+          const descuentoAplicado = tieneDescuento ? precioOriginal - precioConDescuento : 0
+
+          // Crear el objeto con la estructura exacta que espera el backend
+          return {
+            servicio: servicioId,
+            nombreServicio:
+              servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio"),
+            precio: precioOriginal,
+            precioFinal: precioConDescuento,
+            tiempo: servicio.tiempo || 0,
+            descuentoAplicado: descuentoAplicado,
+            tipoDescuento: tieneDescuento ? "tipo-servicio" : null,
+          }
+        })
+
+        // Calcular subtotales para la venta unificada
+        const subtotalServicios = precioTotalServicios
+        const subtotalProductos = precioTotalProductos
+
+        // Crear la venta unificada con los datos disponibles
+        const ventaUnificadaData = {
+          cliente: clienteId,
+          empleado: empleadoId,
+          cita: cita._id,
+          servicios: serviciosFormateadosParaBackend,
+          productos: productosFormateados,
+          subtotalServicios: subtotalServicios,
+          subtotalProductos: subtotalProductos,
+          total: precioTotal,
+          metodoPago: metodoPago,
+          tipoVenta: getTipoVenta(),
+        }
+
+        console.log("Creando venta unificada (sin validación de IDs):", ventaUnificadaData)
+
+        try {
+          // Crear la venta unificada
+          const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
+          console.log("Respuesta de creación de venta unificada:", createResponse.data)
+
+          // Actualizar el estado de la cita a "Completada"
+          await axios.put(
+            `${API_URL}/citas/${cita._id}`,
+            {
+              nombreempleado: empleadoId,
+              nombrecliente: clienteId,
+              fechacita: cita.fechacita,
+              horacita: cita.horacita,
+              duracionTotal: tiempoTotal,
+              servicios: serviciosFormateados,
+              productos: productosFormateados,
+              montototal: precioTotal,
+              estadocita: "Completada", // Cambiar estado a "Completada"
+            },
+            { headers },
+          )
+
+          // Limpiar localStorage
+          try {
+            localStorage.removeItem(`servicios_cita_${cita._id}`)
+            localStorage.removeItem(`productos_cita_${cita._id}`)
+            console.log("Datos eliminados de localStorage después de finalizar venta")
+          } catch (storageError) {
+            console.error("Error al limpiar localStorage:", storageError)
+          }
+
+          // Marcar que no hay cambios sin guardar
+          setCambiosSinGuardar(false)
+
+          Swal.fire({
+            title: "Éxito",
+            text: "Venta finalizada correctamente",
+            icon: "success",
+            confirmButtonText: "Ir a ventas",
+          }).then(() => {
+            navigate("/ventas-unificadas")
+          })
+        } catch (error) {
+          console.error("Error al crear la venta unificada:", error)
+          depurarErrorRespuesta(error)
+          throw error
+        }
       }
     } catch (error) {
       console.error("Error en el proceso de finalización:", error)
       let mensajeError = "No se pudo finalizar la venta"
 
       if (error.response && error.response.data) {
-        if (error.response.data.message) {
+        console.log("Datos de respuesta de error:", error.response.data)
+
+        if (error.response.data.msg) {
+          mensajeError = error.response.data.msg
+        } else if (error.response.data.message) {
           mensajeError = error.response.data.message
         } else if (error.response.data.error) {
           mensajeError = error.response.data.error
-        } else if (error.response.data.msg) {
-          mensajeError = error.response.data.msg
+        } else if (typeof error.response.data === "string") {
+          mensajeError = error.response.data
+        }
+
+        // Si hay detalles adicionales, mostrarlos
+        if (error.response.data.detalles) {
+          mensajeError += `: ${error.response.data.detalles}`
         }
       } else if (error.message) {
         mensajeError = error.message
       }
 
-      Swal.fire("Error", mensajeError, "error")
+      Swal.fire({
+        title: "Error",
+        text: mensajeError,
+        icon: "error",
+        confirmButtonText: "Entendido",
+      })
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // Agregar una función para depurar la respuesta de error del servidor
+  // Añadir esta función after the function finalizarVenta
+
+  // Función para depurar errores de respuesta
+  const depurarErrorRespuesta = (error) => {
+    console.log("Error completo:", error)
+
+    if (error.response) {
+      console.log("Datos de la respuesta:", error.response.data)
+      console.log("Estado HTTP:", error.response.status)
+      console.log("Cabeceras:", error.response.headers)
+
+      // Intentar mostrar más detalles si están disponibles
+      if (error.response.data) {
+        if (typeof error.response.data === "string") {
+          console.log("Mensaje de error:", error.response.data)
+        } else {
+          console.log("Detalles del error:", JSON.stringify(error.response.data, null, 2))
+        }
+      }
+    } else if (error.request) {
+      console.log("La solicitud fue realizada pero no se recibió respuesta")
+      console.log("Detalles de la solicitud:", error.request)
+    } else {
+      console.log("Error al configurar la solicitud:", error.message)
+    }
+
+    console.log("Configuración de la solicitud:", error.config)
   }
 
   // Update the loading state display
@@ -1196,18 +1600,19 @@ const GestionVentaServicio = () => {
             <p className="info-value">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
           </div>
           <div className="info-item">
-            <p className="info-label">Fecha:</p>
-            <p className="info-value">
-              {cita?.fechacita
-                ? new Date(cita.fechacita).toLocaleDateString("es-ES", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "Fecha no disponible"}
-            </p>
+          <p className="info-label">Fecha:</p>
+<p className="info-value">
+  {new Date(cita.fechacita).toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}
+</p>
+
+<p className="info-label">Hora:</p>
+<p className="info-value">
+  {cita.horacita}
+</p>
           </div>
           <div className="info-item">
             <p className="info-label">Estado:</p>
@@ -1565,4 +1970,3 @@ const GestionVentaServicio = () => {
 }
 
 export default GestionVentaServicio
-

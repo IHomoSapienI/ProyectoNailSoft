@@ -5,17 +5,21 @@ import axios from "axios"
 import Modal from "react-modal"
 import FormularioCliente from "./FormularioCliente"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { faEdit, faTrash, faSearch } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
+import { useSidebar } from "../Sidebar/Sidebar"
 
 Modal.setAppElement("#root")
 
 const TablaClientes = () => {
+  const { isCollapsed } = useSidebar()
   const [clientes, setClientes] = useState([])
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
-  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [modalIsOpen, setModalIsOpen] = useState(false)
   const [paginaActual, setPaginaActual] = useState(1)
   const [busqueda, setBusqueda] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const clientesPorPagina = 5
 
   useEffect(() => {
@@ -23,16 +27,87 @@ const TablaClientes = () => {
   }, [])
 
   const obtenerClientes = async () => {
+    setIsLoading(true)
     try {
-      const respuesta = await axios.get("https://gitbf.onrender.com/api/clientes")
+      const token = localStorage.getItem("token")
+      
+      if (!token) {
+        Swal.fire({
+          title: "Error",
+          text: "No tienes permiso para estar aquí. No se encontró un token válido.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+        setError("Token no encontrado.")
+        return
+      }
+
+      const respuesta = await axios.get("https://gitbf.onrender.com/api/clientes", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       setClientes(respuesta.data || [])
+      setError(null)
     } catch (error) {
       console.error("Error al obtener los clientes:", error)
+      setError("Error al cargar los clientes. Por favor, intente de nuevo.")
       Swal.fire({
-        icon: "error",
         title: "Error",
-        text: "Error al obtener los clientes",
+        text: "No tienes permiso para estar aquí. Tu token no es válido.",
+        icon: "error",
+        confirmButtonColor: "#db2777",
       })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const manejarCerrarModal = () => {
+    setModalIsOpen(false)
+  }
+
+  const manejarEditar = (cliente) => {
+    setClienteSeleccionado(cliente)
+    setModalIsOpen(true)
+  }
+
+  const manejarEliminar = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminarlo!",
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        await axios.delete(`https://gitbf.onrender.com/api/clientes/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        setClientes(clientes.filter(c => c._id !== id))
+        Swal.fire({
+          title: "Eliminado!",
+          text: "El cliente ha sido eliminado.",
+          icon: "success",
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error("Error al eliminar el cliente:", error)
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo eliminar el cliente.",
+          icon: "error",
+          confirmButtonColor: "#db2777",
+        })
+      }
     }
   }
 
@@ -42,7 +117,7 @@ const TablaClientes = () => {
         cliente.nombrecliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
         cliente.apellidocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
         cliente.correocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase()),
+        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase())
     )
   }
 
@@ -52,164 +127,149 @@ const TablaClientes = () => {
   const clientesActuales = clientesFiltrados.slice(indicePrimerCliente, indiceUltimoCliente)
   const paginasTotales = Math.ceil(clientesFiltrados.length / clientesPorPagina)
 
-  return (
-    <div className="p-6 flex flex-col items-center">
-      <h2 className="text-3xl font-semibold mb-8">Gestión de Clientes</h2>
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina)
+  }
 
-      <div className="flex justify-between mb-5 w-full max-w-4xl">
-        <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300"
-          onClick={() => {
-            setFormModalIsOpen(true)
-            setClienteSeleccionado(null)
-          }}
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          Nuevo Cliente
-        </button>
-        <input
-          type="text"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="border border-gray-300 rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="Buscar cliente..."
-        />
+  const paginaAnterior = () => {
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
+  }
+
+  const paginaSiguiente = () => {
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-gray-600">Cargando clientes...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="alert alert-error">{error}</div>
+  }
+
+  return (
+    <div className="tabla-container transition-all duration-100 dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Clientes</h2>
+
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <div className="search-container">
+          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="search-input dark:card-gradient-4"
+            placeholder="Buscar clientes..."
+          />
+        </div>
       </div>
 
-      <div className="w-full max-w-4xl overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 bg-white border border-gray-300 rounded-lg shadow-md">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Apellido
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Celular
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
+      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
+        <table className="serv-tabla-moderna w-full">
+          <thead className="dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Correo</th>
+              <th>Celular</th>
+              <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {clientesActuales.map((cliente) => (
-              <tr key={cliente._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cliente.nombrecliente}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.apellidocliente}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.correocliente}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cliente.celularcliente}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      cliente.estadocliente ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {cliente.estadocliente ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded mr-2 transition duration-300"
-                    onClick={() => {
-                      setClienteSeleccionado(cliente)
-                      setFormModalIsOpen(true)
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faEdit} />
-                  </button>
-                  <button
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300"
-                    onClick={() => {
-                      Swal.fire({
-                        title: "¿Estás seguro?",
-                        text: "No podrás revertir esta acción",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#d33",
-                        cancelButtonColor: "#3085d6",
-                        confirmButtonText: "Sí, eliminar",
-                        cancelButtonText: "Cancelar",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          // Aquí va la lógica para eliminar
-                          axios
-                            .delete(`https://gitbf.onrender.com/api/clientes/${cliente._id}`)
-                            .then(() => {
-                              obtenerClientes()
-                              Swal.fire("Eliminado!", "El cliente ha sido eliminado.", "success")
-                            })
-                            .catch((error) => {
-                              console.error("Error:", error)
-                              Swal.fire("Error!", "No se pudo eliminar el cliente.", "error")
-                            })
-                        }
-                      })
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
+          <tbody>
+            {clientesActuales.length > 0 ? (
+              clientesActuales.map((cliente) => (
+                <tr key={cliente._id}>
+                  <td className="font-medium">{cliente.nombrecliente}</td>
+                  <td>{cliente.apellidocliente}</td>
+                  <td>{cliente.correocliente}</td>
+                  <td>{cliente.celularcliente}</td>
+                  <td>
+                    <span className={`estado-badge ${cliente.estadocliente ? "activo" : "inactivo"}`}>
+                      {cliente.estadocliente ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex space-x-2">
+                      <button className="btn-edit" onClick={() => manejarEditar(cliente)} title="Editar">
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button className="btn-delete" onClick={() => manejarEliminar(cliente._id)} title="Eliminar">
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-4 text-gray-500">
+                  No se encontraron clientes
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Paginación */}
-      <div className="mt-4">
-        <nav className="flex justify-center">
-          <ul className="inline-flex items-center -space-x-px">
-            <li>
-              <button
-                onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
-                disabled={paginaActual === 1}
-                className="px-3 py-2 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 disabled:bg-gray-200 disabled:cursor-not-allowed"
-              >
-                Anterior
-              </button>
-            </li>
-            {[...Array(paginasTotales)].map((_, index) => (
-              <li key={index}>
-                <button
-                  onClick={() => setPaginaActual(index + 1)}
-                  className={`px-3 py-2 leading-tight border border-gray-300 
-                                        ${
-                                          paginaActual === index + 1
-                                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700"
-                                            : "text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700"
-                                        }`}
-                >
-                  {index + 1}
-                </button>
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={() => setPaginaActual((prev) => Math.min(prev + 1, paginasTotales))}
-                disabled={paginaActual === paginasTotales}
-                className="px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 disabled:bg-gray-200 disabled:cursor-not-allowed"
-              >
-                Siguiente
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
+      {clientesFiltrados.length > 0 && (
+        <div className="pagination-container mt-6">
+          <button
+            onClick={paginaAnterior}
+            disabled={paginaActual === 1}
+            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+          >
+            &lt;
+          </button>
 
+          <div className="pagination-pages">
+            {Array.from({ length: paginasTotales }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => cambiarPagina(index + 1)}
+                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={paginaSiguiente}
+            disabled={paginaActual === paginasTotales}
+            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+          >
+            &gt;
+          </button>
+        </div>
+      )}
+
+      {/* Modal */}
       <Modal
-        isOpen={formModalIsOpen}
-        onRequestClose={() => setFormModalIsOpen(false)}
-        className="fixed inset-0 flex items-center justify-center p-4"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        isOpen={modalIsOpen}
+        onRequestClose={manejarCerrarModal}
+        className="modal-content"
+        overlayClassName="modal-overlay"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+        <div className="relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
+            onClick={manejarCerrarModal}
+          >
+            &times;
+          </button>
           <FormularioCliente
             cliente={clienteSeleccionado}
             onClose={() => {
-              setFormModalIsOpen(false)
+              manejarCerrarModal()
               obtenerClientes()
             }}
           />
@@ -220,4 +280,3 @@ const TablaClientes = () => {
 }
 
 export default TablaClientes
-

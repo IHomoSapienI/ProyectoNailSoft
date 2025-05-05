@@ -871,19 +871,20 @@ const SeleccionarServicios = () => {
       tiempo: servicio.tiempo,
     }))
 
-    // Crear una fecha completa combinando fecha y hora
-    const [horas, minutos] = formData.hora.split(":").map(Number)
-    // Crear la fecha correctamente para evitar problemas de zona horaria
-    const [year, month, day] = formData.fecha.split("-").map(Number)
-    // Usar UTC para evitar ajustes de zona horaria
-    const fechaCompleta = new Date(Date.UTC(year, month - 1, day, horas, minutos, 0))
+    // SOLUCIÓN CORREGIDA: Crear una fecha en formato ISO string sin conversión de zona horaria
+    // Formato: "YYYY-MM-DDThh:mm:00Z" - La Z al final indica UTC
+    // Esto asegura que la hora se mantenga exactamente como fue seleccionada
+    const fechaISO = `${formData.fecha}T${formData.hora}:00`
+
+    console.log("Fecha y hora seleccionadas:", formData.fecha, formData.hora)
+    console.log("Fecha ISO a enviar:", fechaISO)
 
     // Crear el objeto de datos para enviar al servidor
     const dataToSend = {
       // Datos básicos de la cita
       nombreempleado: formData.nombreempleado,
-      fechacita: fechaCompleta.toISOString(),
-      horacita: formData.hora,
+      fechacita: fechaISO, // Usar el formato ISO sin conversión
+      horacita: formData.hora, // Guardar la hora como string separado también
       duracionTotal: duracionTotal,
       servicios: serviciosFormateados,
       montototal: total,
@@ -918,7 +919,7 @@ const SeleccionarServicios = () => {
         },
       ])
 
-      // Mostrar Sweet Alert de éxito
+      // Mostrar Sweet Alert de éxito con la fecha y hora correctas (sin conversión)
       Swal.fire({
         icon: "success",
         title: "¡Cita agendada con éxito!",
@@ -2109,26 +2110,25 @@ const SeleccionarServicios = () => {
 }
 
 // Función para obtener empleados de respaldo
-function obtenerEmpleadosRespaldo() {
-  console.log("Usando datos de empleados de respaldo")
-  return [
-    {
-      _id: "emp1",
-      nombreempleado: "Ana Martínez",
-      especialidades: ["Manicura", "Pedicura"],
-    },
-    {
-      _id: "emp2",
-      nombreempleado: "Carlos Rodríguez",
-      especialidades: ["Uñas Acrílicas", "Diseño de Uñas"],
-    },
-    {
-      _id: "emp3",
-      nombreempleado: "Laura Sánchez",
-      especialidades: ["Manicura", "Pedicura", "Uñas Acrílicas"],
-    },
-  ]
-}
+// function obtenerEmpleadosRespaldo() {
+//   console.log("Usando datos de empleados de respaldo")
+//   return [
+//     {
+//       _id: "emp1",
+//       nombreempleado: "Ana Martínez",
+//       especialidades: ["Manicura", "Pedicura"],
+//     },
+//     {
+//       _id: "emp2",
+//       nombreempleado: "Carlos Rodríguez",
+//       especialidades: ["Uñas Acrílicas", "Diseño de Uñas"],
+//     },
+//     {
+//       _id: "emp3",
+//       nombreempleado: "Laura Sánchez",
+//       especialidades: ["Manicura", "Pedicura", "Uñas Acrílicas"],
+//     },
+//   ]
+// }
 
 export default SeleccionarServicios
-

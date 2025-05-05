@@ -351,7 +351,7 @@ export default function TablaPermisos() {
   // Renderizar spinner durante la carga
   if (cargando) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando Permisos...</p>
@@ -440,30 +440,30 @@ export default function TablaPermisos() {
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
         <table className="permiso-tabla-moderna w-full">
-          <thead className="dark:card-gradient-4"  >
+          <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
-              <th onClick={() => handleSort("nombrePermiso")} className="text-foreground dark:hover:card-gradient-0">
+              <th onClick={() => handleSort("nombrePermiso")} className="dark:hover:bg-gray-500/50">
                 Nombre {getSortIcon("nombrePermiso")}
               </th>
-              <th onClick={() => handleSort("descripcion")} className="dark:hover:card-gradient-0">
+              <th onClick={() => handleSort("descripcion")} className="dark:hover:bg-gray-500/50">
                 Descripción {getSortIcon("descripcion")}
               </th>
-              <th onClick={() => handleSort("categoria")} className="dark:hover:card-gradient-0">
+              <th onClick={() => handleSort("categoria")} className="dark:hover:bg-gray-500/50">
                 Categoría {getSortIcon("categoria")}
               </th>
-              <th onClick={() => handleSort("nivel")} className="dark:hover:card-gradient-0">
+              <th onClick={() => handleSort("nivel")} className="dark:hover:bg-gray-500/50">
                 Nivel {getSortIcon("nivel")}
               </th>
-              <th onClick={() => handleSort("activo")} className="text-center " >
+              <th onClick={() => handleSort("activo")} className="text-center dark:hover:bg-gray-500/50" >
                 Estado {getSortIcon("activo")}
               </th>
               <th className="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80 ">
             {permisosActuales.length > 0 ? (
               permisosActuales.map((permiso) => (
-                <tr key={permiso._id} className="hover:bg-gray-50">
+                <tr key={permiso._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{permiso.nombrePermiso}</td>
                   <td className="max-w-xs truncate">{permiso.descripcion}</td>
                   <td>{permiso.categoria}</td>

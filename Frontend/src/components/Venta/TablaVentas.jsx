@@ -52,6 +52,7 @@ const TablaVentas = () => {
 
   const formatearFechaHora = (fecha) => {
     return new Date(fecha).toLocaleString("es-ES", {
+      timeZone: "America/Bogota",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -574,8 +575,26 @@ const TablaVentas = () => {
               </div>
               {detallesVenta.cita && (
                 <div className="form-group">
-                  <p className="text-sm font-medium text-gray-500">Fecha y Hora de Cita:</p>
-                  <p className="text-base">{formatearFechaHora(detallesVenta.cita.fechacita)}</p>
+                  <p className="text-sm font-medium text-gray-500">Fecha de Cita:</p>
+                  <p className="text-base">
+                    {new Date(detallesVenta.cita.fechacita).toLocaleDateString("es-ES", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              )}
+              {detallesVenta.cita && (
+                <div className="form-group">
+                  <p className="text-sm font-medium text-gray-500">Hora de Cita:</p>
+                  <p className="text-base">
+                    {detallesVenta.cita.horacita ||
+                      new Date(detallesVenta.cita.fechacita).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </p>
                 </div>
               )}
               <div className="form-group">
@@ -691,7 +710,9 @@ const TablaVentas = () => {
                             <li key={`descuento-${index}`} className="flex justify-between border-b pb-2">
                               <div>
                                 <span className="font-medium">{servicio.nombreServicio}</span>
-                                <span className="discount-badge ml-2 text-black">{servicio.porcentajeDescuento || 0}% OFF</span>
+                                <span className="discount-badge ml-2 text-black">
+                                  {servicio.porcentajeDescuento || 0}% OFF
+                                </span>
                               </div>
                               <div className="text-right">
                                 <div>

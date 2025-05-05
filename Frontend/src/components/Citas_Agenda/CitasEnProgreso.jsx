@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
-import { FaPlay, FaEdit, FaSpinner, FaExclamationTriangle } from "react-icons/fa"
+import { FaPlay, FaEdit, FaSpinner, FaExclamationTriangle, FaTimes, FaInfoCircle, FaTrash } from "react-icons/fa"
 import "./CitasEnProgreso.css"
 
 const CitasEnProgreso = () => {
@@ -16,38 +16,79 @@ const CitasEnProgreso = () => {
   const location = useLocation()
   const API_URL = "https://gitbf.onrender.com/api"
 
-  // Modificar la función fetchData para manejar mejor las respuestas vacías
+  // Función para obtener los datos de citas y ventas
   const fetchData = async () => {
     setIsLoading(true)
     setError(null)
     try {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
-      // Obtener citas confirmadas y en progreso
+
+      // Obtener citas confirmadas, en progreso, pendientes y canceladas
       try {
         const citasResponse = await axios.get(`${API_URL}/citas`, { headers })
+        console.log("Respuesta completa de citas:", citasResponse.data)
+
         const citasData = citasResponse.data.citas || []
 
-        // Filtrar citas válidas (con estado adecuado)
+        // Filtrar citas por estado
         const citasFiltradas = citasData.filter(
           (cita) =>
-            cita.estadocita === "Confirmada" || cita.estadocita === "En Progreso" || cita.estadocita === "Pendiente",
+            cita.estadocita === "Confirmada" ||
+            cita.estadocita === "En Progreso" ||
+            cita.estadocita === "Pendiente" ||
+            cita.estadocita === "Cancelada",
         )
 
         // Verificar que las citas tengan la información necesaria
         const citasValidas = citasFiltradas.filter((cita) => cita._id && cita.nombrecliente && cita.nombreempleado)
 
-        setCitas(citasValidas)
+        // Log de citas canceladas para depuración
+        const citasCanceladas = citasValidas.filter((cita) => cita.estadocita === "Cancelada")
+        if (citasCanceladas.length > 0) {
+          console.log("Citas canceladas encontradas:", citasCanceladas.length)
+          console.log("Primera cita cancelada:", JSON.stringify(citasCanceladas[0], null, 2))
+        }
+
+        // SOLUCIÓN CORREGIDA: Procesar las fechas correctamente
+        const citasConFechasCorrectas = citasValidas.map((cita) => {
+          // Crear una copia de la cita para no modificar la original
+          const citaCorregida = { ...cita }
+
+          // Si tenemos horacita como campo separado, calcular la fecha correcta
+          if (citaCorregida.horacita) {
+            // Extraer solo la parte de fecha de fechacita (YYYY-MM-DD)
+            const fechaBase =
+              typeof citaCorregida.fechacita === "string"
+                ? citaCorregida.fechacita.split("T")[0]
+                : new Date(citaCorregida.fechacita).toISOString().split("T")[0]
+
+            // Guardar la fecha original para depuración
+            citaCorregida._fechaOriginal = citaCorregida.fechacita
+
+            // Construir fecha combinando fecha base y hora exacta
+            citaCorregida._fechaCorrecta = `${fechaBase}T${citaCorregida.horacita}`
+
+            // Crear un objeto Date para mostrar en la interfaz
+            citaCorregida._fechaObjeto = new Date(`${fechaBase}T${citaCorregida.horacita}`)
+
+            console.log(
+              `Cita ${citaCorregida._id}: Corrigiendo fecha de ${citaCorregida._fechaOriginal} a ${citaCorregida._fechaCorrecta}`,
+            )
+          }
+
+          return citaCorregida
+        })
+
+        setCitas(citasConFechasCorrectas)
       } catch (citasError) {
         console.error("Error al cargar citas:", citasError)
         setError("No se pudieron cargar las citas")
       }
 
-      // Obtener ventas activas - MEJORADO para manejar respuestas vacías
+      // Obtener ventas activas con manejo mejorado para respuestas vacías
       try {
         const ventasResponse = await axios.get(`${API_URL}/ventaservicios`, { headers })
-
-        // Verificar si la respuesta tiene la estructura esperada
         let ventasData = []
 
         if (ventasResponse.data) {
@@ -67,14 +108,13 @@ const CitasEnProgreso = () => {
           }
         }
 
-        // Filtrar ventas activas (no finalizadas)
+        // Filtrar ventas activas (con estado true)
         const ventasActivas = ventasData.filter((venta) => venta && venta.estado === true)
         setVentas(ventasActivas)
 
         console.log("Ventas cargadas correctamente:", ventasActivas.length)
       } catch (ventasError) {
         console.error("Error al cargar ventas:", ventasError)
-        // No interrumpimos el flujo si no se pueden cargar las ventas
         setVentas([]) // Establecer un array vacío para evitar errores
       }
     } catch (error) {
@@ -85,13 +125,10 @@ const CitasEnProgreso = () => {
     }
   }
 
+  // Cargar datos al iniciar y actualizar cada 30 segundos
   useEffect(() => {
     fetchData()
-
-    // Configurar un intervalo para actualizar los datos cada 30 segundos
     const intervalId = setInterval(fetchData, 30000)
-
-    // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId)
   }, [location.pathname])
 
@@ -114,14 +151,13 @@ const CitasEnProgreso = () => {
     return venta ? venta._id : null
   }
 
-  // Modificar la función continuarVenta para manejar mejor los errores 404
+  // Continuar con una venta existente
   const continuarVenta = async (ventaId) => {
     if (!ventaId) {
       Swal.fire("Error", "ID de venta no válido", "error")
       return
     }
 
-    // Mostrar indicador de carga
     Swal.fire({
       title: "Verificando venta...",
       text: "Por favor espere",
@@ -135,9 +171,7 @@ const CitasEnProgreso = () => {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
-      // Verificar primero si la venta existe - CORREGIDO: Usar la ruta correcta
       try {
-        // Cambiado de /ventaservicios/ a /ventaservicio/ (singular) si es necesario según la API
         const ventaResponse = await axios.get(`${API_URL}/ventaservicio/${ventaId}`, { headers })
 
         if (ventaResponse.data) {
@@ -147,10 +181,9 @@ const CitasEnProgreso = () => {
           throw new Error("Venta no encontrada")
         }
       } catch (error) {
-        // Si la venta no existe, intentar encontrar la cita asociada
         console.error("Error al verificar la venta:", error)
 
-        // Buscar la cita asociada a esta venta
+        // Si la venta no existe, intentar encontrar la cita asociada
         const citaAsociada = citas.find((cita) => getVentaIdPorCita(cita._id) === ventaId)
 
         if (citaAsociada) {
@@ -185,14 +218,13 @@ const CitasEnProgreso = () => {
     }
   }
 
-  // Modificar la función iniciarVenta para manejar mejor el flujo
+  // Iniciar una nueva venta
   const iniciarVenta = async (citaId) => {
     if (!citaId) {
       Swal.fire("Error", "ID de cita no válido", "error")
       return
     }
 
-    // Mostrar indicador de carga
     Swal.fire({
       title: "Verificando cita...",
       text: "Por favor espere",
@@ -212,36 +244,77 @@ const CitasEnProgreso = () => {
       if (citaResponse.data && citaResponse.data.cita) {
         // Intentar obtener servicios con descuentos y guardarlos en localStorage
         try {
+          console.log("Importando función obtenerServiciosConDescuento...")
           const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
+          console.log("Obteniendo servicios con descuentos...")
           const serviciosConDescuento = await obtenerServiciosConDescuento()
+          console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
 
           // Si la cita tiene servicios, guardarlos con información de descuento
           if (citaResponse.data.cita.servicios && citaResponse.data.cita.servicios.length > 0) {
-            const serviciosFormateados = citaResponse.data.cita.servicios.map((servicio) => {
-              const servicioId = servicio._id || servicio.servicio
-              const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
+            console.log("Servicios en la cita:", citaResponse.data.cita.servicios)
 
-              if (servicioCompleto) {
-                return {
-                  servicio: servicioId,
-                  nombreServicio: servicioCompleto.nombreServicio,
-                  precio: servicioCompleto.precio,
-                  tiempo: servicioCompleto.tiempo,
-                  tieneDescuento: servicioCompleto.tieneDescuento,
-                  precioOriginal: servicioCompleto.precioOriginal,
-                  precioConDescuento: servicioCompleto.precioConDescuento,
-                  porcentajeDescuento: servicioCompleto.porcentajeDescuento,
+            const serviciosFormateados = await Promise.all(
+              citaResponse.data.cita.servicios.map(async (servicio) => {
+                // Determinar el ID del servicio
+                const servicioId = servicio.servicio || servicio._id
+                console.log(`Procesando servicio ID: ${servicioId}`)
+
+                // Buscar el servicio completo en la lista de servicios con descuento
+                const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
+
+                if (servicioCompleto) {
+                  console.log(`Servicio encontrado en lista con descuentos: ${servicioCompleto.nombreServicio}`)
+                  return {
+                    servicio: servicioId,
+                    nombreServicio: servicioCompleto.nombreServicio,
+                    precio: servicioCompleto.precio,
+                    tiempo: servicioCompleto.tiempo,
+                    tieneDescuento: servicioCompleto.tieneDescuento,
+                    precioOriginal: servicioCompleto.precioOriginal,
+                    precioConDescuento: servicioCompleto.precioConDescuento,
+                    porcentajeDescuento: servicioCompleto.porcentajeDescuento,
+                  }
+                } else {
+                  // Si no lo encontramos en la lista, intentar validar el ID
+                  console.log(`Servicio no encontrado en lista, validando ID: ${servicioId}`)
+                  const { validarIdServicio } = await import("../Servicios/obtenerServicios")
+                  const idValidado = await validarIdServicio(servicioId)
+
+                  if (idValidado !== servicioId) {
+                    console.log(`ID validado diferente: ${idValidado}, buscando nuevamente`)
+                    const servicioValidado = serviciosConDescuento.find((s) => s._id === idValidado)
+
+                    if (servicioValidado) {
+                      return {
+                        servicio: idValidado,
+                        nombreServicio: servicioValidado.nombreServicio,
+                        precio: servicioValidado.precio,
+                        tiempo: servicioValidado.tiempo,
+                        tieneDescuento: servicioValidado.tieneDescuento,
+                        precioOriginal: servicioValidado.precioOriginal,
+                        precioConDescuento: servicioValidado.precioConDescuento,
+                        porcentajeDescuento: servicioValidado.porcentajeDescuento,
+                      }
+                    }
+                  }
+
+                  // Si no encontramos el servicio, usar los datos básicos
+                  return {
+                    servicio: servicioId,
+                    nombreServicio: servicio.nombreServicio || "Servicio",
+                    precio: servicio.precio || 0,
+                    tiempo: servicio.tiempo || 0,
+                    tieneDescuento: false,
+                    precioOriginal: Number.parseFloat(servicio.precio || 0),
+                    precioConDescuento: Number.parseFloat(servicio.precio || 0),
+                    porcentajeDescuento: 0,
+                  }
                 }
-              }
+              }),
+            )
 
-              return {
-                servicio: servicioId,
-                nombreServicio: servicio.nombreServicio || "Servicio",
-                precio: servicio.precio || 0,
-                tiempo: servicio.tiempo || 0,
-              }
-            })
-
+            console.log("Servicios formateados con descuentos:", serviciosFormateados)
             localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
             console.log("Servicios con descuento guardados en localStorage antes de iniciar venta")
           }
@@ -291,6 +364,193 @@ const CitasEnProgreso = () => {
     }
   }
 
+  // Cancelar una cita
+  const cancelarCita = async (citaId) => {
+    if (!citaId) {
+      Swal.fire("Error", "ID de cita no válido", "error")
+      return
+    }
+
+    const { value: motivo } = await Swal.fire({
+      title: "Cancelar cita",
+      input: "textarea",
+      inputLabel: "Motivo de cancelación",
+      inputPlaceholder: "Ingrese el motivo de cancelación...",
+      inputAttributes: {
+        "aria-label": "Ingrese el motivo de cancelación",
+      },
+      showCancelButton: true,
+      confirmButtonText: "Confirmar cancelación",
+      cancelButtonText: "Volver",
+      inputValidator: (value) => {
+        if (!value) {
+          return "Debe ingresar un motivo de cancelación"
+        }
+      },
+    })
+
+    if (motivo) {
+      try {
+        Swal.fire({
+          title: "Cancelando cita...",
+          text: "Por favor espere",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading()
+          },
+        })
+
+        const token = localStorage.getItem("token")
+        const headers = { Authorization: `Bearer ${token}` }
+
+        // Enviar la solicitud para cancelar la cita, incluyendo motivo y fecha de cancelación
+        const response = await axios.put(
+          `${API_URL}/citas/${citaId}`,
+          {
+            estadocita: "Cancelada",
+            motivo: motivo,
+            fechacancelacion: new Date().toISOString(), // Fecha actual en formato ISO
+          },
+          { headers },
+        )
+
+        console.log("Respuesta de cancelación:", response.data)
+
+        Swal.fire({
+          title: "¡Cita cancelada!",
+          text: "La cita ha sido cancelada exitosamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          fetchData() // Actualizar la lista de citas
+        })
+      } catch (error) {
+        console.error("Error al cancelar la cita:", error)
+        Swal.fire({
+          title: "Error",
+          text: `No se pudo cancelar la cita: ${error.response?.data?.message || error.message}`,
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        })
+      }
+    }
+  }
+
+  // Eliminar una cita
+  const eliminarCita = async (citaId) => {
+    if (!citaId) {
+      Swal.fire("Error", "ID de cita no válido", "error")
+      return
+    }
+
+    // Confirmar eliminación
+    const confirmacion = await Swal.fire({
+      title: "¿Eliminar cita?",
+      text: "Esta acción no se puede deshacer. La cita será eliminada permanentemente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    })
+
+    if (confirmacion.isConfirmed) {
+      try {
+        Swal.fire({
+          title: "Eliminando cita...",
+          text: "Por favor espere",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading()
+          },
+        })
+
+        const token = localStorage.getItem("token")
+        const headers = { Authorization: `Bearer ${token}` }
+
+        // Enviar la solicitud para eliminar la cita
+        await axios.delete(`${API_URL}/citas/${citaId}`, { headers })
+
+        Swal.fire({
+          title: "¡Cita eliminada!",
+          text: "La cita ha sido eliminada exitosamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          fetchData()
+        })
+      } catch (error) {
+        console.error("Error al eliminar la cita:", error)
+        Swal.fire({
+          title: "Error",
+          text: `No se pudo eliminar la cita: ${error.message}`,
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        })
+      }
+    }
+  }
+
+  // Mostrar detalles de cancelación de una cita
+  const mostrarDetallesCancelacion = async (cita) => {
+    try {
+      // Obtener los detalles actualizados de la cita
+      const token = localStorage.getItem("token")
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const response = await axios.get(`${API_URL}/citas/${cita._id}`, { headers })
+      const citaActualizada = response.data.cita
+
+      // Formatear la fecha de cancelación
+      const fechaCancelacionFormateada = citaActualizada.fechacancelacion
+        ? new Date(citaActualizada.fechacancelacion).toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "No registrada"
+
+      // Usar la fecha corregida si está disponible
+      const fechaCita = cita._fechaObjeto || new Date(cita.fechacita)
+
+      Swal.fire({
+        title: "Detalles de Cancelación",
+        html: `
+          <div class="text-left">
+            <p class="mb-2"><strong>Cliente:</strong> ${cita.nombrecliente?.nombrecliente} ${cita.nombrecliente?.apellidocliente || ""}</p>
+            <p class="mb-2"><strong>Empleado:</strong> ${cita.nombreempleado?.nombreempleado || "No asignado"}</p>
+            <p class="mb-2"><strong>Fecha de cita:</strong> ${fechaCita.toLocaleDateString("es-ES", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })} a las ${cita.horacita || fechaCita.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+            <p class="mb-2"><strong>Motivo de cancelación:</strong> ${citaActualizada.motivo || "No especificado"}</p>
+            <p class="mb-2"><strong>Fecha de cancelación:</strong> ${fechaCancelacionFormateada}</p>
+          </div>
+        `,
+        icon: "info",
+        confirmButtonText: "Cerrar",
+        customClass: {
+          container: "swal-wide",
+          popup: "swal-wide-popup",
+          content: "swal-wide-content",
+        },
+      })
+    } catch (error) {
+      console.error("Error al obtener detalles de la cita cancelada:", error)
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar los detalles de la cancelación",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+      })
+    }
+  }
+
+  // Mostrar indicador de carga mientras se cargan los datos
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -299,6 +559,7 @@ const CitasEnProgreso = () => {
     )
   }
 
+  // Mostrar mensaje de error si ocurrió algún problema
   if (error) {
     return (
       <div className="p-6">
@@ -336,6 +597,9 @@ const CitasEnProgreso = () => {
             const tieneVenta = tieneVentaAsociada(cita._id)
             const ventaId = getVentaIdPorCita(cita._id)
 
+            // Usar la fecha corregida si está disponible
+            const fechaMostrar = cita._fechaObjeto || new Date(cita.fechacita)
+
             return (
               <div key={cita._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div
@@ -344,7 +608,9 @@ const CitasEnProgreso = () => {
                       ? "bg-blue-100"
                       : cita.estadocita === "Confirmada"
                         ? "bg-green-100"
-                        : "bg-yellow-100"
+                        : cita.estadocita === "Cancelada"
+                          ? "bg-red-100"
+                          : "bg-yellow-100"
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -357,7 +623,9 @@ const CitasEnProgreso = () => {
                           ? "bg-blue-200 text-blue-800"
                           : cita.estadocita === "Confirmada"
                             ? "bg-green-200 text-green-800"
-                            : "bg-yellow-200 text-yellow-800"
+                            : cita.estadocita === "Cancelada"
+                              ? "bg-red-200 text-red-800"
+                              : "bg-yellow-200 text-yellow-800"
                       }`}
                     >
                       {cita.estadocita}
@@ -371,20 +639,43 @@ const CitasEnProgreso = () => {
                   </p>
                   <p className="text-sm text-gray-600 mb-2">
                     <strong>Fecha:</strong>{" "}
-                    {new Date(cita.fechacita).toLocaleDateString("es-ES", {
+                    {fechaMostrar.toLocaleDateString("es-ES", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
                     })}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong>Hora:</strong>{" "}
+                    {cita.horacita ||
+                      fechaMostrar.toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
                     <strong>Monto Total:</strong> ${cita.montototal?.toFixed(2) || "0.00"}
                   </p>
 
-                  <div className="flex justify-end">
-                    {tieneVenta ? (
+                  <div className="flex justify-end gap-2">
+                    {cita.estadocita === "Cancelada" ? (
+                      <>
+                        <button
+                          onClick={() => mostrarDetallesCancelacion(cita)}
+                          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                          <FaInfoCircle className="inline mr-2" />
+                          Ver Detalles
+                        </button>
+                        <button
+                          onClick={() => eliminarCita(cita._id)}
+                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                          <FaTrash className="inline mr-2" />
+                          Eliminar
+                        </button>
+                      </>
+                    ) : tieneVenta ? (
                       <button
                         onClick={() => continuarVenta(ventaId)}
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -393,13 +684,22 @@ const CitasEnProgreso = () => {
                         Continuar Venta
                       </button>
                     ) : (
-                      <button
-                        onClick={() => iniciarVenta(cita._id)}
-                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                      >
-                        <FaPlay className="inline mr-2" />
-                        Iniciar Venta
-                      </button>
+                      <>
+                        <button
+                          onClick={() => iniciarVenta(cita._id)}
+                          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                          <FaPlay className="inline mr-2" />
+                          Iniciar Venta
+                        </button>
+                        <button
+                          onClick={() => cancelarCita(cita._id)}
+                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                          <FaTimes className="inline mr-2" />
+                          Cancelar
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -418,4 +718,3 @@ const CitasEnProgreso = () => {
 }
 
 export default CitasEnProgreso
-

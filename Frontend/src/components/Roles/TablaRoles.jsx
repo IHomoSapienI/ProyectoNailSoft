@@ -173,6 +173,20 @@ export default function TablaRoles() {
   }
 
   const manejarEliminar = async (id) => {
+    // Obtener el rol para verificar si es Admin
+    const rolAEliminar = roles.find((rol) => rol._id === id)
+
+    // Si es un rol Admin, mostrar mensaje de error sin intentar eliminar
+    if (rolAEliminar && (rolAEliminar.nombreRol.toLowerCase() === "admin" || rolAEliminar.esAdmin)) {
+      Swal.fire({
+        icon: "error",
+        title: "Acción no permitida",
+        text: "No se puede eliminar el rol de Administrador",
+        confirmButtonColor: "#db2777",
+      })
+      return
+    }
+
     const result = await Swal.fire({
       title: "¿Estás seguro?",
       text: "¡No podrás revertir esto!",
@@ -193,9 +207,18 @@ export default function TablaRoles() {
             Authorization: `Bearer ${token}`,
           },
         })
+
         if (!response.ok) {
+          const errorData = await response.json()
+
+          // Si el backend indica que es un rol Admin
+          if (errorData.isAdminRole) {
+            throw new Error("No se puede eliminar el rol de Administrador")
+          }
+
           throw new Error(`HTTP error! status: ${response.status}`)
         }
+
         setRoles(roles.filter((rol) => rol._id !== id))
         Swal.fire({
           icon: "success",
@@ -208,7 +231,7 @@ export default function TablaRoles() {
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "No se pudo eliminar el rol",
+          text: error.message || "No se pudo eliminar el rol",
           confirmButtonColor: "#db2777",
         })
       }
@@ -564,4 +587,3 @@ export default function TablaRoles() {
     </div>
   )
 }
-
