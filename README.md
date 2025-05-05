@@ -20,11 +20,11 @@ NailSoft es un sistema integral para gestionar servicios mediante citas para dis
 - Express
 
 ### Base de Datos
-- MongoDB
+- MongoDB - ATLAS
 
 ### Frontend
 - JavaScript
-- React
+- Framework (React con Vite)
 - Tailwind CSS
 - Material UI
 - CSS
@@ -32,7 +32,7 @@ NailSoft es un sistema integral para gestionar servicios mediante citas para dis
 
 ### Aplicación Móvil
 - Dart
-- Flutter
+- Framework (Flutter)
 
 ## Instalación y Ejecución
 
@@ -67,20 +67,15 @@ npm install
 
 
 
-5. Iniciar el servidor:
-
-
-```shellscript
-# En la carpeta backend
-npm start
-```
+5. El servidor está alojado en Render, donde se encuentran desplegadas todas las APIs.
+En caso de presentarse algún problema, se debe realizar mantenimiento al backend y luego actualizar el repositorio correspondiente.
 
 6. Iniciar la aplicación frontend:
 
 
 ```shellscript
-# En la carpeta frontend
-npm start
+cd frontend
+npm run dev
 ```
 
 ## Vistas Disponibles
