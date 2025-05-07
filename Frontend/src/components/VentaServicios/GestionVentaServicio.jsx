@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faTrash, faSave, faArrowLeft, faCheck, faBoxOpen, faCut } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faTrash, faSave, faArrowLeft, faCheck, faBoxOpen, faCut, faSquarePollVertical, faShoppingBag, faCompassDrafting } from "@fortawesome/free-solid-svg-icons"
 import "./gestionVentaServicio.css"
 
 const GestionVentaServicio = () => {
@@ -1522,10 +1522,10 @@ const GestionVentaServicio = () => {
   // Update the loading state display
   if (isLoading)
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando datos...</p>
+          <p className="mt-4 text-foreground">Cargando datos...</p>
         </div>
       </div>
     )
@@ -1538,8 +1538,8 @@ const GestionVentaServicio = () => {
           <strong className="error-title">Error: </strong>
           <span className="error-message">{error}</span>
         </div>
-        <button onClick={() => navigate("/citas-en-progreso")} className="btn-back mt-4">
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+        <button onClick={() => navigate("/citas-en-progreso")} className="btn-back mt-4 bg-red-500 text-foreground">
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2"/>
           Volver a citas
         </button>
       </div>
@@ -1548,7 +1548,7 @@ const GestionVentaServicio = () => {
   return (
     <div className="gestion-container">
       <div className="header-container">
-        <h1>{id && id !== "new" ? "Gestionar Venta" : "Nueva Venta"}</h1>
+        <h1 className="text-foreground">{id && id !== "new" ? "Gestionar Venta" : "Nueva Venta"}</h1>
         <button
           onClick={async () => {
             // Si hay cambios sin guardar, preguntar al usuario
@@ -1605,7 +1605,7 @@ const GestionVentaServicio = () => {
 
             navigate("/citas-en-progreso")
           }}
-          className="btn-back"
+          className="btn-info-1 dark:card-gradient-4 text-foreground"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Volver
@@ -1613,24 +1613,24 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Información de la cita */}
-      <div className="card">
-        <h2 className="card-title">Información de la Cita</h2>
-        <div className="info-grid">
+      <div className="card-1 dark:card-gradient-4 text-foreground">
+        <h2 className="card-title-1 text-foreground">Información de la Cita</h2>
+        <div className="info-grid text-foreground">
           <div className="info-item">
-            <p className="info-label">Cliente:</p>
-            <p className="info-value">
+            <p className="info-label-1">Cliente:</p>
+            <p className="info-value-1 text-foreground">
               {cita?.nombrecliente?.nombrecliente
                 ? `${cita.nombrecliente.nombrecliente} ${cita.nombrecliente.apellidocliente || ""}`
                 : "Cliente no disponible"}
             </p>
           </div>
           <div className="info-item">
-            <p className="info-label">Empleado:</p>
-            <p className="info-value">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
+            <p className="info-label-1 text-foreground">Empleado:</p>
+            <p className="info-value-1 text-foreground">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
           </div>
           <div className="info-item">
-            <p className="info-label">Fecha:</p>
-            <p className="info-value">
+            <p className="info-label-1 text-foreground ">Fecha:</p>
+            <p className="info-value-1 text-foreground">
               {new Date(cita.fechacita).toLocaleDateString("es-ES", {
                 year: "numeric",
                 month: "long",
@@ -1638,45 +1638,45 @@ const GestionVentaServicio = () => {
               })}
             </p>
 
-            <p className="info-label">Hora:</p>
-            <p className="info-value">{cita.horacita}</p>
+            <p className="info-label-1 text-foreground">Hora:</p>
+            <p className="info-value-1 text-foreground">{cita.horacita}</p>
           </div>
           <div className="info-item">
-            <p className="info-label">Estado:</p>
-            <p className="info-value">{cita?.estadocita || "Estado no disponible"}</p>
+            <p className="info-label-1 text-foreground">Estado:</p>
+            <span><p className="info-value-1 text-foreground">{cita?.estadocita || "Estado no disponible"}</p></span>
           </div>
         </div>
       </div>
 
       {/* Pestañas para servicios y productos */}
-      <div className="card">
-        <div className="tabs-container">
+      <div className="card-1 dark:card-gradient-4 text-foreground">
+        <div className="tabs-container dark:card-gradient-4 text-foreground">
           <div className="tabs-header">
             <button
               type="button"
-              className={`tab-button ${activeTab === "servicios" ? "active" : ""}`}
+              className={`tab-button-1 bg-pink-600 text-foreground ${activeTab === "servicios" ? "active   hover:bg-pink-400  dark:bg-pink-800 dark:hover:bg-pink-400 " : "bg-pink-500 hover:bg-pink-600"}`}
               onClick={() => setActiveTab("servicios")}
             >
-              <FontAwesomeIcon icon={faCut} className="mr-2" />
+              <FontAwesomeIcon icon={faCompassDrafting} className="mr-2" />
               Servicios
             </button>
             <button
               type="button"
-              className={`tab-button ${activeTab === "productos" ? "active" : ""}`}
+              className={`tab-button-1 bg-pink-600 text-foreground ${activeTab === "productos" ? "active hover:bg-pink-400 dark:bg-pink-800 dark:hover:bg-pink-400" : "bg-pink-500 hover:bg-pink-600"}`}
               onClick={() => setActiveTab("productos")}
             >
-              <FontAwesomeIcon icon={faBoxOpen} className="mr-2" />
+              <FontAwesomeIcon icon={faShoppingBag} className="mr-2" />
               Productos
             </button>
           </div>
 
           {/* Tab de Servicios */}
           <div className={`tab-content ${activeTab === "servicios" ? "block" : "hidden"}`}>
-            <h2 className="card-title">Servicios Seleccionados</h2>
+            <h2 className="card-title-1 text-foreground">Servicios Seleccionados</h2>
             {serviciosSeleccionados.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="tabla-servicios">
-                  <thead>
+                  <thead className="bg-gray-100">
                     <tr>
                       <th>Servicio</th>
                       <th className="text-right">Precio</th>

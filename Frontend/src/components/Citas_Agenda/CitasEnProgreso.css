@@ -8,7 +8,7 @@
   
   /* Título principal */
   .text-2xl.font-semibold.mb-6 {
-    color: #ff69b4;
+    /* color: #ff69b4; */
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -61,16 +61,17 @@
   
   /* Colores específicos para los estados según el código proporcionado */
   /* Pendiente: Azul */
-  .bg-yellow-100 {
-    background-color: #eff6ff !important; /* Color azul claro para Pendiente */
+  /* .bg-yellow-100 {
+    background-color: #eff6ff !important; 
     border-bottom: 1px solid #2563eb;
-  }
+  } */
   
   /* En Progreso: Amarillo */
-  .bg-blue-100 {
-    background-color: #fffbeb !important; /* Color amarillo claro para En Progreso */
+  /* Color amarillo claro para En Progreso */
+  /* .bg-blue-100 {
+    background-color: #fffbeb !important; 
     border-bottom: 1px solid #d97706;
-  }
+  } */
   
   /* Confirmada/Completada: Verde */
   .bg-green-100 {
@@ -106,7 +107,7 @@
   .text-sm.text-gray-600 {
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
-    color: #4b5563;
+    /* color: #4b5563; */
   }
   
   .text-sm.text-gray-600 strong {
@@ -250,4 +251,101 @@
     }
   }
   
+  .btn-info-2 {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    height: 3.5rem;
+    width: 6.5rem;
+  }
   
+  .btn-info-2::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+
+    z-index: -1;
+    transition: none;
+    transform: skewX(-30deg);
+  }
+  
+  .btn-info-2:hover::before,
+  .btn-delete-cp:hover::before,
+  .btn-start-1:hover::before,
+  .btn-cancel-cp:hover::before {
+    left: 100%;
+    transition: all 0.5s ease;
+  }
+
+  /* Estilos para el boton de borrar */
+  .btn-delete-cp {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    height: 3.5rem;
+    width: 6.5rem;
+  }
+  
+  .btn-delete-cp::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+
+    z-index: -1;
+    transition: none;
+    transform: skewX(-30deg);
+  }
+
+  /* Estilos para el boton de comenzar la venta */
+  .btn-start-1 {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    height: 3.5rem;
+    width: 6.5rem;
+  }
+  
+  .btn-start-1::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+
+    z-index: -1;
+    transition: none;
+    transform: skewX(-30deg);
+  }
+
+  /* Estilos para el boton de comenzar la cancelar */
+  .btn-cancel-cp {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    height: 3.5rem;
+    width: 6.5rem;
+  }
+  
+  .btn-cancel-cp::before{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+
+    z-index: -1;
+    transition: none;
+    transform: skewX(-30deg);
+  }

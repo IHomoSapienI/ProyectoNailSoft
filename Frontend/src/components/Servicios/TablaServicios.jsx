@@ -464,7 +464,7 @@ const TablaServicios = () => {
                     <td>
                       {servicio.tipoServicio?.nombreTs || "No definido"}
                       {tieneDescuento && (
-                        <span className="ml-2 inline-block bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
+                        <span className="ml-2 inline-block bg-pink-200 text-foreground px-2  rounded-full dark:bg-pink-500 ">
                           {servicio.tipoServicio.descuento}% OFF
                         </span>
                       )}
@@ -473,7 +473,7 @@ const TablaServicios = () => {
                     <td>${precioOriginal.toFixed(2)}</td>
                     <td>
                       {tieneDescuento ? (
-                        <span className="text-pink-600 font-medium">${precioConDescuento.toFixed(2)}</span>
+                        <span className="text-foreground underline cursor-pointer font-medium">${precioConDescuento.toFixed(2)}</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}

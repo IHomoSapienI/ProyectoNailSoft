@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
-import { FaPlay, FaEdit, FaSpinner, FaExclamationTriangle, FaTimes, FaInfoCircle, FaTrash } from "react-icons/fa"
+import { FaSpinner, FaInfoCircle, FaTrash, FaEdit, FaPlay, FaTimes, FaExclamationTriangle } from "react-icons/fa"
 import "./CitasEnProgreso.css"
 
 const CitasEnProgreso = () => {
@@ -22,6 +22,12 @@ const CitasEnProgreso = () => {
     setError(null)
     try {
       const token = localStorage.getItem("token")
+      if (!token) {
+        setError("No se encontró un token de autenticación")
+        setIsLoading(false)
+        return
+      }
+
       const headers = { Authorization: `Bearer ${token}` }
 
       // Obtener citas confirmadas, en progreso, pendientes y canceladas
@@ -44,10 +50,17 @@ const CitasEnProgreso = () => {
         const citasValidas = citasFiltradas.filter((cita) => cita._id && cita.nombrecliente && cita.nombreempleado)
 
         // Log de citas canceladas para depuración
-        const citasCanceladas = citasValidas.filter((cita) => cita.estadocita === "Cancelada")
-        if (citasCanceladas.length > 0) {
-          console.log("Citas canceladas encontradas:", citasCanceladas.length)
-          console.log("Primera cita cancelada:", JSON.stringify(citasCanceladas[0], null, 2))
+        const citasCanceladasIniciales = citasValidas.filter((cita) => cita.estadocita === "Cancelada")
+        if (citasCanceladasIniciales.length > 0) {
+          console.log("Citas canceladas encontradas:", citasCanceladasIniciales.length)
+          citasCanceladasIniciales.forEach((cita, index) => {
+            console.log(`Cita cancelada #${index + 1}:`, {
+              id: cita._id,
+              cliente: cita.nombrecliente?.nombrecliente,
+              motivo: cita.motivo || "No especificado",
+              fechaCancelacion: cita.fechacancelacion || "No registrada",
+            })
+          })
         }
 
         // SOLUCIÓN CORREGIDA: Procesar las fechas correctamente
@@ -378,7 +391,7 @@ const CitasEnProgreso = () => {
   }
 
   // Cancelar una cita
-  const cancelarCita = async (citaId) => {
+  async function cancelarCita(citaId) {
     if (!citaId) {
       Swal.fire("Error", "ID de cita no válido", "error")
       return
@@ -414,20 +427,67 @@ const CitasEnProgreso = () => {
         })
 
         const token = localStorage.getItem("token")
+        if (!token) {
+          throw new Error("No se encontró token de autenticación")
+        }
+
         const headers = { Authorization: `Bearer ${token}` }
 
-        // Enviar la solicitud para cancelar la cita, incluyendo motivo y fecha de cancelación
-        const response = await axios.put(
-          `${API_URL}/citas/${citaId}`,
-          {
-            estadocita: "Cancelada",
-            motivo: motivo,
-            fechacancelacion: new Date().toISOString(), // Fecha actual en formato ISO
-          },
-          { headers },
-        )
+        // Crear objeto de datos completo para la cancelación
+        const fechaCancelacion = new Date().toISOString()
 
+        // IMPORTANTE: Asegurarnos de que los nombres de los campos coincidan exactamente con el esquema
+        const datosCancelacion = {
+          estadocita: "Cancelada",
+          motivo: motivo,
+          fechacancelacion: fechaCancelacion,
+        }
+
+        console.log("Enviando datos de cancelación:", JSON.stringify(datosCancelacion))
+
+        // Obtener datos actuales de la cita para comparar después
+        const citaAntes = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
+        console.log("Datos de la cita ANTES de cancelar:", citaAntes.data)
+
+        // Enviar la solicitud para cancelar la cita
+        const response = await axios.put(`${API_URL}/citas/${citaId}`, datosCancelacion, { headers })
         console.log("Respuesta de cancelación:", response.data)
+
+        // Verificar que los datos se guardaron correctamente
+        const citaDespues = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
+        console.log("Datos de la cita DESPUÉS de cancelar:", citaDespues.data)
+
+        // Verificar específicamente los campos de cancelación
+        const citaActualizada = citaDespues.data.cita || citaDespues.data
+        console.log("Campos de cancelación guardados:", {
+          estadocita: citaActualizada.estadocita,
+          motivo: citaActualizada.motivo,
+          fechacancelacion: citaActualizada.fechacancelacion,
+        })
+
+        // Guardar también en localStorage como respaldo
+        const datosRespaldo = {
+          citaId: citaId,
+          motivo: motivo,
+          fechacancelacion: fechaCancelacion,
+          timestamp: Date.now(),
+        }
+        localStorage.setItem(`cancelacion_${citaId}`, JSON.stringify(datosRespaldo))
+        console.log("Datos de cancelación guardados en localStorage como respaldo")
+
+        // Actualizar la cita en el estado local
+        setCitas((prevCitas) =>
+          prevCitas.map((cita) =>
+            cita._id === citaId
+              ? {
+                  ...cita,
+                  estadocita: "Cancelada",
+                  motivo: motivo,
+                  fechacancelacion: fechaCancelacion,
+                }
+              : cita,
+          ),
+        )
 
         Swal.fire({
           title: "¡Cita cancelada!",
@@ -449,86 +509,136 @@ const CitasEnProgreso = () => {
     }
   }
 
-  // Eliminar una cita
-  const eliminarCita = async (citaId) => {
-    if (!citaId) {
-      Swal.fire("Error", "ID de cita no válido", "error")
-      return
-    }
-
-    // Confirmar eliminación
-    const confirmacion = await Swal.fire({
-      title: "¿Eliminar cita?",
-      text: "Esta acción no se puede deshacer. La cita será eliminada permanentemente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    })
-
-    if (confirmacion.isConfirmed) {
-      try {
-        Swal.fire({
-          title: "Eliminando cita...",
-          text: "Por favor espere",
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading()
-          },
-        })
-
-        const token = localStorage.getItem("token")
-        const headers = { Authorization: `Bearer ${token}` }
-
-        // Enviar la solicitud para eliminar la cita
-        await axios.delete(`${API_URL}/citas/${citaId}`, { headers })
-
-        Swal.fire({
-          title: "¡Cita eliminada!",
-          text: "La cita ha sido eliminada exitosamente",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          fetchData()
-        })
-      } catch (error) {
-        console.error("Error al eliminar la cita:", error)
-        Swal.fire({
-          title: "Error",
-          text: `No se pudo eliminar la cita: ${error.message}`,
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        })
-      }
-    }
-  }
-
   // Mostrar detalles de cancelación de una cita
-  const mostrarDetallesCancelacion = async (cita) => {
+  async function mostrarDetallesCancelacion(cita) {
+    console.log("Mostrando detalles de cancelación para cita:", cita._id)
+    console.log("Datos iniciales de la cita:", JSON.stringify(cita, null, 2))
+
     try {
-      // Obtener los detalles actualizados de la cita
+      // Intentar obtener datos de respaldo del localStorage
+      let datosRespaldo = null
+      try {
+        const respaldoStr = localStorage.getItem(`cancelacion_${cita._id}`)
+        if (respaldoStr) {
+          datosRespaldo = JSON.parse(respaldoStr)
+          console.log("Datos de respaldo encontrados en localStorage:", datosRespaldo)
+        }
+      } catch (e) {
+        console.error("Error al leer datos de respaldo:", e)
+      }
+
       const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No se encontró token de autenticación")
+      }
+
       const headers = { Authorization: `Bearer ${token}` }
 
-      const response = await axios.get(`${API_URL}/citas/${cita._id}`, { headers })
-      const citaActualizada = response.data.cita
+      // Obtener datos actualizados de la cita
+      let motivoCancelacion = "No especificado"
+      let fechaCancelacionFormateada = "No registrada"
+      let citaActualizada = null
 
-      // Formatear la fecha de cancelación
-      const fechaCancelacionFormateada = citaActualizada.fechacancelacion
-        ? new Date(citaActualizada.fechacancelacion).toLocaleDateString("es-ES", {
+      try {
+        // Intentar obtener datos actualizados del servidor
+        console.log(`Obteniendo datos actualizados para cita ${cita._id}...`)
+        const response = await axios.get(`${API_URL}/citas/${cita._id}`, { headers })
+        console.log("Respuesta completa del servidor:", response.data)
+
+        // Extraer la cita de la respuesta según su estructura
+        if (response.data && response.data.cita) {
+          citaActualizada = response.data.cita
+          console.log("Usando datos de response.data.cita")
+        } else if (response.data) {
+          citaActualizada = response.data
+          console.log("Usando datos de response.data directamente")
+        }
+
+        // Verificar si tenemos datos de cancelación en la respuesta
+        if (citaActualizada) {
+          console.log("Datos de cancelación en respuesta:", {
+            motivo: citaActualizada.motivo,
+            fechacancelacion: citaActualizada.fechacancelacion,
+          })
+
+          // Usar los datos actualizados si existen
+          if (citaActualizada.motivo) {
+            motivoCancelacion = citaActualizada.motivo
+            console.log("Usando motivo del servidor:", motivoCancelacion)
+          }
+
+          if (citaActualizada.fechacancelacion) {
+            try {
+              const fechaCancelacion = new Date(citaActualizada.fechacancelacion)
+              fechaCancelacionFormateada = fechaCancelacion.toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              console.log("Usando fecha de cancelación del servidor:", fechaCancelacionFormateada)
+            } catch (dateError) {
+              console.error("Error al formatear fecha del servidor:", dateError)
+              fechaCancelacionFormateada = String(citaActualizada.fechacancelacion)
+            }
+          }
+        }
+      } catch (fetchError) {
+        console.error("Error al obtener datos actualizados:", fetchError)
+        // Si falla la obtención de datos actualizados, continuamos con los siguientes pasos
+      }
+
+      // Si no pudimos obtener datos actualizados, usar los datos locales
+      if (motivoCancelacion === "No especificado" && cita.motivo) {
+        console.log("Usando motivo de datos locales:", cita.motivo)
+        motivoCancelacion = cita.motivo
+      }
+
+      if (fechaCancelacionFormateada === "No registrada" && cita.fechacancelacion) {
+        console.log("Usando fecha de cancelación de datos locales:", cita.fechacancelacion)
+        try {
+          const fechaCancelacion = new Date(cita.fechacancelacion)
+          fechaCancelacionFormateada = fechaCancelacion.toLocaleDateString("es-ES", {
             year: "numeric",
             month: "long",
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
           })
-        : "No registrada"
+        } catch (dateError) {
+          console.error("Error al formatear fecha local:", dateError)
+          fechaCancelacionFormateada = String(cita.fechacancelacion)
+        }
+      }
+
+      // Si aún no tenemos datos, usar los datos de respaldo
+      if (motivoCancelacion === "No especificado" && datosRespaldo?.motivo) {
+        console.log("Usando motivo de datos de respaldo:", datosRespaldo.motivo)
+        motivoCancelacion = datosRespaldo.motivo
+      }
+
+      if (fechaCancelacionFormateada === "No registrada" && datosRespaldo?.fechacancelacion) {
+        console.log("Usando fecha de cancelación de datos de respaldo:", datosRespaldo.fechacancelacion)
+        try {
+          const fechaCancelacion = new Date(datosRespaldo.fechacancelacion)
+          fechaCancelacionFormateada = fechaCancelacion.toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        } catch (dateError) {
+          console.error("Error al formatear fecha de respaldo:", dateError)
+          fechaCancelacionFormateada = String(datosRespaldo.fechacancelacion)
+        }
+      }
 
       // Usar la fecha corregida si está disponible
       const fechaCita = cita._fechaObjeto || new Date(cita.fechacita)
 
+      // Mostrar el modal con la información
       Swal.fire({
         title: "Detalles de Cancelación",
         html: `
@@ -540,7 +650,7 @@ const CitasEnProgreso = () => {
               month: "long",
               day: "numeric",
             })} a las ${cita.horacita || fechaCita.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
-            <p class="mb-2"><strong>Motivo de cancelación:</strong> ${citaActualizada.motivo || "No especificado"}</p>
+            <p class="mb-2"><strong>Motivo de cancelación:</strong> ${motivoCancelacion}</p>
             <p class="mb-2"><strong>Fecha de cancelación:</strong> ${fechaCancelacionFormateada}</p>
           </div>
         `,
@@ -553,7 +663,7 @@ const CitasEnProgreso = () => {
         },
       })
     } catch (error) {
-      console.error("Error al obtener detalles de la cita cancelada:", error)
+      console.error("Error general al mostrar detalles:", error)
       Swal.fire({
         title: "Error",
         text: "No se pudieron cargar los detalles de la cancelación",
@@ -563,11 +673,81 @@ const CitasEnProgreso = () => {
     }
   }
 
+  // Función para eliminar una cita
+  async function eliminarCita(citaId) {
+    if (!citaId) {
+      Swal.fire("Error", "ID de cita no válido", "error")
+      return
+    }
+
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará la cita permanentemente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          Swal.fire({
+            title: "Eliminando cita...",
+            text: "Por favor espere",
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
+            },
+          })
+
+          const token = localStorage.getItem("token")
+          if (!token) {
+            throw new Error("No se encontró token de autenticación")
+          }
+
+          const headers = { Authorization: `Bearer ${token}` }
+
+          // Enviar la solicitud para eliminar la cita
+          await axios.delete(`${API_URL}/citas/${citaId}`, { headers })
+
+          // Eliminar datos de respaldo si existen
+          try {
+            localStorage.removeItem(`cancelacion_${citaId}`)
+          } catch (e) {
+            console.error("Error al eliminar datos de respaldo:", e)
+          }
+
+          // Actualizar la lista de citas
+          setCitas((prevCitas) => prevCitas.filter((cita) => cita._id !== citaId))
+
+          Swal.fire({
+            title: "¡Cita eliminada!",
+            text: "La cita ha sido eliminada exitosamente",
+            icon: "success",
+            confirmButtonText: "Aceptar",
+          })
+        } catch (error) {
+          console.error("Error al eliminar la cita:", error)
+          Swal.fire({
+            title: "Error",
+            text: `No se pudo eliminar la cita: ${error.message}`,
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          })
+        }
+      }
+    })
+  }
+
   // Mostrar indicador de carga mientras se cargan los datos
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
+      <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          <p className="mt-4 text-foreground">Cargando citas en progreso...</p>
+        </div>
       </div>
     )
   }
@@ -614,16 +794,16 @@ const CitasEnProgreso = () => {
             const fechaMostrar = cita._fechaObjeto || new Date(cita.fechacita)
 
             return (
-              <div key={cita._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div key={cita._id} className="dark:card-gradient-4 rounded-lg shadow-md overflow-hidden">
                 <div
                   className={`p-4 ${
                     cita.estadocita === "En Progreso"
-                      ? "bg-blue-100"
-                      : cita.estadocita === "Confirmada"
-                        ? "bg-green-100"
-                        : cita.estadocita === "Cancelada"
-                          ? "bg-red-100"
-                          : "bg-yellow-100"
+                    ? "bg-yellow-200 dark:bg-amber-800/80"
+                    : cita.estadocita === "Confirmada"
+                      ? "bg-green-100"
+                      : cita.estadocita === "Cancelada"
+                        ? "bg-red-300 dark:bg-rose-800/80"
+                        : "bg-blue-200 dark:bg-indigo-800/80"
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -633,12 +813,12 @@ const CitasEnProgreso = () => {
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         cita.estadocita === "En Progreso"
-                          ? "bg-blue-200 text-blue-800"
-                          : cita.estadocita === "Confirmada"
-                            ? "bg-green-200 text-green-800"
-                            : cita.estadocita === "Cancelada"
-                              ? "bg-red-200 text-red-800"
-                              : "bg-yellow-200 text-yellow-800"
+                        ? "bg-blue-200 text-blue-800"
+                        : cita.estadocita === "Confirmada"
+                          ? "bg-green-200 text-green-800"
+                          : cita.estadocita === "Cancelada"
+                            ? "bg-red-200 text-red-800"
+                            : "bg-yellow-200 text-yellow-800"
                       }`}
                     >
                       {cita.estadocita}
@@ -647,10 +827,10 @@ const CitasEnProgreso = () => {
                 </div>
 
                 <div className="p-4">
-                  <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-foreground mb-2">
                     <strong>Empleado:</strong> {cita.nombreempleado?.nombreempleado || "No asignado"}
                   </p>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-foreground mb-2">
                     <strong>Fecha:</strong>{" "}
                     {fechaMostrar.toLocaleDateString("es-ES", {
                       year: "numeric",
@@ -658,7 +838,7 @@ const CitasEnProgreso = () => {
                       day: "numeric",
                     })}
                   </p>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-foreground mb-2">
                     <strong>Hora:</strong>{" "}
                     {cita.horacita ||
                       fechaMostrar.toLocaleTimeString("es-ES", {
@@ -666,7 +846,7 @@ const CitasEnProgreso = () => {
                         minute: "2-digit",
                       })}
                   </p>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-foreground mb-2">
                     <strong>Monto Total:</strong> ${cita.montototal?.toFixed(2) || "0.00"}
                   </p>
 
@@ -675,14 +855,14 @@ const CitasEnProgreso = () => {
                       <>
                         <button
                           onClick={() => mostrarDetallesCancelacion(cita)}
-                          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                          className="btn-info-2 bg-gray-300 dark:bg-gray-800"
                         >
                           <FaInfoCircle className="inline mr-2" />
                           Ver Detalles
                         </button>
                         <button
                           onClick={() => eliminarCita(cita._id)}
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                          className="btn-delete-cp bg-red-300 dark:bg-red-800"
                         >
                           <FaTrash className="inline mr-2" />
                           Eliminar
@@ -700,14 +880,14 @@ const CitasEnProgreso = () => {
                       <>
                         <button
                           onClick={() => iniciarVenta(cita._id)}
-                          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                          className="btn-start-1 bg-green-300 dark:bg-green-800"
                         >
                           <FaPlay className="inline mr-2" />
                           Iniciar Venta
                         </button>
                         <button
                           onClick={() => cancelarCita(cita._id)}
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                          className="btn-cancel-cp bg-red-300 dark:bg-red-800"
                         >
                           <FaTimes className="inline mr-2" />
                           Cancelar
@@ -721,7 +901,7 @@ const CitasEnProgreso = () => {
           })}
         </div>
       ) : (
-        <div className="bg-gray-100 p-6 rounded-lg text-center">
+        <div className="dark:bg-primary p-6 rounded-lg text-center">
           <FaExclamationTriangle className="inline-block text-yellow-500 text-4xl mb-2" />
           <p className="text-gray-500">No hay citas activas en este momento</p>
         </div>
