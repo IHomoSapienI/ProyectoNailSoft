@@ -390,7 +390,7 @@ const TablaServicios = () => {
       <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando servicios...</p>
+          <p className="mt-4 text-foreground">Cargando servicios...</p>
         </div>
       </div>
     )
@@ -427,28 +427,28 @@ const TablaServicios = () => {
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
         {/* Modificar la tabla para mostrar información de descuento */}
         <table className="serv-tabla-moderna w-full">
-          <thead className=" dark:card-gradient-4 ">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th onClick={() => handleSort("nombreServicio")} className="cursor-pointer dark:hover:bg-gray-800">
+              <th onClick={() => handleSort("nombreServicio")} className="dark:hover:bg-gray-500/50">
                 Nombre del Servicio {getSortIcon("nombreServicio")}
               </th>
-              <th onClick={() => handleSort("tipoServicio")} className="cursor-pointer dark:hover:bg-gray-800">
+              <th onClick={() => handleSort("tipoServicio")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Tipo {getSortIcon("tipoServicio")}
               </th>
-              <th onClick={() => handleSort("tiempo")} className="cursor-pointer dark:hover:bg-gray-800">
+              <th onClick={() => handleSort("tiempo")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Tiempo {getSortIcon("tiempo")}
               </th>
-              <th onClick={() => handleSort("precio")} className="cursor-pointer dark:hover:bg-gray-800">
+              <th onClick={() => handleSort("precio")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Precio {getSortIcon("precio")}
               </th>
               <th>Precio con Descuento</th>
-              <th onClick={() => handleSort("estado")} className="cursor-pointer dark:hover:bg-gray-800">
+              <th onClick={() => handleSort("estado")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Estado {getSortIcon("estado")}
               </th>
-              <th>Acciones</th>
+              <th className="cursor-pointer dark:hover:bg-gray-500/50">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80 text-foreground">
             {serviciosActuales.length > 0 ? (
               serviciosActuales.map((servicio) => {
                 // Calcular precio con descuento si el tipo de servicio tiene descuento
@@ -479,20 +479,20 @@ const TablaServicios = () => {
                       )}
                     </td>
                     <td>
-                      <span className={`estado-badge ${servicio.estado ? "activo" : "inactivo"}`}>
+                      <span className={`serv-estado-badge ${servicio.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                         {servicio.estado ? "Activo" : "Inactivo"}
                       </span>
                     </td>
                     <td>
                       <div className="flex space-x-2">
-                        <button className="btn-edit-1" onClick={() => manejarEditar(servicio)} title="Editar">
+                        <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(servicio)} title="Editar">
                           <FontAwesomeIcon icon={faEdit} />
                         </button>
-                        <button className="btn-delete-1" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
+                        <button className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(servicio._id)} title="Eliminar">
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
                         <button
-                          className={`btn-toggle-1 ${servicio.estado ? "active" : "inactive"}`}
+                          className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${servicio.estado ? "active" : "inactive"}`}
                           onClick={() => manejarToggleEstado(servicio._id, servicio.estado)}
                           title={servicio.estado ? "Desactivar servicio" : "Activar servicio"}
                         >

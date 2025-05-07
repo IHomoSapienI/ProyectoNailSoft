@@ -41,16 +41,16 @@
 .serv-tabla-moderna td {
   padding: 1rem;
   font-size: 0.875rem;
-  color: #374151;
+  /* color: #374151; */
   border-bottom: 1px solid #e5e7eb;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.serv-tabla-moderna tbody tr:hover {
+/* .serv-tabla-moderna tbody tr:hover {
   background-color: #f9fafb;
-}
+} */
 
 .serv-tabla-moderna tbody tr:last-child td {
   border-bottom: none;
@@ -250,7 +250,7 @@
 }
 
 /* Estado badge */
-.estado-badge {
+.serv-estado-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -258,7 +258,7 @@
   font-weight: 500;
 }
 
-.estado-badge.activo {
+/* .estado-badge.activo {
   background-color: #dcfce7;
   color: #16a34a;
 }
@@ -266,7 +266,7 @@
 .estado-badge.inactivo {
   background-color: #fee2e2;
   color: #dc2626;
-}
+} */
 
 /* Modal */
 .modal-overlay {

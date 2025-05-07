@@ -19,9 +19,9 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
   
-  .venta-tabla-moderna thead {
+  /* .venta-tabla-moderna thead {
     background-color: #f9fafb;
-  }
+  } */
   
   .venta-tabla-moderna th {
     padding: 0.75rem 0.5rem; /* Reducido el padding horizontal */
@@ -36,14 +36,14 @@
     white-space: nowrap; /* Evita que los encabezados se rompan */
   }
   
-  .venta-tabla-moderna th:hover {
+  /* .venta-tabla-moderna th:hover {
     background-color: #5b5b5b;
-  }
+  } */
   
   .venta-tabla-moderna td {
     padding: 0.75rem 0.5rem; /* Reducido el padding horizontal */
     font-size: 0.875rem;
-    color: #374151;
+    /* color: #374151; */
     border-bottom: 1px solid #e5e7eb;
     white-space: nowrap;
     overflow: hidden;
@@ -94,9 +94,9 @@
     text-align: center;
   }
   
-  .tabla-moderna tbody tr:hover {
+  /* .tabla-moderna tbody tr:hover {
     background-color: #f9fafb;
-  }
+  } */
   
   .tabla-moderna tbody tr:last-child td {
     border-bottom: none;
@@ -105,14 +105,15 @@
   /* Ajustar el tamaño de los botones de acción para que ocupen menos espacio */
   .btn-edit,
   .btn-delete,
-  .btn-info {
+  .btn-info,
+  .btn-success-1 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 1.75rem;
     height: 1.75rem;
-    background-color: #3b82f6;
-    color: white;
+    /* background-color: #3b82f6;
+    color: white; */
     border-radius: 0.375rem;
     border: none;
     transition: all 0.2s ease;
@@ -254,7 +255,7 @@
   }
   
   /* Estado badge */
-  .estado-badge {
+  .venta-estado-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
@@ -262,7 +263,7 @@
     font-weight: 500;
   }
   
-  .estado-badge.activo {
+  /* .estado-badge.activo {
     background-color: #dcfce7;
     color: #16a34a;
   }
@@ -270,7 +271,7 @@
   .estado-badge.inactivo {
     background-color: #fee2e2;
     color: #dc2626;
-  }
+  } */
   
   /* Modal */
   .modal-overlay {

@@ -26,6 +26,8 @@ const GestionVentaServicio = () => {
   const [cambiosSinGuardar, setCambiosSinGuardar] = useState(false)
   const [activeTab, setActiveTab] = useState("servicios") // servicios, productos
   const API_URL = "https://gitbf.onrender.com/api"
+  const [duracionTotal, setDuracionTotal] = useState(0)
+  const [tiempoTotal, setTiempoTotal] = useState(0)
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -643,10 +645,18 @@ const GestionVentaServicio = () => {
   const precioTotal = precioTotalServicios + precioTotalProductos
 
   // Calcular el tiempo total
-  const tiempoTotal = serviciosSeleccionados.reduce(
-    (total, servicio) => total + (Number.parseInt(servicio.tiempo) || 0),
-    0,
-  )
+  useEffect(() => {
+    const calcularTiempoTotal = () => {
+      const total = serviciosSeleccionados.reduce(
+        (total, servicio) => total + (Number.parseInt(servicio.tiempo) || 0),
+        0,
+      )
+      setDuracionTotal(total)
+      setTiempoTotal(total)
+    }
+
+    calcularTiempoTotal()
+  }, [serviciosSeleccionados])
 
   // Determinar el tipo de venta
   const getTipoVenta = () => {
@@ -950,9 +960,9 @@ const GestionVentaServicio = () => {
             nombreempleado: empleadoId,
             nombrecliente: clienteId,
             fechacita: cita.fechacita,
-            horacita: cita.horacita || "00:00",
+            horacita: cita.horacita,
             // horacita: cita.horacita || "00:00",
-            duracionTotal: tiempoTotal,
+            duracionTotal: duracionTotal,
             servicios: serviciosFormateados, // Guardar los servicios seleccionados en la cita
             productos: productosFormateados, // Guardar los productos seleccionados en la cita
             montototal: precioTotal,
@@ -1283,23 +1293,42 @@ const GestionVentaServicio = () => {
           const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
           console.log("Respuesta de creación de venta unificada:", createResponse.data)
 
-          // Actualizar el estado de la cita a "Completada"
+          // Actualizar el estado de la cita a "Completada" y liberar el horario
           await axios.put(
             `${API_URL}/citas/${cita._id}`,
             {
               nombreempleado: empleadoId,
               nombrecliente: clienteId,
               fechacita: cita.fechacita,
-              // horacita: cita.horacita || "00:00",
               horacita: cita.horacita,
-              duracionTotal: tiempoTotal,
+              duracionTotal: duracionTotal,
               servicios: serviciosFormateados,
               productos: productosFormateados,
               montototal: precioTotal,
               estadocita: "Completada", // Cambiar estado a "Completada"
+              horarioLiberado: true, // Marcar que el horario ha sido liberado
             },
             { headers },
           )
+
+          // Notificar al sistema de agenda que el horario ha sido liberado
+          try {
+            await axios.post(
+              `${API_URL}/horarios/liberar`,
+              {
+                citaId: cita._id,
+                empleadoId: empleadoId,
+                fecha: cita.fechacita,
+                hora: cita.horacita,
+                duracion: duracionTotal,
+              },
+              { headers },
+            )
+            console.log("Horario liberado correctamente en el sistema de agenda")
+          } catch (horarioError) {
+            console.error("Error al liberar horario:", horarioError)
+            // No interrumpir el flujo principal si falla la liberación del horario
+          }
 
           // Limpiar localStorage
           try {
@@ -1389,7 +1418,7 @@ const GestionVentaServicio = () => {
               nombrecliente: clienteId,
               fechacita: cita.fechacita,
               horacita: cita.horacita,
-              duracionTotal: tiempoTotal,
+              duracionTotal: duracionTotal,
               servicios: serviciosFormateados,
               productos: productosFormateados,
               montototal: precioTotal,
@@ -1600,19 +1629,17 @@ const GestionVentaServicio = () => {
             <p className="info-value">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
           </div>
           <div className="info-item">
-          <p className="info-label">Fecha:</p>
-<p className="info-value">
-  {new Date(cita.fechacita).toLocaleDateString("es-ES", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })}
-</p>
+            <p className="info-label">Fecha:</p>
+            <p className="info-value">
+              {new Date(cita.fechacita).toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
 
-<p className="info-label">Hora:</p>
-<p className="info-value">
-  {cita.horacita}
-</p>
+            <p className="info-label">Hora:</p>
+            <p className="info-value">{cita.horacita}</p>
           </div>
           <div className="info-item">
             <p className="info-label">Estado:</p>

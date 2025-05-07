@@ -299,7 +299,7 @@
   }
   
   /* Estado badge */
-  .estado-badge {
+  .permiso-estado-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
@@ -307,16 +307,16 @@
     font-weight: 500;
   }
   
-  .estado-badge.activo {
+  /* .permiso-estado-badge.activo {
     background-color: #dcfce7;
-    color: #16a34a;
+    color: #131615;
   }
   
-  .estado-badge.inactivo {
+  .permiso-estado-badge.inactivo {
     background-color: #fee2e2;
     color: #dc2626;
   }
-  
+   */
   /* Modal */
   .modal-overlay {
     position: fixed;

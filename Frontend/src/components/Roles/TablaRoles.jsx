@@ -325,10 +325,10 @@ export default function TablaRoles() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando roles...</p>
+          <p className="mt-4 text-foreground">Cargando roles...</p>
         </div>
       </div>
     )
@@ -392,30 +392,30 @@ export default function TablaRoles() {
 
       <div className="overflow-x-auto rounded-lg shadow mx-4 w-full mx-auto">
         <table className="rol-tabla-moderna w-full dark:bg-foreground" style={{ width: "100%", tableLayout: "fixed" }}>
-          <thead className="dark:card-gradient-4">
-            <tr>
-              <th className="dark:hover:card-gradient-0">Nombre del Rol</th>
-              <th className="dark:hover:card-gradient-0">Estado</th>
-              <th className="dark:hover:card-gradient-0">Acciones</th>
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
+            <tr className="text-foreground">
+              <th className="dark:hover:bg-gray-500/50">Nombre del Rol</th>
+              <th className="dark:hover:bg-gray-500/50">Estado</th>
+              <th className="dark:hover:bg-gray-500/50">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80 text-foreground">
             {rolesFiltrados.length > 0 ? (
               rolesFiltrados.map((rol) => (
-                <tr key={rol._id} className="hover:bg-gray-50">
+                <tr key={rol._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{rol.nombreRol}</td>
                   <td>
-                    <span className={`estado-badge ${rol.estadoRol ? "activo" : "inactivo"}`}>
+                    <span className={`rol-estado-badge ${rol.estadoRol ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                       {rol.estadoRol ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     <div className="flex space-x-2 center">
-                      <button className="btn-edit" onClick={() => manejarEditar(rol)} title="Editar rol">
+                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(rol)} title="Editar rol">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
 
-                      <button className="btn-delete" onClick={() => manejarEliminar(rol._id)} title="Eliminar rol">
+                      <button className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(rol._id)} title="Eliminar rol">
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
@@ -424,7 +424,7 @@ export default function TablaRoles() {
                       </button>
 
                       <button
-                        className={`btn-toggle ${rol.estadoRol ? "active" : "inactive"}`}
+                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${rol.estadoRol ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(rol._id, rol.estadoRol)}
                         title={rol.estadoRol ? "Desactivar rol" : "Activar rol"}
                       >

@@ -312,15 +312,15 @@ const TablaVentas = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando ventas...</p>
+          <p className="mt-4 text-foreground">Cargando ventas...</p>
         </div>
       </div>
     )
   }
-
+  
   return (
     <div className="tabla-container dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-8 text-foreground">Gestión de Ventas</h2>
@@ -387,21 +387,21 @@ const TablaVentas = () => {
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="venta-tabla-moderna w-full">
-          <thead className="dark:card-gradient-4">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th>Código</th>
-              <th>Cliente</th>
-              <th>Tipo</th>
-              <th>Fecha</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th className="dark:hover:bg-gray-500/50">Código</th>
+              <th className="dark:hover:bg-gray-500/50">Cliente</th>
+              <th className="dark:hover:bg-gray-500/50">Tipo</th>
+              <th className="dark:hover:bg-gray-500/50">Fecha</th>
+              <th className="dark:hover:bg-gray-500/50">Total</th>
+              <th className="dark:hover:bg-gray-500/50">Estado</th>
+              <th className="dark:hover:bg-gray-500/50">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {ventasActuales.length > 0 ? (
               ventasActuales.map((venta) => (
-                <tr key={venta._id}>
+                <tr className="dark:hover:bg-gray-500/50 text-foreground" key={venta._id}>
                   <td>{venta.codigoVenta || venta._id.substring(0, 8)}</td>
                   <td className="font-medium">
                     {venta.cliente?.nombrecliente} {venta.cliente?.apellidocliente}
@@ -426,13 +426,13 @@ const TablaVentas = () => {
                   <td>{formatearFechaHora(venta.fechaCreacion || venta.fecha)}</td>
                   <td>${venta.total.toFixed(2)}</td>
                   <td>
-                    <span className={`estado-badge ${venta.estado ? "activo" : "inactivo"}`}>
+                    <span className={`venta-estado-badge ${venta.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                       {venta.estado ? "Completada" : "Pendiente"}
                     </span>
                   </td>
                   <td>
-                    <div className="flex justify-center space-x-1">
-                      <button
+                    <div className="flex justify-center">
+                      {/* <button
                         className="btn-edit"
                         onClick={() => {
                           setVentaSeleccionada(venta)
@@ -441,20 +441,20 @@ const TablaVentas = () => {
                         title="Editar venta"
                       >
                         <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button
+                      </button> */}
+                      {/* <button
                         className="btn-delete"
                         onClick={() => manejarEliminarVenta(venta._id)}
                         title="Eliminar venta"
                       >
                         <FontAwesomeIcon icon={faTrash} />
-                      </button>
+                      </button> */}
                       <button className="btn-info" onClick={() => mostrarDetallesVenta(venta)} title="Ver detalles">
                         <FontAwesomeIcon icon={faInfoCircle} />
                       </button>
                       {!venta.estado && (
                         <button
-                          className="btn-success"
+                          className="btn-success-1 bg-emerald-500/50 dark:bg-emerald-500"
                           onClick={() => finalizarVenta(venta._id)}
                           title="Finalizar venta"
                         >

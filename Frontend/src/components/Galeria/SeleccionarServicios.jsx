@@ -1001,7 +1001,7 @@ const SeleccionarServicios = () => {
         <div className="notebook">
           {/* Espiral de la libreta */}
           <div className="notebook-spiral">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(10)].map((_, i) => (
               <div key={i} className="spiral-ring"></div>
             ))}
           </div>
@@ -1039,7 +1039,7 @@ const SeleccionarServicios = () => {
               className={`notebook-page left-page ${isFlipping ? "flipping" : ""}`}
               initial={{ rotateY: 0 }}
               animate={{ rotateY: isFlipping ? -180 : 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 1 }}
             >
               {/* PASO 1: Selección de servicios */}
               {currentStep === 1 && (

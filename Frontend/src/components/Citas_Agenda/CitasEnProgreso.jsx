@@ -340,6 +340,19 @@ const CitasEnProgreso = () => {
           } else {
             // Si no existe una venta, ir a crear una nueva
             Swal.close()
+            // Actualizar el estado de la cita a "En Progreso" antes de navegar
+            try {
+              await axios.put(`${API_URL}/citas/${citaId}`, { estadocita: "En Progreso" }, { headers })
+              console.log("Cita marcada como En Progreso")
+
+              // Actualizar la lista de citas en la UI
+              setCitas((prevCitas) =>
+                prevCitas.map((cita) => (cita._id === citaId ? { ...cita, estadocita: "En Progreso" } : cita)),
+              )
+            } catch (updateError) {
+              console.error("Error al actualizar estado de cita:", updateError)
+              // No interrumpir el flujo principal si falla la actualización
+            }
             navigate(`/gestion-venta/new/${citaId}`)
           }
         } catch (error) {

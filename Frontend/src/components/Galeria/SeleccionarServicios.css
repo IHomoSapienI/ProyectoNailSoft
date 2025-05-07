@@ -47,9 +47,9 @@ h6 {
 }
 
 .servicios-view {
-  position: relative;
+  position: fixed;
   width: 100%;
-  height: 100vh;
+  height: 90vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -454,9 +454,9 @@ h6 {
 
 /* Lista de servicios - REDISEÑADA para mejor visualización */
 .services-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.8rem;
+  display: grid-flex;
+  /* flex-direction: column; */
+  /* gap: 1.8rem; */
   height: calc(100% - 170px);
   overflow-y: auto;
   padding: 0.5rem 0.5rem 1.5rem 0.5rem;

@@ -47,7 +47,14 @@ const CitaSchema = Schema({
         nombreServicio: String,
         precio: Number,
         tiempo: Number
-    }]
-});
+    }],
+    horarioLiberado: {
+      type: Boolean,
+      default: false,
+    },
+
+    
+},
+{ timestamps: true },);
 
 module.exports = model('Cita', CitaSchema);

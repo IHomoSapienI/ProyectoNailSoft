@@ -619,6 +619,86 @@ const AgendaEmpleado = () => {
     }, 100)
   }
 
+  const verificarDisponibilidad = async (
+    fechaSeleccionada,
+    empleadoSeleccionado,
+    inicioSeleccionado,
+    finSeleccionado,
+  ) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        Swal.fire({
+          title: "Error",
+          text: "No se encontró un token de autenticación",
+          icon: "error",
+          confirmButtonColor: "#ff69b4",
+        })
+        return false
+      }
+
+      const headers = { Authorization: `Bearer ${token}` }
+      const respuesta = await axios.get(
+        `https://gitbf.onrender.com/api/citas?fechacita=${fechaSeleccionada}&empleadoId=${empleadoSeleccionado}`,
+        { headers },
+      )
+
+      if (!respuesta.data || !respuesta.data.citas) {
+        Swal.fire({
+          title: "Error",
+          text: "Formato de respuesta inválido al cargar citas para verificar disponibilidad",
+          icon: "error",
+          confirmButtonColor: "#ff69b4",
+        })
+        return false
+      }
+
+      const citasDelDia = respuesta.data.citas
+
+      // Verificar si hay solapamiento con alguna cita existente
+      const hayConflicto = citasDelDia.some((cita) => {
+        // Ignorar citas con horario liberado
+        if (cita.horarioLiberado) return false
+
+        // Ignorar citas completadas (que deberían tener horario liberado)
+        if (cita.estadocita === "Completada") return false
+
+        // Convertir la hora de la cita existente a minutos desde el inicio del día
+        const [horaCita, minutosCita] = cita.horacita.split(":").map(Number)
+        const inicioCita = horaCita * 60 + minutosCita
+        const duracionCita = cita.duracionTotal || 60 // Usar 60 minutos por defecto si no hay duración
+        const finCita = inicioCita + duracionCita
+
+        console.log(`Evaluando cita existente: ${cita.horacita} (${inicioCita}-${finCita} min)`)
+
+        // Hay solapamiento si el inicio o fin de la nueva cita está dentro del rango de la cita existente
+        // O si la nueva cita engloba completamente a la cita existente
+        const conflicto =
+          (inicioSeleccionado >= inicioCita && inicioSeleccionado < finCita) ||
+          (finSeleccionado > inicioCita && finSeleccionado <= finCita) ||
+          (inicioSeleccionado <= inicioCita && finSeleccionado >= finCita)
+
+        if (conflicto) {
+          console.log(`Conflicto detectado con cita existente: ${cita.horacita} (${inicioCita}-${finCita} min)`)
+        }
+
+        return conflicto
+      })
+
+      return !hayConflicto
+    } catch (error) {
+      console.error("Error al verificar disponibilidad:", error)
+      const mensaje = error.response?.data?.message || "No se pudo verificar la disponibilidad"
+      Swal.fire({
+        title: "Error",
+        text: mensaje,
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
+      return false
+    }
+  }
+
   return (
     <div className="agenda-container">
       <div className="agenda-content">

@@ -469,17 +469,17 @@ export default function TablaPermisos() {
                   <td>{permiso.categoria}</td>
                   <td>{traducirNivel(permiso.nivel)}</td>
                   <td className="text-center">
-                    <span className={`estado-badge ${permiso.activo ? "activo" : "inactivo"}`}>
+                    <span className={`permiso-estado-badge ${permiso.activo ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
                       {permiso.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     <div className="flex justify-center space-x-2">
-                      <button className="btn-edit-1" onClick={() => manejarEditar(permiso)} title="Editar permiso">
+                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(permiso)} title="Editar permiso">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-delete-1"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminar(permiso._id)}
                         title="Eliminar permiso"
                       >
@@ -489,7 +489,7 @@ export default function TablaPermisos() {
                         <FontAwesomeIcon icon={faInfoCircle} />
                       </button>
                       <button
-                        className={`btn-toggle-1 ${permiso.activo ? "active" : "inactive"}`}
+                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${permiso.activo ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(permiso._id, permiso.activo)}
                         title={permiso.activo ? "Desactivar permiso" : "Activar permiso"}
                       >
@@ -601,7 +601,7 @@ export default function TablaPermisos() {
               </div>
               <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Estado:</p>
-                <span className={`estado-badge ${permisoSeleccionado.activo ? "activo" : "inactivo"}`}>
+                <span className={`estado-badge ${permisoSeleccionado.activo ? "activo " : "inactivo"}`}>
                   {permisoSeleccionado.activo ? "Activo" : "Inactivo"}
                 </span>
               </div>
