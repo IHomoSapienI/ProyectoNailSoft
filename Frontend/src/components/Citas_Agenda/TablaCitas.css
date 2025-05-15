@@ -1,0 +1,806 @@
+/* TablaCitas.css - Versión modernizada con clases específicas */
+
+/* Contenedor principal */
+.tabla-citas-container {
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fff0f7 0%, #f9f0ff 100%);
+  }
+  
+  /* Contenido principal */
+  .tabla-citas-content {
+    background-color: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.15);
+    padding: 2rem;
+    max-width: 1500px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+  
+  /* Encabezado y título */
+  .tabla-citas-header {
+    margin-bottom: 2rem;
+  }
+  
+  .tabla-citas-title-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tabla-citas-title-icon {
+    font-size: 1.8rem;
+    color: #ff69b4;
+    margin-right: 0.75rem;
+  }
+  
+  .tabla-citas-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ff69b4;
+    margin: 0;
+    letter-spacing: -0.5px;
+  }
+  
+  /* Botones principales */
+  .tabla-citas-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tabla-citas-btn-icon {
+    margin-right: 0.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .tabla-citas-btn-primary {
+    background-color: #ff69b4;
+    color: white;
+  }
+  
+  .tabla-citas-btn-primary:hover {
+    background-color: #ff5ba7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3);
+  }
+  
+  .tabla-citas-btn-success {
+    background-color: #da70d6;
+    color: white;
+  }
+  
+  .tabla-citas-btn-success:hover {
+    background-color: #c45bb9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(218, 112, 214, 0.3);
+  }
+  
+  .tabla-citas-btn-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .tabla-citas-btn-secondary:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Filtros */
+  .tabla-citas-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background-color: #fff0f7;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+  }
+  
+  .tabla-citas-filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    flex: 1;
+  }
+  
+  .tabla-citas-filter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tabla-citas-select,
+  .tabla-citas-input {
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: white;
+    color: #374151;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    width: 100%;
+  }
+  
+  .tabla-citas-select:focus,
+  .tabla-citas-input:focus {
+    outline: none;
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.15);
+  }
+  
+  .tabla-citas-search-container {
+    flex: 2;
+    position: relative;
+  }
+  
+  .tabla-citas-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff69b4;
+    font-size: 0.875rem;
+  }
+  
+  .tabla-citas-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+  }
+  
+  .tabla-citas-filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+  
+  /* Leyenda de colores */
+  .tabla-citas-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 1rem 1.5rem;
+    background-color: #fff0f7;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+  }
+  
+  .tabla-citas-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .tabla-citas-legend-color {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+  }
+  
+  .tabla-citas-legend-text {
+    font-size: 0.95rem;
+    color: #4b5563;
+    font-weight: 500;
+  }
+  
+  /* Calendario */
+  .tabla-citas-calendar-wrapper {
+    background-color: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .tabla-citas-calendar {
+    padding: 0 1rem 1rem;
+  }
+  
+  /* Estilos para la barra de herramientas del calendario */
+  .tabla-citas-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff0f7;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .tabla-citas-toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .tabla-citas-toolbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .tabla-citas-toolbar-label {
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 1.125rem;
+    min-width: 150px;
+    text-align: center;
+  }
+  
+  .tabla-citas-toolbar-views {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .tabla-citas-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: white;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+  }
+  
+  .tabla-citas-toolbar-btn:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .tabla-citas-toolbar-btn-active {
+    background-color: #ff69b4;
+    color: white;
+    border-color: #ff5ba7;
+  }
+  
+  .tabla-citas-toolbar-btn-active:hover {
+    background-color: #ff5ba7;
+  }
+  
+  /* Spinner de carga */
+  .tabla-citas-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+  }
+  
+  .tabla-citas-loading-spinner {
+    color: #ff69b4;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tabla-citas-loading-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #ff69b4;
+  }
+  
+  /* Modal */
+  .react-modal-overlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .react-modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    position: relative;
+  }
+  
+  /* Estilos para los eventos del calendario */
+  .tabla-citas-event {
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .tabla-citas-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Estilos para el formulario */
+  .tabla-citas-form {
+    max-width: 100%;
+  }
+  
+  .tabla-citas-form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .tabla-citas-form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tabla-citas-form-input,
+  .tabla-citas-form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: white;
+    color: #374151;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .tabla-citas-form-input:focus,
+  .tabla-citas-form-select:focus {
+    outline: none;
+    border-color: #ff69b4;
+    box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.15);
+  }
+  
+  .tabla-citas-form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+  }
+  
+  /* Estilos para el formulario de citas */
+  .tabla-citas-time-slot {
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background-color: white;
+    color: #4b5563;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .tabla-citas-time-slot:hover {
+    background-color: #fff0f7;
+    border-color: #ff69b4;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(255, 105, 180, 0.15);
+  }
+  
+  .tabla-citas-time-slot.selected {
+    background-color: #ff69b4;
+    color: white;
+    border-color: #ff5ba7;
+    box-shadow: 0 3px 6px rgba(255, 105, 180, 0.3);
+  }
+  
+  .tabla-citas-time-slot.unavailable {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    opacity: 0.7;
+    box-shadow: none;
+    transform: none;
+  }
+  
+  .tabla-citas-employee-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .tabla-citas-employee-card:hover {
+    border-color: #ff69b4;
+    box-shadow: 0 4px 8px rgba(255, 105, 180, 0.15);
+    transform: translateY(-3px);
+  }
+  
+  .tabla-citas-employee-card.selected {
+    border-color: #ff69b4;
+    background-color: #fff0f7;
+    box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+  }
+  
+  .tabla-citas-employee-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff69b4, #da70d6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-right: 1rem;
+  }
+  
+  .tabla-citas-employee-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 0.25rem 0;
+  }
+  
+  .tabla-citas-employee-info p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .tabla-citas-step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    position: relative;
+    padding: 0 1rem;
+  }
+  
+  .tabla-citas-step-indicator::before {
+    content: "";
+    position: absolute;
+    top: 1.25rem;
+    left: 3rem;
+    right: 3rem;
+    height: 0.25rem;
+    background-color: #e5e7eb;
+    border-radius: 1rem;
+    z-index: 0;
+  }
+  
+  .tabla-citas-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    width: 5rem;
+  }
+  
+  .tabla-citas-step-circle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.4s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid white;
+  }
+  
+  .tabla-citas-step.active .tabla-citas-step-circle {
+    background-color: #ff69b4;
+    color: white;
+    box-shadow: 0 3px 8px rgba(255, 105, 180, 0.3);
+    transform: scale(1.1);
+  }
+  
+  .tabla-citas-step.completed .tabla-citas-step-circle {
+    background-color: #da70d6;
+    color: white;
+    box-shadow: 0 3px 8px rgba(218, 112, 214, 0.3);
+  }
+  
+  .tabla-citas-step-text {
+    font-size: 0.9rem;
+    color: #6b7280;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .tabla-citas-step.active .tabla-citas-step-text {
+    color: #ff69b4;
+    font-weight: 600;
+  }
+  
+  .tabla-citas-step.completed .tabla-citas-step-text {
+    color: #da70d6;
+    font-weight: 600;
+  }
+  
+  .tabla-citas-step-line {
+    position: absolute;
+    top: 1.25rem;
+    height: 0.25rem;
+    background: linear-gradient(90deg, #ff69b4, #da70d6);
+    border-radius: 1rem;
+    z-index: 0;
+    transition: all 0.4s ease;
+  }
+  
+  .tabla-citas-step-line-1 {
+    left: 3rem;
+    width: calc(33.33% - 3rem);
+  }
+  
+  .tabla-citas-step-line-2 {
+    left: calc(33.33% + 3rem);
+    width: calc(33.33% - 6rem);
+  }
+  
+  .tabla-citas-step-line-3 {
+    left: calc(66.66% + 3rem);
+    width: calc(33.33% - 6rem);
+  }
+  
+  .tabla-citas-service-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background-color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .tabla-citas-service-card:hover {
+    border-color: #ff69b4;
+    box-shadow: 0 3px 6px rgba(255, 105, 180, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .tabla-citas-service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tabla-citas-service-name {
+    font-weight: 600;
+    color: #374151;
+    font-size: 1rem;
+  }
+  
+  .tabla-citas-service-price {
+    font-weight: 700;
+    color: #ff69b4;
+    font-size: 1.1rem;
+  }
+  
+  .tabla-citas-service-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #6b7280;
+  }
+  
+  .tabla-citas-service-time {
+    display: flex;
+    align-items: center;
+  }
+  
+  .tabla-citas-service-time-icon {
+    margin-right: 0.25rem;
+    color: #9ca3af;
+  }
+  
+  .tabla-citas-service-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+  }
+  
+  .tabla-citas-service-btn {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+  }
+  
+  .tabla-citas-service-btn-remove {
+    color: #ef4444;
+  }
+  
+  .tabla-citas-service-btn-remove:hover {
+    background-color: #fee2e2;
+  }
+  
+  .tabla-citas-summary-card {
+    background-color: #fff0f7;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+    box-shadow: 0 2px 4px rgba(255, 105, 180, 0.1);
+  }
+  
+  .tabla-citas-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+  }
+  
+  .tabla-citas-summary-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 1.1rem;
+  }
+  
+  .tabla-citas-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .tabla-citas-summary-label {
+    color: #6b7280;
+  }
+  
+  .tabla-citas-summary-value {
+    font-weight: 500;
+    color: #374151;
+  }
+  
+  .tabla-citas-summary-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 105, 180, 0.2);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  .tabla-citas-summary-total-label {
+    color: #374151;
+  }
+  
+  .tabla-citas-summary-total-value {
+    color: #ff69b4;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .tabla-citas-container {
+      padding: 1rem;
+    }
+  
+    .tabla-citas-content {
+      padding: 1.5rem;
+    }
+  
+    .tabla-citas-toolbar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .tabla-citas-toolbar-section {
+      width: 100%;
+      justify-content: space-between;
+    }
+  
+    .tabla-citas-toolbar-views {
+      width: 100%;
+      justify-content: space-between;
+    }
+  
+    .tabla-citas-step-indicator::before {
+      left: 2rem;
+      right: 2rem;
+    }
+  
+    .tabla-citas-step {
+      width: 4rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .tabla-citas-filters {
+      flex-direction: column;
+    }
+  
+    .tabla-citas-filter-group {
+      width: 100%;
+    }
+  
+    .tabla-citas-actions {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  
+    .tabla-citas-btn {
+      width: 100%;
+    }
+  
+    .tabla-citas-toolbar-btn {
+      padding: 0.5rem;
+    }
+  
+    .tabla-citas-toolbar-btn span {
+      display: none;
+    }
+  
+    .tabla-citas-step-indicator {
+      padding: 0;
+    }
+  
+    .tabla-citas-step-indicator::before {
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+  
+    .tabla-citas-step {
+      width: 3.5rem;
+    }
+  
+    .tabla-citas-step-text {
+      font-size: 0.75rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .tabla-citas-title-section {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .tabla-citas-title-icon {
+      margin-bottom: 0.5rem;
+    }
+  
+    .tabla-citas-legend {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .tabla-citas-step-circle {
+      width: 2rem;
+      height: 2rem;
+    }
+  
+    .tabla-citas-step-text {
+      font-size: 0.7rem;
+    }
+  }
+  

@@ -1,0 +1,226 @@
+/* tablaProveedor.css - Puedes copiar este contenido y adaptarlo */
+.tabla-container {
+    padding: 1rem;
+}
+
+.btn-add, .btn-export, .btn-secondary {
+    background-color: #db2777; /* Rosa principal */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-add:hover, .btn-export:hover, .btn-secondary:hover {
+    background-color: #c0266d; /* Rosa más oscuro al pasar el ratón */
+}
+
+.btn-edit {
+    background-color: #3b82f6; /* Azul */
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+    background-color: #2563eb; /* Azul más oscuro al pasar el ratón */
+}
+
+.btn-delete {
+    background-color: #dc2626; /* Rojo */
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-delete:hover {
+    background-color: #b91c1c; /* Rojo más oscuro al pasar el ratón */
+}
+
+.btn-toggle {
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.btn-toggle.active {
+    background-color: #22c55e; /* Verde para activo */
+    color: white;
+}
+
+.btn-toggle.active:hover {
+    opacity: 0.9;
+}
+
+.btn-toggle.inactive {
+    background-color: #f43f5e; /* Rojo para inactivo */
+    color: white;
+}
+
+.btn-toggle.inactive:hover {
+    opacity: 0.9;
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.search-input:focus {
+    border-color: #db2777;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(219, 39, 119, 0.25);
+}
+
+.search-icon {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
+    color: #6b7280;
+}
+
+.proveedores-tabla-moderna {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #e5e7eb;
+}
+
+.proveedores-tabla-moderna thead th {
+    /* background-color: #f9fafb;
+    color: #374151; */
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.proveedores-tabla-moderna tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.875rem;
+}
+
+.proveedores-tabla-moderna tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.estado-badge.activo {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.estado-badge.inactivo {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.pagination-btn {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.25rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    background-color: #f9fafb;
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+.pagination-btn.disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+.pagination-number {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.25rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.pagination-number:hover {
+    background-color: #f9fafb;
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+.pagination-number.active {
+    background-color: #db2777;
+    color: white;
+    border-color: #db2777;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-width: 90%;
+    width: 500px;
+    position: relative;
+}

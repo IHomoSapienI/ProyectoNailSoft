@@ -1,0 +1,393 @@
+/* Reseteo global para la página de login */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.login-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: flex-start; /* Cambiar de center a flex-start para subir el formulario */
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: #ffe6ea; /* Fondo rosado muy claro */
+  padding-top: 8rem; /* Aumentar el padding superior para bajar un poco desde el tope */
+  box-sizing: border-box; /* Importante: incluye padding en el cálculo de altura */
+}
+
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 192, 203, 0.1) 0%, rgba(255, 192, 203, 0) 70%);
+  z-index: 0;
+}
+
+.login-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.background-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, rgba(255, 182, 193, 0.05) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 182, 193, 0.05) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 182, 193, 0.05) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 182, 193, 0.05) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  min-height: 520px; /* Aumentar ligeramente la altura mínima */
+  max-height: 80vh;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(219, 112, 147, 0.15);
+  display: flex;
+  overflow: hidden;
+  z-index: 1;
+  position: relative;
+  border: 1px solid rgba(255, 182, 193, 0.3);
+  margin: 0;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #ffb6c1, #db7093, #ffb6c1); /* Gradiente de rosados */
+  z-index: -1;
+  border-radius: 22px;
+  opacity: 0.5;
+  filter: blur(8px);
+}
+
+.login-content {
+  flex: 1;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* Eliminar scroll */
+}
+
+/* Nuevo contenedor para el logo y título */
+.header-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.8rem; /* Aumentar el margen inferior para dar más espacio */
+}
+
+.logo-container {
+  text-align: center;
+}
+
+.logo-image {
+  width: auto;
+  height: 180px; /* Aumentar considerablemente la altura del logo */
+  object-fit: contain;
+  margin-bottom: 0.5rem; /* Reducir el margen inferior */
+}
+
+.logo-text {
+  font-size: 2rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, #db7093, #ff69b4); /* Gradiente de rosados */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin: 0;
+}
+
+.welcome-text {
+  font-size: 1.4rem; /* Reducir ligeramente el tamaño de fuente */
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 1.2rem; /* Reducir el margen inferior */
+  text-align: center;
+}
+
+.form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 1.2rem; /* Reducir el margen inferior */
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #f8bbd0; /* Borde rosado claro */
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: transparent;
+  box-sizing: border-box;
+  color: #000000; /* Texto negro como solicitado */
+}
+
+.form-input:focus {
+  border-color: #db7093; /* Rosa más oscuro al enfocar */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(219, 112, 147, 0.1);
+}
+
+/* Estilo mejorado para las etiquetas flotantes */
+.input-label {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  color: #000000; /* Texto negro como solicitado */
+  transition: all 0.3s ease;
+  pointer-events: none;
+  background: #ffffff; /* Fondo blanco para que se vea bien cuando flota */
+  padding: 0 0.25rem;
+  font-weight: 500;
+  transform-origin: left top;
+}
+
+/* Animación mejorada para las etiquetas cuando el input está enfocado o tiene contenido */
+.form-input:focus ~ .input-label,
+.form-input:not(:placeholder-shown) ~ .input-label {
+  transform: translateY(-1.7rem) scale(0.85);
+  color: #db7093; /* Rosa más oscuro */
+  font-weight: 600;
+}
+
+.login-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #db7093, #ff69b4); /* Gradiente de rosados */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(219, 112, 147, 0.2);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+}
+
+.loader-circle {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Nuevo estilo para las opciones adicionales */
+.additional-options {
+  display: flex;
+  flex-direction: row; /* Cambiar a fila para que estén en horizontal */
+  justify-content: space-between; /* Separar los elementos */
+  align-items: center;
+  margin-top: 1.5rem; /* Reducir el margen superior */
+  width: 100%; /* Asegurar que ocupe todo el ancho disponible */
+}
+
+.option-link {
+  color: #000000;
+  text-decoration: none;
+  font-size: 0.9rem; /* Reducir ligeramente el tamaño de fuente */
+  transition: all 0.3s ease;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem; /* Reducir el padding */
+  border-radius: 8px;
+}
+
+.login-decoration {
+  flex: 1;
+  background: linear-gradient(135deg, #ffb6c1, #db7093); /* Gradiente de rosados */
+  padding: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-decoration::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,.1)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 20%),
+    radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 20%);
+}
+
+.decoration-content {
+  color: white;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.decoration-title {
+  font-size: 2.3rem; /* Reducir ligeramente el tamaño */
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.decoration-text {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 0; /* Eliminar el margen inferior ya que no hay imagen */
+  max-width: 80%;
+  line-height: 1.5;
+}
+
+.error-message {
+  background: #fff5f5;
+  color: #e53e3e;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #feb2b2;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
+    margin: 0 1rem; /* Margen horizontal en móvil */
+  }
+
+  .login-decoration {
+    display: none;
+  }
+
+  .login-content {
+    padding: 1.5rem;
+  }
+
+  .form-container {
+    max-width: 100%;
+  }
+
+  .login-container {
+    padding: 1rem;
+    padding-top: 4.5rem; /* Más espacio para la navbar en móvil */
+    align-items: flex-start; /* Alinear al principio en móvil */
+  }
+
+  .welcome-text {
+    font-size: 1.25rem;
+  }
+
+  .header-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .logo-image {
+    height: 120px; /* Logo un poco más pequeño en móvil */
+  }
+}
+
+/* Efecto de brillo en el botón */
+.login-button::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  30% {
+    transform: translateX(100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+/* Animación suave para los inputs */
+.form-input {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  transform: translateY(-2px);
+}
+
+/* Mejora en la accesibilidad - focus visible */
+.form-input:focus-visible,
+.login-button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #ff69b4;
+  outline-offset: 2px;
+}
