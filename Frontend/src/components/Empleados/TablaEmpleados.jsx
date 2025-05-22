@@ -5,7 +5,7 @@ import axios from "axios"
 import Modal from "react-modal"
 import FormularioEmpleado from "./FormularioEmpleado"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEdit, faTrash, faSearch, faSort, faSortUp, faSortDown } from "@fortawesome/free-solid-svg-icons"
+import { faEdit, faTrash, faSearch, faSort, faSortUp, faSortDown, faPlus } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
 
@@ -159,17 +159,22 @@ const TablaEmpleados = () => {
     if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
   }
 
-  useEffect(() => {
-    if (empleados.length > 0) {
-      console.log("Sample employee data:", empleados[0])
-    }
-  }, [empleados])
-
   return (
-    <div className="tabla-container transition-all duration-100 dark:bg-primary">
+    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Empleados</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <button
+          className="btn-add bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => {
+            setEmpleadoSeleccionado(null)
+            setFormModalIsOpen(true)
+          }}
+        >
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+          Nuevo Empleado
+        </button>
+
         <div className="search-container">
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input
@@ -182,46 +187,52 @@ const TablaEmpleados = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="serv-tabla-moderna w-full">
-          <thead className="dark:card-gradient-4">
+      <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
+        <table className="tiposerv-tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
+          <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
-              <th onClick={() => handleSort("nombreempleado")} className="cursor-pointer">
+              <th onClick={() => handleSort("nombreempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Nombre {getSortIcon("nombreempleado")}
               </th>
-              <th onClick={() => handleSort("apellidoempleado")} className="cursor-pointer">
+              <th onClick={() => handleSort("apellidoempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Apellido {getSortIcon("apellidoempleado")}
               </th>
-              <th onClick={() => handleSort("correoempleado")} className="cursor-pointer">
+              <th onClick={() => handleSort("correoempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Correo {getSortIcon("correoempleado")}
               </th>
-              <th onClick={() => handleSort("telefonoempleado")} className="cursor-pointer">
+              <th onClick={() => handleSort("telefonoempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
                 Teléfono {getSortIcon("telefonoempleado")}
               </th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th className="dark:hover:bg-gray-500/50">Estado</th>
+              <th className="dark:hover:bg-gray-500/50 text-foreground">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {empleadosActuales.length > 0 ? (
               empleadosActuales.map((empleado) => (
-                <tr key={empleado._id}>
+                <tr key={empleado._id} className="dark:hover:bg-gray-500/50 text-foreground">
                   <td className="font-medium">{empleado.nombreempleado}</td>
                   <td>{empleado.apellidoempleado}</td>
                   <td>{empleado.correoempleado}</td>
                   <td>{empleado.telefonoempleado}</td>
                   <td>
-                  <span className={`estado-badge ${empleado.estadoempleado ? "activo" : "inactivo"}`}>
+                    <span
+                      className={`estado-badge1 ${empleado.estadoempleado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}
+                    >
                       {empleado.estadoempleado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
-                    <div className="flex space-x-2">
-                      <button className="btn-edit" onClick={() => abrirFormulario(empleado)} title="Editar">
+                    <div className="flex space-x-2 center">
+                      <button
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
+                        onClick={() => abrirFormulario(empleado)}
+                        title="Editar"
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-delete"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminarEmpleado(empleado._id)}
                         title="Eliminar"
                       >
@@ -234,7 +245,7 @@ const TablaEmpleados = () => {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center py-4 text-gray-500">
-                  No se encontraron empleados
+                  No se encontraron empleados con ese criterio de búsqueda
                 </td>
               </tr>
             )}

@@ -657,8 +657,8 @@ const AgendaEmpleado = () => {
 
       // Verificar si hay solapamiento con alguna cita existente
       const hayConflicto = citasDelDia.some((cita) => {
-        // Ignorar citas con horario liberado
-        if (cita.horarioLiberado) return false
+        // Ignorar citas con horario liberado o canceladas
+        if (cita.horarioLiberado || cita.estadocita === "Cancelada") return false
 
         // Ignorar citas completadas (que deberían tener horario liberado)
         if (cita.estadocita === "Completada") return false

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import Swal from "sweetalert2"
-import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaLock, FaUserTag } from "react-icons/fa"
+import { FaSpinner, FaUser, FaEnvelope, FaPhone, FaLock, FaUserTag, FaSuperpowers } from "react-icons/fa"
 
 import "./formularioUsuarios.css"
 
@@ -29,6 +29,8 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
   const [loading, setLoading] = useState(false)
   const [originalRolId, setOriginalRolId] = useState("")
   const [fetchingCurrentUser, setFetchingCurrentUser] = useState(false)
+  const [passwordMatchError, setPasswordMatchError] = useState("")
+  const allowedDomains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com"];
 
   useEffect(() => {
     if (usuarioEditando) {
@@ -83,6 +85,29 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
       }))
     }
 
+    if (name === 'email') {
+    const domain = value.split('@')[1]?.toLowerCase();
+    if (domain && !allowedDomains.includes(domain)) {
+      setFormErrors((prev) => ({
+        ...prev,
+        email: 'Solo se permiten correos de gmail, hotmail, outlook, yahoo o icloud',
+      }));
+    } else {
+      setFormErrors((prev) => ({ ...prev, email: '' }));
+    }
+  }
+    // Validación de coincidencia de contraseña en tiempo real
+  if (name === "password" || name === "confirmPassword") {
+    const newPassword = name === "password" ? value : formData.password
+    const confirmPassword = name === "confirmPassword" ? value : formData.confirmPassword
+
+    if (confirmPassword && newPassword !== confirmPassword) {
+      setPasswordMatchError("Las contraseñas no coinciden")
+    } else {
+      setPasswordMatchError("")
+    }
+  }
+
     // Si se selecciona un rol, actualizar automáticamente el tipoUsuario
     if (name === "rol") {
       const selectedRole = roles.find((r) => r._id === value)
@@ -125,6 +150,8 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    
 
     // Validar campos obligatorios
     if (
@@ -244,29 +271,29 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         userData.confirmPassword = formData.confirmPassword
       }
 
-      // Agregar datos específicos para empleado según el modelo exacto
-      if (isEmpleado) {
-        userData.nombreempleado = formData.nombre.trim()
-        userData.apellidoempleado = formData.apellido.trim()
-        userData.correoempleado = formData.email.trim()
-        userData.telefonoempleado = formData.celular.trim()
-        userData.estadoempleado = formData.estado === "Activo"
+      // // Agregar datos específicos para empleado según el modelo exacto
+      // if (isEmpleado) {
+      //   userData.nombreempleado = formData.nombre.trim()
+      //   userData.apellidoempleado = formData.apellido.trim()
+      //   userData.correoempleado = formData.email.trim()
+      //   userData.telefonoempleado = formData.celular.trim()
+      //   userData.estadoempleado = formData.estado === "Activo"
 
-        // Asegurarse de que todos los campos requeridos para Empleado estén presentes
-        userData.especialidad = "General" // Valor por defecto
-        userData.salario = 0 // Valor por defecto
-      }
+      //   // Asegurarse de que todos los campos requeridos para Empleado estén presentes
+      //   userData.especialidad = "General" // Valor por defecto
+      //   userData.salario = 0 // Valor por defecto
+      // }
 
-      // Agregar datos específicos para cliente según el modelo exacto
-      if (isCliente) {
-        userData.nombrecliente = formData.nombre.trim()
-        userData.apellidocliente = formData.apellido.trim()
-        userData.correocliente = formData.email.trim()
-        userData.celularcliente = formData.celular.trim()
-        userData.estadocliente = formData.estado === "Activo"
-      }
+      // // Agregar datos específicos para cliente según el modelo exacto
+      // if (isCliente) {
+      //   userData.nombrecliente = formData.nombre.trim()
+      //   userData.apellidocliente = formData.apellido.trim()
+      //   userData.correocliente = formData.email.trim()
+      //   userData.celularcliente = formData.celular.trim()
+      //   userData.estadocliente = formData.estado === "Activo"
+      // }
 
-      console.log("Datos a enviar:", userData)
+      // console.log("Datos a enviar:", userData)
 
       // Usar axios para la solicitud
       const url = usuarioEditando
@@ -295,32 +322,34 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
         onClose()
       }
     } catch (error) {
-      console.error("Error completo:", error)
+  console.error("Error completo:", error)
 
-      // Mostrar mensaje de error más específico y detallado
-      let errorMsg = "Error al procesar la solicitud"
+  let errorMsg = "Error al procesar la solicitud"
+  let errorDetails = ""
 
-      if (error.response?.data?.error) {
-        errorMsg = error.response.data.error
-      } else if (error.response?.data?.msg) {
-        errorMsg = error.response.data.msg
-      } else if (error.message) {
-        errorMsg = error.message
-      }
+  if (error.response?.data?.errores && Array.isArray(error.response.data.errores)) {
+    // Si viene un array de errores, lo convertimos a string amigable
+    errorMsg = "Errores de validación:"
+    errorDetails = error.response.data.errores.join("\n")
+  } else if (error.response?.data?.error) {
+    errorMsg = error.response.data.error
+  } else if (error.response?.data?.msg) {
+    errorMsg = error.response.data.msg
+  } else if (error.message) {
+    errorMsg = error.message
+  }
 
-      // Mostrar detalles adicionales si están disponibles
-      const errorDetails = error.response?.data?.details || ""
+  setError(`${errorMsg} ${errorDetails}`)
 
-      setError(`${errorMsg} ${errorDetails}`)
-
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: errorMsg,
-        footer: errorDetails || "Si el problema persiste, contacte al administrador del sistema",
-        confirmButtonColor: "#db2777",
-      })
-    } finally {
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: errorMsg,
+    footer: errorDetails || "Si el problema persiste, contacte al administrador del sistema",
+    confirmButtonColor: "#db2777",
+  })
+}
+finally {
       setLoading(false)
     }
   }
@@ -339,17 +368,24 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
             Nombre <span className="text-pink-500">*</span>
           </label>
           <div className="relative">
+            
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaUser className="text-gray-400" />
+                <FaUser className="text-gray-400" />
             </div>
+            
             <input
+            
               type="text"
               id="nombre"
               name="nombre"
+              minLength={3}
+              maxLength={50}
+              pattern="^[a-zA-Z\s]+$"
+              title="El nombre solo puede contener letras y espacios"
               value={formData.nombre}
               onChange={handleChange}
               required
-              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              className="form-input-1  focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
               placeholder="Ingrese su nombre"
             />
           </div>
@@ -361,16 +397,20 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaUser className="text-gray-400" />
+              <FaSuperpowers className="text-gray-400" />
             </div>
             <input
               type="text"
               id="apellido"
               name="apellido"
+              minLength={3}
+              maxLength={50}
+              pattern="^[a-zA-Z\s]+$"
+              title="El apellido solo puede contener letras y espacios"
               value={formData.apellido}
               onChange={handleChange}
               required
-              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              className="form-input-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
               placeholder="Ingrese su apellido"
             />
           </div>
@@ -388,10 +428,14 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
               type="email"
               id="email"
               name="email"
+              minLength={10}
+              maxLength={80}
+              pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+@(gmail\.com|hotmail\.com|outlook\.com|yahoo\.com|icloud\.com){2,}$"
+              title="El email debe tener un formato válido, Solo se permiten correos de gmail, hotmail, outlook, yahoo o icloud "
               value={formData.email}
               onChange={handleChange}
               required
-              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              className="form-input-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
               placeholder="ejemplo@dominio.com"
             />
           </div>
@@ -409,10 +453,14 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
               type="text"
               id="celular"
               name="celular"
+              minLength={10}
+              maxLength={10}
+              pattern="^[1-9][0-9]{9}$"
+              title="El celular debe tener 10 dígitos y no puede comenzar con 0"
               value={formData.celular}
               onChange={handleChange}
               required
-              className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              className="form-input-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
               placeholder="Ingrese su número de celular"
             />
           </div>
@@ -432,15 +480,18 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
                   type="password"
                   id="password"
                   name="password"
+                  minLength={8}
+                  maxLength={64}
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  minLength={7}
-                  className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+                  pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[^\s]{8,64}"
+                  title="La contraseña debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales"
+                  className="form-input-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
                   placeholder="Ingrese su contraseña"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">Mínimo 7 caracteres</p>
+              {/* <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p> */}
             </div>
 
             <div className="form-group">
@@ -458,10 +509,14 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  minLength={7}
-                  className="form-input pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+                  minLength={8}
+                  maxLength={64}
+                  className="form-input-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
                   placeholder="Confirme su contraseña"
                 />
+                {passwordMatchError && (
+  <p className="text-red-500 text-sm mt-1 ml-8">{passwordMatchError}</p>
+)}
               </div>
             </div>
           </>
@@ -481,7 +536,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
               value={formData.rol}
               onChange={handleChange}
               required
-              className="form-select pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
+              className="form-select-1 pl-10 focus:border-pink-500 focus:ring focus:ring-pink-200 focus:ring-opacity-50"
             >
               <option value="">Seleccionar rol</option>
               {roles.map((r) => (

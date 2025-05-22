@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import { useAuth } from "../../context/AuthContext"
-import "./Login.css"
+import "./login.css"
 import Swal from "sweetalert2"
 
 export default function Login() {
@@ -17,9 +17,11 @@ export default function Login() {
   const { login } = useAuth()
   const loginContainerRef = useRef(null)
 
-  // Función para aplicar estilos forzados
+  // Función para aplicar estilos forzados para subir el formulario
   const applyForcedStyles = () => {
     // Forzar estilos en el body y html
+    document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
     document.body.classList.add("login-page-active")
     document.documentElement.classList.add("login-page-active")
 
@@ -27,6 +29,7 @@ export default function Login() {
     const appContainer = document.getElementById("root") || document.getElementById("app")
     if (appContainer) {
       appContainer.classList.add("login-app-container")
+      appContainer.style.overflow = "hidden"
     }
 
     // Forzar estilos en el contenedor de login
@@ -34,9 +37,10 @@ export default function Login() {
       loginContainerRef.current.style.height = "100vh"
       loginContainerRef.current.style.width = "100%"
       loginContainerRef.current.style.display = "flex"
-      loginContainerRef.current.style.alignItems = "center"
+      loginContainerRef.current.style.alignItems = "flex-start" // Alinear al principio
       loginContainerRef.current.style.justifyContent = "center"
-      loginContainerRef.current.style.paddingTop = "4rem"
+      loginContainerRef.current.style.paddingTop = "13vh" // Añadir padding superior
+      loginContainerRef.current.style.overflow = "hidden"
     }
   }
 
@@ -51,16 +55,33 @@ export default function Login() {
     // Aplicar estilos periódicamente para asegurar que se mantengan
     const intervalId = setInterval(applyForcedStyles, 500)
 
+    // Prevenir scroll con event listeners
+    const preventScroll = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      return false
+    }
+
+    // Agregar event listeners para prevenir scroll
+    window.addEventListener("scroll", preventScroll, { passive: false })
+    document.addEventListener("touchmove", preventScroll, { passive: false })
+
     // Limpiar al desmontar
     return () => {
       clearTimeout(initialTimeout)
       clearInterval(intervalId)
       document.body.classList.remove("login-page-active")
       document.documentElement.classList.remove("login-page-active")
+      document.body.style.overflow = ""
+      document.documentElement.style.overflow = ""
+
+      window.removeEventListener("scroll", preventScroll)
+      document.removeEventListener("touchmove", preventScroll)
 
       const appContainer = document.getElementById("root") || document.getElementById("app")
       if (appContainer) {
         appContainer.classList.remove("login-app-container")
+        appContainer.style.overflow = ""
       }
     }
   }, [])
@@ -120,7 +141,7 @@ export default function Login() {
   return (
     <div className="login-container" ref={loginContainerRef}>
       <div className="login-background">
-        <div className="background-pattern"></div>
+        <div className="background-pattern-login"></div>
       </div>
 
       <motion.div
@@ -130,17 +151,11 @@ export default function Login() {
         className="login-card"
       >
         <div className="login-content">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="logo-container"
-          >
-            <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
-            <h1 className="logo-text">NailsSoft</h1>
-          </motion.div>
+          <div className="header-container-login">
 
-          <div className="form-container">
+          </div>
+
+          <div className="form-container-login">
             <h2 className="welcome-text">¡Bienvenido de nuevo!</h2>
             {error && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
@@ -149,28 +164,34 @@ export default function Login() {
             )}
 
             <form onSubmit={handleLogin} className="login-form">
-              <div className="input-group">
+              <div className="input-group-login">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="form-input"
+                  className="form-input-login"
                   placeholder=" "
+                  id="email"
                 />
-                <label className="input-label">Correo electrónico</label>
+                <label htmlFor="email" className="input-label-login">
+                  Correo electrónico
+                </label>
               </div>
 
-              <div className="input-group">
+              <div className="input-group-login">
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="form-input"
+                  className="form-input-login"
                   placeholder=" "
+                  id="password"
                 />
-                <label className="input-label">Contraseña</label>
+                <label htmlFor="password" className="input-label-login">
+                  Contraseña
+                </label>
               </div>
 
               <motion.button
@@ -190,34 +211,46 @@ export default function Login() {
               </motion.button>
             </form>
 
-            <div className="additional-options">
-              <Link to="/forgot-password" whileHover={{ scale: 1.05 }} className="forgot-password">
+            <div className="additional-options-login">
+              <Link to="/forgot-password" className="option-link-login">
                 ¿Olvidaste tu contraseña?
               </Link>
-              <motion.Link to="/register" whileHover={{ scale: 1.05 }} className="create-account">
+              <Link to="/register" className="option-link-login">
                 Crear cuenta
-              </motion.Link>
+              </Link>
             </div>
           </div>
         </div>
 
         <div className="login-decoration">
-          <div className="decoration-content">
+          <div className="decoration-content-login">
+                        <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="logo-container-login"
+            >
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
+                alt="SPA Y BELLEZA"
+                className="logo-image"
+              />
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="decoration-title"
+              className="decoration-title-login"
             >
-              Belleza y Estilo
+              Belleza y Elegancia
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="decoration-text"
+              className="decoration-text-login"
             >
-              Descubre un mundo de belleza y profesionalismo
+              Descubre un mundo de belleza y profesionalismo en tus manos
             </motion.p>
           </div>
         </div>
@@ -225,4 +258,3 @@ export default function Login() {
     </div>
   )
 }
-

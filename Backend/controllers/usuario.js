@@ -1,4 +1,5 @@
 const { response } = require("express")
+const {usuarioSchema, usuarioUpdateSchema} = require("../validators/usuario.validator")
 const Rol = require("../modules/rol")
 const Usuario = require("../modules/usuario")
 const Cliente = require("../modules/cliente")
@@ -81,286 +82,440 @@ const usuarioGetById = async (req, res = response) => {
 
 // Crear un nuevo usuario
 const usuariosPost = async (req, res = response) => {
-  console.log("usuariosPost - Datos recibidos:", JSON.stringify(req.body, null, 2))
-
-  const { nombre, apellido, correo, email, celular, password, confirmPassword, rol, tipoUsuario, estadocliente } =
-    req.body
-
+  
   try {
-    // Usar correo o email según lo que venga en la petición
-    const emailUsuario = correo || email
-
-    // Validar campos obligatorios
-    if (!nombre || !emailUsuario || !password) {
-      return res.status(400).json({
-        msg: "Faltan campos obligatorios (nombre, correo/email, password)",
-      })
+    const {value, error} = usuarioSchema.validate(req.body, {abortEarly: false})
+  
+    if (error){
+      const errores = error.details.map((err)=> err.message)
+      return res.status(400).json({ errores})
     }
 
-    // Verificar que la contraseña y la confirmación coincidan si se proporciona confirmPassword
-    if (confirmPassword && password !== confirmPassword) {
-      return res.status(400).json({
-        msg: "Las contraseñas no coinciden",
-      })
+    const {nombre, apellido, email, celular, password, estado, rol}
+    = value
+    const emailExistente = await Usuario.findOne({ $or: [{ correo: email }, { email }] })
+    if (emailExistente) {
+      return res.status(400).json({ msg: 'El correo ya está registrado.' })
     }
 
-    // Verificar si el usuario ya existe
-    const existeEmail = await Usuario.findOne({
-      $or: [{ correo: emailUsuario }, { email: emailUsuario }],
-    })
-
-    if (existeEmail) {
-      return res.status(400).json({
-        msg: "El correo ya está registrado",
-      })
+    const rolAsignado = await Rol.findById(Array.isArray(rol) ? rol[0] : rol)
+    if (!rolAsignado) {
+      return res.status(400).json({ msg: 'El rol proporcionado no existe.' })
     }
 
-    // Determinar el rol a asignar
-    let rolAsignado
-
-    if (rol) {
-      // Si se proporciona un ID de rol, verificar que exista
-      rolAsignado = await Rol.findById(rol)
-      if (!rolAsignado) {
-        return res.status(400).json({
-          msg: `El rol con ID ${rol} no existe`,
-        })
-      }
-    } else if (tipoUsuario) {
-      // Si se proporciona un tipo de usuario, buscar el rol correspondiente
-      const tipoRol = tipoUsuario === "cliente" ? "Cliente" : tipoUsuario === "empleado" ? "Empleado" : "Cliente"
-
-      rolAsignado = await Rol.findOne({ nombreRol: tipoRol })
-      if (!rolAsignado) {
-        return res.status(400).json({
-          msg: `El rol ${tipoRol} no existe en la base de datos`,
-        })
-      }
-    } else {
-      // Por defecto, asignar rol de Cliente
-      rolAsignado = await Rol.findOne({ nombreRol: "Cliente" })
-
-      // Si no existe el rol Cliente, verificar si hay usuarios
-      if (!rolAsignado) {
-        const usuarios = await Usuario.countDocuments()
-
-        // Si no hay usuarios, buscar rol Admin
-        if (usuarios === 0) {
-          rolAsignado = await Rol.findOne({ nombreRol: "Admin" })
-        }
-
-        // Si aún no hay rol asignado, error
-        if (!rolAsignado) {
-          return res.status(400).json({
-            msg: "No se encontró un rol válido para asignar",
-          })
-        }
-      }
-    }
-
-    console.log("Rol asignado:", JSON.stringify(rolAsignado, null, 2))
-
-    // Usar el helper existente para crear el usuario
-    const userData = {
+    const nuevoUsuario = await createUser({
       nombre,
-      apellido: apellido || "",
-      email: emailUsuario,
-      correo: emailUsuario,
-      celular: celular || "",
+      apellido,
+      correo: email,
+      email,
+      celular,
       password,
       rol: rolAsignado._id,
-      estado: true,
-    }
+      estado,
+    })
 
-    // Crear el usuario usando el helper existente
-    const nuevoUsuario = await createUser(userData)
-    console.log("Usuario creado:", JSON.stringify(nuevoUsuario, null, 2))
-
-    // Verificar el rol y crear el cliente o empleado correspondiente
-    if (rolAsignado.nombreRol === "Cliente") {
-      // Verificar si ya existe un cliente con este correo
-      const clienteExistente = await Cliente.findOne({
-        $or: [{ correocliente: emailUsuario }, { usuario: nuevoUsuario._id }],
-      })
-
+    // Asociar con Cliente o Empleado
+    if (rolAsignado.nombreRol === 'Cliente') {
+      const clienteExistente = await Cliente.findOne({ usuario: nuevoUsuario._id })
       if (!clienteExistente) {
-        // Crear un nuevo cliente
-        const nuevoCliente = new Cliente({
+        await new Cliente({
           nombrecliente: nombre,
-          apellidocliente: apellido || "",
-          correocliente: emailUsuario,
-          celularcliente: celular || "",
-          estadocliente: estadocliente === "Activo" || estadocliente === true ? true : false,
-          usuario: nuevoUsuario._id, // Vincular con el usuario
-        })
-
-        await nuevoCliente.save()
-        console.log("Cliente creado:", JSON.stringify(nuevoCliente, null, 2))
+          apellidocliente: apellido,
+          correocliente: email,
+          celularcliente: celular,
+          estadocliente: estado,
+          usuario: nuevoUsuario._id,
+        }).save()
       }
-
-      // Asegurar que no exista como empleado
-      await Empleado.findOneAndDelete({
-        $or: [{ correoempleado: emailUsuario }, { usuario: nuevoUsuario._id }],
-      })
-    } else if (rolAsignado.nombreRol === "Empleado") {
-      // Verificar si ya existe un empleado con este correo
-      const empleadoExistente = await Empleado.findOne({
-        $or: [{ correoempleado: emailUsuario }, { usuario: nuevoUsuario._id }],
-      })
-
-      if (!empleadoExistente) {
-        // Crear un nuevo empleado
-        const nuevoEmpleado = new Empleado({
-          nombreempleado: nombre,
-          apellidoempleado: apellido || "",
-          correoempleado: emailUsuario,
-          celularempleado: celular || "",
-          telefonoempleado: celular || "", // Añadir el campo telefonoempleado
-          estadoempleado: true,
-          especialidad: req.body.especialidad || "General",
-          salario: req.body.salario || 0,
-          usuario: nuevoUsuario._id, // Vincular con el usuario
-        })
-
-        await nuevoEmpleado.save()
-        console.log("Empleado creado:", JSON.stringify(nuevoEmpleado, null, 2))
-      }
-
-      // Asegurar que no exista como cliente
-      await Cliente.findOneAndDelete({
-        $or: [{ correocliente: emailUsuario }, { usuario: nuevoUsuario._id }],
-      })
+      await Empleado.deleteMany({ usuario: nuevoUsuario._id }) // Evita duplicidad
     }
 
-    // Generar token JWT usando el mismo formato que en authController
+    if (rolAsignado.nombreRol === 'Empleado') {
+      const empleadoExistente = await Empleado.findOne({ usuario: nuevoUsuario._id })
+      if (!empleadoExistente) {
+        await new Empleado({
+          nombreempleado: nombre,
+          apellidoempleado: apellido,
+          correoempleado: email,
+          celularempleado: celular,
+          telefonoempleado: celular,
+          estadoempleado: estado,
+          especialidad: req.body.especialidad || 'General',
+          salario: req.body.salario || 0,
+          usuario: nuevoUsuario._id,
+        }).save()
+      }
+      await Cliente.deleteMany({ usuario: nuevoUsuario._id })
+    }
+
     const token = jwt.sign(
       { userId: nuevoUsuario._id, role: rolAsignado.nombreRol },
-      process.env.JWT_SECRET || "secret_key",
-      { expiresIn: "1h" },
+      process.env.JWT_SECRET || 'secret_key',
+      { expiresIn: '1h' }
     )
 
-    // Eliminar el campo de la contraseña de la respuesta
-    const usuarioResponse = nuevoUsuario.toObject ? nuevoUsuario.toObject() : { ...nuevoUsuario }
+    const usuarioResponse = nuevoUsuario.toObject()
     delete usuarioResponse.password
 
     res.status(201).json({
-      msg: "Usuario registrado correctamente",
+      msg: 'Usuario registrado correctamente',
       usuario: usuarioResponse,
       token,
       role: rolAsignado.nombreRol,
     })
-  } catch (error) {
-    console.error("Error al registrar usuario:", error)
-    let msg = "Error al registrar usuario"
-    if (error.name === "ValidationError") {
-      msg = Object.values(error.errors)
-        .map((val) => val.message)
-        .join(", ")
-    }
-    res.status(500).json({
-      msg,
-      error: error.message,
-    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: 'Error interno del servidor' })
   }
+
+
+
+  
+  
+  
+  // console.log("usuariosPost - Datos recibidos:", JSON.stringify(req.body, null, 2))
+
+  // const { nombre, apellido, correo, email, celular, password, confirmPassword, rol, tipoUsuario, estadocliente } =
+  //   req.body
+
+  // try {
+  //   // Usar correo o email según lo que venga en la petición
+  //   const emailUsuario = correo || email
+
+  //   // Validar campos obligatorios
+  //   if (!nombre || !emailUsuario || !password) {
+  //     return res.status(400).json({
+  //       msg: "Faltan campos obligatorios (nombre, correo/email, password)",
+  //     })
+  //   }
+
+  //   // Verificar que la contraseña y la confirmación coincidan si se proporciona confirmPassword
+  //   if (confirmPassword && password !== confirmPassword) {
+  //     return res.status(400).json({
+  //       msg: "Las contraseñas no coinciden",
+  //     })
+  //   }
+
+  //   // Verificar si el usuario ya existe
+  //   const existeEmail = await Usuario.findOne({
+  //     $or: [{ correo: emailUsuario }, { email: emailUsuario }],
+  //   })
+
+  //   if (existeEmail) {
+  //     return res.status(400).json({
+  //       msg: "El correo ya está registrado",
+  //     })
+  //   }
+
+  //   // Determinar el rol a asignar
+  //   let rolAsignado
+
+  //   if (rol) {
+  //     // Si se proporciona un ID de rol, verificar que exista
+  //     rolAsignado = await Rol.findById(rol)
+  //     if (!rolAsignado) {
+  //       return res.status(400).json({
+  //         msg: `El rol con ID ${rol} no existe`,
+  //       })
+  //     }
+  //   } else if (tipoUsuario) {
+  //     // Si se proporciona un tipo de usuario, buscar el rol correspondiente
+  //     const tipoRol = tipoUsuario === "cliente" ? "Cliente" : tipoUsuario === "empleado" ? "Empleado" : "Cliente"
+
+  //     rolAsignado = await Rol.findOne({ nombreRol: tipoRol })
+  //     if (!rolAsignado) {
+  //       return res.status(400).json({
+  //         msg: `El rol ${tipoRol} no existe en la base de datos`,
+  //       })
+  //     }
+  //   } else {
+  //     // Por defecto, asignar rol de Cliente
+  //     rolAsignado = await Rol.findOne({ nombreRol: "Cliente" })
+
+  //     // Si no existe el rol Cliente, verificar si hay usuarios
+  //     if (!rolAsignado) {
+  //       const usuarios = await Usuario.countDocuments()
+
+  //       // Si no hay usuarios, buscar rol Admin
+  //       if (usuarios === 0) {
+  //         rolAsignado = await Rol.findOne({ nombreRol: "Admin" })
+  //       }
+
+  //       // Si aún no hay rol asignado, error
+  //       if (!rolAsignado) {
+  //         return res.status(400).json({
+  //           msg: "No se encontró un rol válido para asignar",
+  //         })
+  //       }
+  //     }
+  //   }
+
+  //   console.log("Rol asignado:", JSON.stringify(rolAsignado, null, 2))
+
+  //   // Usar el helper existente para crear el usuario
+  //   const userData = {
+  //     nombre,
+  //     apellido: apellido || "",
+  //     email: emailUsuario,
+  //     correo: emailUsuario,
+  //     celular: celular || "",
+  //     password,
+  //     rol: rolAsignado._id,
+  //     estado: true,
+  //   }
+
+  //   // Crear el usuario usando el helper existente
+  //   const nuevoUsuario = await createUser(userData)
+  //   console.log("Usuario creado:", JSON.stringify(nuevoUsuario, null, 2))
+
+  //   // Verificar el rol y crear el cliente o empleado correspondiente
+  //   if (rolAsignado.nombreRol === "Cliente") {
+  //     // Verificar si ya existe un cliente con este correo
+  //     const clienteExistente = await Cliente.findOne({
+  //       $or: [{ correocliente: emailUsuario }, { usuario: nuevoUsuario._id }],
+  //     })
+
+  //     if (!clienteExistente) {
+  //       // Crear un nuevo cliente
+  //       const nuevoCliente = new Cliente({
+  //         nombrecliente: nombre,
+  //         apellidocliente: apellido || "",
+  //         correocliente: emailUsuario,
+  //         celularcliente: celular || "",
+  //         estadocliente: estadocliente === "Activo" || estadocliente === true ? true : false,
+  //         usuario: nuevoUsuario._id, // Vincular con el usuario
+  //       })
+
+  //       await nuevoCliente.save()
+  //       console.log("Cliente creado:", JSON.stringify(nuevoCliente, null, 2))
+  //     }
+
+  //     // Asegurar que no exista como empleado
+  //     await Empleado.findOneAndDelete({
+  //       $or: [{ correoempleado: emailUsuario }, { usuario: nuevoUsuario._id }],
+  //     })
+  //   } else if (rolAsignado.nombreRol === "Empleado") {
+  //     // Verificar si ya existe un empleado con este correo
+  //     const empleadoExistente = await Empleado.findOne({
+  //       $or: [{ correoempleado: emailUsuario }, { usuario: nuevoUsuario._id }],
+  //     })
+
+  //     if (!empleadoExistente) {
+  //       // Crear un nuevo empleado
+  //       const nuevoEmpleado = new Empleado({
+  //         nombreempleado: nombre,
+  //         apellidoempleado: apellido || "",
+  //         correoempleado: emailUsuario,
+  //         celularempleado: celular || "",
+  //         telefonoempleado: celular || "", // Añadir el campo telefonoempleado
+  //         estadoempleado: true,
+  //         especialidad: req.body.especialidad || "General",
+  //         salario: req.body.salario || 0,
+  //         usuario: nuevoUsuario._id, // Vincular con el usuario
+  //       })
+
+  //       await nuevoEmpleado.save()
+  //       console.log("Empleado creado:", JSON.stringify(nuevoEmpleado, null, 2))
+  //     }
+
+  //     // Asegurar que no exista como cliente
+  //     await Cliente.findOneAndDelete({
+  //       $or: [{ correocliente: emailUsuario }, { usuario: nuevoUsuario._id }],
+  //     })
+  //   }
+
+  //   // Generar token JWT usando el mismo formato que en authController
+  //   const token = jwt.sign(
+  //     { userId: nuevoUsuario._id, role: rolAsignado.nombreRol },
+  //     process.env.JWT_SECRET || "secret_key",
+  //     { expiresIn: "1h" },
+  //   )
+
+  //   // Eliminar el campo de la contraseña de la respuesta
+  //   const usuarioResponse = nuevoUsuario.toObject ? nuevoUsuario.toObject() : { ...nuevoUsuario }
+  //   delete usuarioResponse.password
+
+  //   res.status(201).json({
+  //     msg: "Usuario registrado correctamente",
+  //     usuario: usuarioResponse,
+  //     token,
+  //     role: rolAsignado.nombreRol,
+  //   })
+  // } catch (error) {
+  //   console.error("Error al registrar usuario:", error)
+  //   let msg = "Error al registrar usuario"
+  //   if (error.name === "ValidationError") {
+  //     msg = Object.values(error.errors)
+  //       .map((val) => val.message)
+  //       .join(", ")
+  //   }
+  //   res.status(500).json({
+  //     msg,
+  //     error: error.message,
+  //   })
+  // }
 }
 
 // Actualizar un usuario existente
 const usuariosPut = async (req, res = response) => {
+
   const { id } = req.params
-  const { _id, password, correo, email, rol, ...resto } = req.body
 
   try {
-    // Verificar si el usuario existe
-    const usuario = await Usuario.findById(id).populate("rol")
+    const { value, error } = usuarioUpdateSchema.validate(req.body, { abortEarly: false })
+
+    if (error) {
+      const errores = error.details.map((err) => err.message)
+      return res.status(400).json({ errores })
+    }
+
+    const usuario = await Usuario.findById(id)
     if (!usuario) {
-      return res.status(404).json({
-        msg: "Usuario no encontrado",
-      })
+      return res.status(404).json({ msg: 'Usuario no encontrado' })
     }
 
-    // Si se está cambiando el rol
-    if (rol && rol !== usuario.rol._id.toString()) {
-      // Verificar que el nuevo rol exista
-      const nuevoRol = await Rol.findById(rol)
-      if (!nuevoRol) {
-        return res.status(400).json({
-          msg: "El rol especificado no existe",
-        })
-      }
+    const updates = value
 
-      // Determinar si está cambiando de cliente a empleado o viceversa
-      const eraCliente = usuario.rol.nombreRol === "Cliente"
-      const eraEmpleado = usuario.rol.nombreRol === "Empleado"
-      const seraCliente = nuevoRol.nombreRol === "Cliente"
-      const seraEmpleado = nuevoRol.nombreRol === "Empleado"
-
-      // Si cambia de cliente a empleado
-      if (eraCliente && seraEmpleado) {
-        // Eliminar de la tabla de clientes
-        await Cliente.findOneAndDelete({
-          $or: [{ correocliente: usuario.email || usuario.correo }, { usuario: id }],
-        })
-
-        // Crear en la tabla de empleados
-        const empleado = new Empleado({
-          nombreempleado: usuario.nombre,
-          apellidoempleado: usuario.apellido || resto.apellido || "",
-          correoempleado: usuario.email || usuario.correo,
-          celularempleado: usuario.celular || resto.celular || "",
-          telefonoempleado: usuario.celular || resto.celular || "",
-          estadoempleado: true,
-          especialidad: req.body.especialidad || "General",
-          salario: req.body.salario || 0,
-          usuario: usuario._id,
-        })
-        await empleado.save()
-      }
-      // Si cambia de empleado a cliente
-      else if (eraEmpleado && seraCliente) {
-        // Eliminar de la tabla de empleados
-        await Empleado.findOneAndDelete({
-          $or: [{ correoempleado: usuario.email || usuario.correo }, { usuario: id }],
-        })
-
-        // Crear en la tabla de clientes
-        const cliente = new Cliente({
-          nombrecliente: usuario.nombre,
-          apellidocliente: usuario.apellido || resto.apellido || "",
-          correocliente: usuario.email || usuario.correo,
-          celularcliente: usuario.celular || resto.celular || "",
-          estadocliente: true,
-          usuario: usuario._id,
-        })
-        await cliente.save()
-      }
+    if (updates.password) {
+      const salt = bcrypt.genSaltSync()
+      updates.password = bcrypt.hashSync(updates.password, salt)
     }
 
-    // Si se está actualizando la contraseña
-    if (password) {
-      const salt = bcrypt.genSaltSync(10)
-      resto.password = bcrypt.hashSync(password, salt)
-    }
+    await Usuario.findByIdAndUpdate(id, updates, { new: true })
 
-    // Actualizar usuario
-    const usuarioActualizado = await Usuario.findByIdAndUpdate(
-      id,
-      { ...resto, rol: rol || usuario.rol._id },
-      { new: true },
-    )
-      .select("-password")
-      .populate("rol")
-
-    res.json({
-      msg: "Usuario actualizado correctamente",
-      usuario: usuarioActualizado,
-    })
-  } catch (error) {
-    console.error("Error al actualizar usuario:", error)
-    res.status(500).json({
-      msg: "Error al actualizar usuario",
-      error: error.message,
-    })
+    res.json({ msg: 'Usuario actualizado correctamente' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: 'Error al actualizar el usuario' })
   }
+
+
+  //   const { id } = req.params
+//   const { _id, password, correo, email, rol, ...resto } = req.body
+
+//   // Agregar el correo/email manualmente si vienen
+// if (correo) resto.correo = correo
+// if (email) resto.email = email
+
+//   try {
+//     // Verificar si el usuario existe
+//     const usuario = await Usuario.findById(id).populate("rol")
+//     if (!usuario) {
+//       return res.status(404).json({
+//         msg: "Usuario no encontrado",
+//       })
+//     }
+
+//     if (usuario.rol.nombreRol === "Cliente") {
+//   await Cliente.findOneAndUpdate(
+//     { usuario: id },
+//     {
+//       nombrecliente: resto.nombre || usuario.nombre,
+//       apellidocliente: resto.apellido || usuario.apellido,
+//       correocliente: resto.email || resto.correo || usuario.correo,
+//       celularcliente: resto.celular || usuario.celular,
+//       // otros campos si aplican
+//     }
+//   )
+// }
+// if (usuario.rol.nombreRol === "Empleado") {
+//   await Empleado.findOneAndUpdate(
+//     { usuario: id },
+//     {
+//       nombreempleado: resto.nombre || usuario.nombre,
+//       apellidoempleado: resto.apellido || usuario.apellido,
+//       correoempleado: resto.email || resto.correo || usuario.correo,
+//       telefonoempleado: resto.celular || usuario.celular,
+//       celularempleado: resto.celular || usuario.celular,
+//       // otros campos como salario o especialidad si se actualizan
+//     }
+//   )
+// }
+
+
+//     // Si se está cambiando el rol
+//     if (rol && rol !== usuario.rol._id.toString()) {
+//       // Verificar que el nuevo rol exista
+//       const nuevoRol = await Rol.findById(rol)
+//       if (!nuevoRol) {
+//         return res.status(400).json({
+//           msg: "El rol especificado no existe",
+//         })
+//       }
+
+//       // Determinar si está cambiando de cliente a empleado o viceversa
+//       const eraCliente = usuario.rol.nombreRol === "Cliente"
+//       const eraEmpleado = usuario.rol.nombreRol === "Empleado"
+//       const seraCliente = nuevoRol.nombreRol === "Cliente"
+//       const seraEmpleado = nuevoRol.nombreRol === "Empleado"
+
+//       // Si cambia de cliente a empleado
+//       if (eraCliente && seraEmpleado) {
+//         // Eliminar de la tabla de clientes
+//         await Cliente.findOneAndDelete({
+//           $or: [{ correocliente: usuario.email || usuario.correo }, { usuario: id }],
+//         })
+
+//         // Crear en la tabla de empleados
+//         const empleado = new Empleado({
+//           nombreempleado: usuario.nombre,
+//           apellidoempleado: usuario.apellido || resto.apellido || "",
+//           correoempleado: usuario.email || usuario.correo,
+//           celularempleado: usuario.celular || resto.celular || "",
+//           telefonoempleado: usuario.celular || resto.celular || "",
+//           estadoempleado: true,
+//           especialidad: req.body.especialidad || "General",
+//           salario: req.body.salario || 0,
+//           usuario: usuario._id,
+//         })
+//         await empleado.save()
+//       }
+//       // Si cambia de empleado a cliente
+//       else if (eraEmpleado && seraCliente) {
+//         // Eliminar de la tabla de empleados
+//         await Empleado.findOneAndDelete({
+//           $or: [{ correoempleado: usuario.email || usuario.correo }, { usuario: id }],
+//         })
+
+//         // Crear en la tabla de clientes
+//         const cliente = new Cliente({
+//           nombrecliente: usuario.nombre,
+//           apellidocliente: usuario.apellido || resto.apellido || "",
+//           correocliente: usuario.email || usuario.correo,
+//           celularcliente: usuario.celular || resto.celular || "",
+//           estadocliente: true,
+//           usuario: usuario._id,
+//         })
+//         await cliente.save()
+//       }
+//     }
+
+//     // Si se está actualizando la contraseña
+//     if (password) {
+//       const salt = bcrypt.genSaltSync(10)
+//       resto.password = bcrypt.hashSync(password, salt)
+//     }
+
+//     // Actualizar usuario
+//     const usuarioActualizado = await Usuario.findByIdAndUpdate(
+//       id,
+//       { ...resto, rol: rol || usuario.rol._id },
+//       { new: true },
+//     )
+//       .select("-password")
+//       .populate("rol")
+
+//     res.json({
+//       msg: "Usuario actualizado correctamente",
+//       usuario: usuarioActualizado,
+//     })
+//   } catch (error) {
+//     console.error("Error al actualizar usuario:", error)
+//     res.status(500).json({
+//       msg: "Error al actualizar usuario",
+//       error: error.message,
+//     })
+//   }
 }
 
 // NUEVO: Actualizar solo el rol de un usuario

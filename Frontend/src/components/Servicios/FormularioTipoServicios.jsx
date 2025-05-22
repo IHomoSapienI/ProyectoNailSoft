@@ -42,60 +42,128 @@ export default function FormularioTipoServicio({ tipoServicioSeleccionado, onTip
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    try {
-      const token = localStorage.getItem("token")
-      const url = tipoServicioSeleccionado
-        ? `https://gitbf.onrender.com/api/tiposervicios/${tipoServicioSeleccionado._id}`
-        : "https://gitbf.onrender.com/api/tiposervicios"
-      const method = tipoServicioSeleccionado ? "PUT" : "POST"
+  // Validación manual previa antes de hacer la petición
+  const { nombreTs, descuento } = formData;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      })
+  // Validar nombreTs
+  const nombreValido = (str) => {
+    if (!str || typeof str !== "string") return false;
+    if (str.trim().length < 3 || str.trim().length > 50) return false;
+    if (/^\d+$/.test(str)) return false; // solo números
+    if (!/^(?!.*([a-zA-ZáéíóúÁÉÍÓÚñÑ])\1{2,})([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+)$/.test(str)) return false;
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.msg || "Error al guardar el tipo de servicio")
+    // Evitar cadenas repetidas como "abcabcabc" o "aaaaaa"
+    const isRepeated = (value) => {
+      const len = value.length;
+      for (let i = 1; i <= len / 2; i++) {
+        const sub = value.slice(0, i);
+        if (sub.repeat(len / i) === value) {
+          return true;
+        }
       }
+      return false;
+    };
 
-      const data = await response.json()
-      Swal.fire({
-        icon: "success",
-        title: "¡Éxito!",
-        text: tipoServicioSeleccionado
-          ? "Tipo de servicio actualizado correctamente"
-          : "Tipo de servicio creado correctamente",
-        confirmButtonColor: "#db2777",
-      })
+    if (isRepeated(str)) return false;
 
-      onTipoServicioActualizado(data.tiposervicio)
-    } catch (error) {
-      console.error("Error:", error)
-      setError(error.message)
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.message,
-        confirmButtonColor: "#db2777",
-      })
-    } finally {
-      setLoading(false)
-    }
+    return true;
+  };
+
+  if (!nombreValido(nombreTs)) {
+    setLoading(false);
+    return Swal.fire({
+      icon: "warning",
+      title: "Nombre inválido",
+      text: "El nombre no puede contener más de dos letras iguales consecutivas, solo letras y espacios, ni ser una cadena repetida o solo números. Debe tener entre 3 y 50 caracteres.",
+      confirmButtonColor: "#f59e0b", // Amarillo
+    });
   }
+
+ // Validar descuento
+const descuentoStr = String(descuento).trim();
+
+// Explicación de la regex:
+// ^            -> inicio de la cadena
+// [1-9]        -> primer dígito debe ser del 1 al 9 (nunca 0)
+// \d{1,2}      -> seguido de 1 o 2 dígitos más (total: 2 a 3 dígitos)
+// $            -> fin de la cadena
+const descuentoRegex = /^[0-9]\d{1,2}$/; //
+
+const descuentoNum = Number(descuentoStr);
+
+// Validación completa
+if (
+  !descuentoRegex.test(descuentoStr) || // no cumple con formato (ej: empieza en 0 o tiene menos de 2 dígitos)
+  isNaN(descuentoNum) || 
+  descuentoNum < 0 || 
+  descuentoNum > 100
+) {
+  setLoading(false);
+  return Swal.fire({
+    icon: "warning",
+    title: "Descuento inválido",
+    text: "El descuento debe ser un número entre 0 y 100, sin comenzar en 0 y con mínimo 2 dígitos.",
+    confirmButtonColor: "#f59e0b", // color amarillo
+  });
+}
+
+
+  try {
+    const token = localStorage.getItem("token");
+    const url = tipoServicioSeleccionado
+      ? `https://gitbf.onrender.com/api/tiposervicios/${tipoServicioSeleccionado._id}`
+      : "https://gitbf.onrender.com/api/tiposervicios";
+    const method = tipoServicioSeleccionado ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.msg || "Error al guardar el tipo de servicio");
+    }
+
+    const data = await response.json();
+
+    Swal.fire({
+      icon: "success",
+      title: "¡Éxito!",
+      text: tipoServicioSeleccionado
+        ? "Tipo de servicio actualizado correctamente"
+        : "Tipo de servicio creado correctamente",
+      confirmButtonColor: "#db2777",
+    });
+
+    onTipoServicioActualizado(data.tiposervicio);
+  } catch (error) {
+    console.error("Error:", error);
+    setError(error.message);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message,
+      confirmButtonColor: "#db2777",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
-        {tipoServicioSeleccionado ? "Editar Tipo de Servicio" : "Nuevo Tipo de Servicio"}
+        {tipoServicioSeleccionado ? "Editar Tipo de Servicio" : "Nuevo Tipo de Descuento"}
       </h2>
 
       {error && (
@@ -108,12 +176,14 @@ export default function FormularioTipoServicio({ tipoServicioSeleccionado, onTip
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="form-group">
           <label htmlFor="nombreTs" className="form-label">
-            Nombre del Tipo de Servicio
+            Nombre del Tipo de Descuento
           </label>
           <input
             type="text"
             id="nombreTs"
             name="nombreTs"
+            minLength={3}
+            maxLength={50}
             value={formData.nombreTs}
             onChange={handleInputChange}
             className="form-input"
@@ -133,6 +203,8 @@ export default function FormularioTipoServicio({ tipoServicioSeleccionado, onTip
             value={formData.descuento}
             onChange={handleInputChange}
             className="form-input"
+            minLength={1}
+            maxLength={3}
             min="0"
             max="100"
             step="1"

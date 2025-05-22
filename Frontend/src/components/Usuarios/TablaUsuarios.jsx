@@ -1,130 +1,151 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Modal from "react-modal"
-import FormularioUsuario from "./Formulario"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faSync, faPowerOff, faSearch } from "@fortawesome/free-solid-svg-icons"
-import Swal from "sweetalert2"
-import axios from "axios"
-import { useSidebar } from "../Sidebar/Sidebar" // Importamos el hook del sidebar
-import "./tablaUsuarios.css" // Importamos los estilos específicos para usuarios
+import { useState, useEffect } from "react";
+import Modal from "react-modal";
+import FormularioUsuario from "./Formulario";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faSync,
+  faPowerOff,
+  faSearch,
+  faToggleOn,
+  faToggleOff,
+} from "@fortawesome/free-solid-svg-icons";
+import Swal from "sweetalert2";
+import axios from "axios";
+import { useSidebar } from "../Sidebar/Sidebar"; // Importamos el hook del sidebar
+import "./tablaUsuarios.css"; // Importamos los estilos específicos para usuarios
 
 // Configura el contenedor del modal
-Modal.setAppElement("#root")
+Modal.setAppElement("#root");
 
 const TablaUsuarios = () => {
-  const { isCollapsed } = useSidebar() // Usamos el hook del sidebar
-  const [usuarios, setUsuarios] = useState([])
-  const [roles, setRoles] = useState([])
-  const [rolMap, setRolMap] = useState({})
-  const [modalIsOpen, setModalIsOpen] = useState(false)
-  const [usuarioEditando, setUsuarioEditando] = useState(null)
-  const [busqueda, setBusqueda] = useState("")
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState(null)
+  const { isCollapsed } = useSidebar(); // Usamos el hook del sidebar
+  const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [rolMap, setRolMap] = useState({});
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
   // Estado para paginación
-  const [paginaActual, setPaginaActual] = useState(1)
-  const usuariosPorPagina = 5
+  const [paginaActual, setPaginaActual] = useState(1);
+  const usuariosPorPagina = 5;
 
   useEffect(() => {
-    obtenerUsuariosYRoles()
-  }, [])
+    obtenerUsuariosYRoles();
+  }, []);
 
   const obtenerUsuariosYRoles = async () => {
-    setCargando(true)
-    setError(null)
+    setCargando(true);
+    setError(null);
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       // Primero obtener los roles para asegurar que estén disponibles
-      const rolesResponse = await fetch("https://gitbf.onrender.com/api/roles", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const rolesResponse = await fetch(
+        "https://gitbf.onrender.com/api/roles",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!rolesResponse.ok) {
-        const errorData = await rolesResponse.json()
-        throw new Error(errorData.msg || "Error al obtener los roles")
+        const errorData = await rolesResponse.json();
+        throw new Error(errorData.msg || "Error al obtener los roles");
       }
 
-      const rolesData = await rolesResponse.json()
-      const rolesArray = rolesData.roles || []
-      setRoles(rolesArray)
+      const rolesData = await rolesResponse.json();
+      const rolesArray = rolesData.roles || [];
+      setRoles(rolesArray);
 
       // Crear un mapa de roles para búsqueda rápida
-      const rolMapObj = {}
+      const rolMapObj = {};
       rolesArray.forEach((rol) => {
-        rolMapObj[rol._id] = rol.nombreRol
-      })
-      setRolMap(rolMapObj)
+        rolMapObj[rol._id] = rol.nombreRol;
+      });
+      setRolMap(rolMapObj);
 
-      console.log("Roles cargados:", rolesArray)
-      console.log("Mapa de roles:", rolMapObj)
+      console.log("Roles cargados:", rolesArray);
+      console.log("Mapa de roles:", rolMapObj);
 
       // Luego obtener los usuarios
-      const usuariosResponse = await fetch("https://gitbf.onrender.com/api/usuarios", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const usuariosResponse = await fetch(
+        "https://gitbf.onrender.com/api/usuarios",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!usuariosResponse.ok) {
-        const errorData = await usuariosResponse.json()
-        throw new Error(errorData.msg || "Error al obtener los usuarios")
+        const errorData = await usuariosResponse.json();
+        throw new Error(errorData.msg || "Error al obtener los usuarios");
       }
 
-      const usuariosData = await usuariosResponse.json()
-      const usuariosArray = usuariosData.usuarios || []
+      const usuariosData = await usuariosResponse.json();
+      const usuariosArray = usuariosData.usuarios || [];
 
       // Asignar nombres de roles a los usuarios para depuración
       const usuariosConRoles = usuariosArray.map((usuario) => {
         // Verificar si el rol es un objeto o un ID
-        const rolId = typeof usuario.rol === "object" ? usuario.rol._id : usuario.rol
-        const rolNombre = typeof usuario.rol === "object" ? usuario.rol.nombreRol : rolMapObj[rolId] || "Desconocido"
+        const rolId =
+          typeof usuario.rol === "object" ? usuario.rol._id : usuario.rol;
+        const rolNombre =
+          typeof usuario.rol === "object"
+            ? usuario.rol.nombreRol
+            : rolMapObj[rolId] || "Desconocido";
 
-        console.log(`Usuario ${usuario.nombre}, ID de rol: ${rolId}, Nombre de rol: ${rolNombre}`)
+        console.log(
+          `Usuario ${usuario.nombre}, ID de rol: ${rolId}, Nombre de rol: ${rolNombre}`
+        );
         return {
           ...usuario,
           rolNombre,
-        }
-      })
+        };
+      });
 
-      setUsuarios(usuariosConRoles)
+      setUsuarios(usuariosConRoles);
     } catch (error) {
-      console.error("Error al obtener los datos:", error)
-      setError(error.message)
-      Swal.fire("Error", error.message, "error")
+      console.error("Error al obtener los datos:", error);
+      setError(error.message);
+      Swal.fire("Error", error.message, "error");
     } finally {
-      setCargando(false)
+      setCargando(false);
     }
-  }
+  };
 
   const manejarAgregarNuevo = () => {
-    setUsuarioEditando(null)
-    setModalIsOpen(true)
-  }
+    setUsuarioEditando(null);
+    setModalIsOpen(true);
+  };
 
   const manejarCerrarModal = () => {
-    setModalIsOpen(false)
-    setUsuarioEditando(null)
-  }
+    setModalIsOpen(false);
+    setUsuarioEditando(null);
+  };
 
   const manejarUsuarioActualizado = () => {
-    manejarCerrarModal()
-    obtenerUsuariosYRoles()
-  }
+    manejarCerrarModal();
+    obtenerUsuariosYRoles();
+  };
 
   const manejarEditar = (usuario) => {
-    setUsuarioEditando(usuario)
-    setModalIsOpen(true)
-  }
+    setUsuarioEditando(usuario);
+    setModalIsOpen(true);
+  };
 
   const manejarEliminar = async (id) => {
     const result = await Swal.fire({
@@ -136,35 +157,46 @@ const TablaUsuarios = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminarlo!",
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token")
-        const response = await fetch(`https://gitbf.onrender.com/api/usuarios/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `https://gitbf.onrender.com/api/usuarios/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (response.ok) {
-          obtenerUsuariosYRoles()
-          Swal.fire("Eliminado!", "El usuario ha sido eliminado.", "success")
+          obtenerUsuariosYRoles();
+          Swal.fire("Eliminado!", "El usuario ha sido eliminado.", "success");
         } else {
-          const errorData = await response.json()
-          Swal.fire("Error", errorData.msg || "Error al eliminar el usuario.", "error")
+          const errorData = await response.json();
+          Swal.fire(
+            "Error",
+            errorData.msg || "Error al eliminar el usuario.",
+            "error"
+          );
         }
       } catch (error) {
-        Swal.fire("Error", "Error en la solicitud para eliminar el usuario.", "error")
+        Swal.fire(
+          "Error",
+          "Error en la solicitud para eliminar el usuario.",
+          "error"
+        );
       }
     }
-  }
+  };
 
   // Añadir esta función después de manejarEliminar
   const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual
-    const accion = nuevoEstado ? "activar" : "desactivar"
+    const nuevoEstado = !estadoActual;
+    const accion = nuevoEstado ? "activar" : "desactivar";
 
     const result = await Swal.fire({
       title: `¿Estás seguro?`,
@@ -175,7 +207,7 @@ const TablaUsuarios = () => {
       cancelButtonColor: "#6c757d",
       confirmButtonText: `Sí, ${accion}!`,
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
@@ -185,9 +217,9 @@ const TablaUsuarios = () => {
           html: '<div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 mx-auto border-pink-500 "></div><p class="mt-4">Por favor espere</p>',
           showConfirmButton: false,
           allowOutsideClick: false,
-        })
+        });
 
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         const response = await axios.patch(
           `https://gitbf.onrender.com/api/usuarios/${id}/toggle-estado`,
           {},
@@ -196,43 +228,54 @@ const TablaUsuarios = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          },
-        )
+          }
+        );
 
         // Cerrar indicador de carga
-        loadingToast.close()
+        loadingToast.close();
 
         // Actualizar el estado local
-        setUsuarios(usuarios.map((usuario) => (usuario._id === id ? { ...usuario, estado: nuevoEstado } : usuario)))
+        setUsuarios(
+          usuarios.map((usuario) =>
+            usuario._id === id ? { ...usuario, estado: nuevoEstado } : usuario
+          )
+        );
 
         Swal.fire(
           `${nuevoEstado ? "Activado" : "Desactivado"}!`,
           `El usuario ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
-          "success",
-        )
+          "success"
+        );
       } catch (error) {
-        console.error(`Error al ${accion} el usuario:`, error)
-        Swal.fire("Error", `No se pudo ${accion} el usuario`, "error")
+        console.error(`Error al ${accion} el usuario:`, error);
+        Swal.fire("Error", `No se pudo ${accion} el usuario`, "error");
       }
     }
-  }
+  };
 
   const filtrarUsuarios = () => {
     return usuarios.filter(
       (usuario) =>
         usuario.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-        usuario.email.toLowerCase().includes(busqueda.toLowerCase()),
-    )
-  }
+        usuario.email.toLowerCase().includes(busqueda.toLowerCase())
+    );
+  };
 
-  const indiceUltimoUsuario = paginaActual * usuariosPorPagina
-  const indicePrimerUsuario = indiceUltimoUsuario - usuariosPorPagina
-  const usuariosActuales = filtrarUsuarios().slice(indicePrimerUsuario, indiceUltimoUsuario)
+  const indiceUltimoUsuario = paginaActual * usuariosPorPagina;
+  const indicePrimerUsuario = indiceUltimoUsuario - usuariosPorPagina;
+  const usuariosActuales = filtrarUsuarios().slice(
+    indicePrimerUsuario,
+    indiceUltimoUsuario
+  );
 
-  const cambiarPagina = (numeroPagina) => setPaginaActual(numeroPagina)
-  const paginasTotales = Math.ceil(filtrarUsuarios().length / usuariosPorPagina)
-  const paginaAnterior = () => paginaActual > 1 && setPaginaActual(paginaActual - 1)
-  const paginaSiguiente = () => paginaActual < paginasTotales && setPaginaActual(paginaActual + 1)
+  const cambiarPagina = (numeroPagina) => setPaginaActual(numeroPagina);
+  const paginasTotales = Math.ceil(
+    filtrarUsuarios().length / usuariosPorPagina
+  );
+  const paginaAnterior = () =>
+    paginaActual > 1 && setPaginaActual(paginaActual - 1);
+  const paginaSiguiente = () =>
+    paginaActual < paginasTotales && setPaginaActual(paginaActual + 1);
 
   if (cargando) {
     return (
@@ -242,13 +285,16 @@ const TablaUsuarios = () => {
           <p className="mt-4 text-foreground">Cargando usuarios...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -260,12 +306,14 @@ const TablaUsuarios = () => {
           Reintentar
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="content">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Usuarios</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
+        Gestión de Usuarios
+      </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <button className="btn-add" onClick={manejarAgregarNuevo}>
@@ -289,28 +337,74 @@ const TablaUsuarios = () => {
         <table className="usuario-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "14%" }}>Nombre</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "14%" }}>Apellido</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "18%" }}>Email</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Celular</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Rol</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Estado</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "12%" }}>Acciones</th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "14%" }}
+              >
+                Nombre
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "14%" }}
+              >
+                Apellido
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "18%" }}
+              >
+                Email
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "12%" }}
+              >
+                Celular
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "12%" }}
+              >
+                Rol
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "12%" }}
+              >
+                Estado
+              </th>
+              <th
+                className="dark:hover:bg-gray-500/50"
+                style={{ width: "12%" }}
+              >
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="dark:bg-zinc-900/80">
             {usuariosActuales.length > 0 ? (
               usuariosActuales.map((usuario) => (
-                <tr className="dark:hover:bg-gray-500/50 text-foreground" key={usuario._id}>
+                <tr
+                  className="dark:hover:bg-gray-500/50 text-foreground"
+                  key={usuario._id}
+                >
                   <td className="font-medium">{usuario.nombre}</td>
-                  <td >{usuario.apellido}</td>
+                  <td>{usuario.apellido}</td>
                   <td>{usuario.email}</td>
                   <td>{usuario.celular}</td>
                   <td>
-                    {typeof usuario.rol === "object" ? usuario.rol.nombreRol : usuario.rolNombre || "Desconocido"}
+                    {typeof usuario.rol === "object"
+                      ? usuario.rol.nombreRol
+                      : usuario.rolNombre || "Desconocido"}
                   </td>
                   <td>
-                    <span className={`usuario-estado-badge ${usuario.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
+                    <span
+                      className={`usuario-estado-badge ${
+                        usuario.estado
+                          ? "activo bg-emerald-300/70 dark:bg-emerald-500"
+                          : "inactivo bg-red-500/80"
+                      }`}
+                    >
                       {usuario.estado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
@@ -330,12 +424,33 @@ const TablaUsuarios = () => {
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
-                      <button
+                      {/* <button
                         className={`usuario btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${usuario.estado ? "active bg-amber-500/80" : "inactive bg-emerald-500/50 dark:bg-emerald-500 "}`}
                         onClick={() => manejarToggleEstado(usuario._id, usuario.estado)}
                         title={usuario.estado ? "Desactivar usuario" : "Activar usuario"}
                       >
                         <FontAwesomeIcon icon={faPowerOff} />
+                      </button> */}
+                      <button
+                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+    ${
+      usuario.estado
+        ? "bg-emerald-400/70  dark:bg-emerald-700 "
+        : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+    }`}
+                        onClick={() =>
+                          manejarToggleEstado(usuario._id, usuario.estado)
+                        }
+                        title={
+                          usuario.estado
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={usuario.estado ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>
@@ -358,7 +473,9 @@ const TablaUsuarios = () => {
           <button
             onClick={paginaAnterior}
             disabled={paginaActual === 1}
-            className={`usuario-pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+            className={`usuario-pagination-btn ${
+              paginaActual === 1 ? "disabled" : ""
+            }`}
           >
             &lt;
           </button>
@@ -368,7 +485,9 @@ const TablaUsuarios = () => {
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`usuario-pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+                className={`usuario-pagination-number ${
+                  paginaActual === index + 1 ? "active" : ""
+                }`}
               >
                 {index + 1}
               </button>
@@ -378,7 +497,9 @@ const TablaUsuarios = () => {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`usuario-pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+            className={`usuario-pagination-btn ${
+              paginaActual === paginasTotales ? "disabled" : ""
+            }`}
           >
             &gt;
           </button>
@@ -408,8 +529,7 @@ const TablaUsuarios = () => {
         </div>
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default TablaUsuarios
-
+export default TablaUsuarios;

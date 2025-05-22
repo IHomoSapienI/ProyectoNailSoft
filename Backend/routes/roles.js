@@ -10,7 +10,7 @@ const {
 const { validarJWT } = require("../middlewares/verificartoken") // Asegúrate de que la ruta sea correcta
 const verificarPermisos = require("../middlewares/verificarPermisos") // Asegúrate de que la ruta sea correcta
 const verificarRolActivo = require('../middlewares/verificarRolActivo');
-
+ 
 
 const router = Router()
 

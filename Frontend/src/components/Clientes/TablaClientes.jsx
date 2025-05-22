@@ -5,7 +5,7 @@ import axios from "axios"
 import Modal from "react-modal"
 import FormularioCliente from "./FormularioCliente"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEdit, faTrash, faSearch } from "@fortawesome/free-solid-svg-icons"
+import { faEdit, faTrash, faSearch, faPowerOff, faPlus } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
 
@@ -30,7 +30,7 @@ const TablaClientes = () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem("token")
-      
+
       if (!token) {
         Swal.fire({
           title: "Error",
@@ -44,8 +44,8 @@ const TablaClientes = () => {
 
       const respuesta = await axios.get("https://gitbf.onrender.com/api/clientes", {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       setClientes(respuesta.data || [])
       setError(null)
@@ -72,6 +72,58 @@ const TablaClientes = () => {
     setModalIsOpen(true)
   }
 
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
+
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} este cliente?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.patch(
+          `https://gitbf.onrender.com/api/clientes/${id}/toggle-estado`,
+          {
+            estadocliente: nuevoEstado,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        )
+
+        // Actualizar el estado local
+        setClientes(clientes.map((c) => (c._id === id ? { ...c, estadocliente: nuevoEstado } : c)))
+
+        Swal.fire({
+          icon: "success",
+          title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+          text: `El cliente ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error(`Error al ${accion} el cliente:`, error)
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: `No se pudo ${accion} el cliente`,
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
+  }
+
   const manejarEliminar = async (id) => {
     const result = await Swal.fire({
       title: "¿Estás seguro?",
@@ -89,10 +141,10 @@ const TablaClientes = () => {
         const token = localStorage.getItem("token")
         await axios.delete(`https://gitbf.onrender.com/api/clientes/${id}`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
-        setClientes(clientes.filter(c => c._id !== id))
+        setClientes(clientes.filter((c) => c._id !== id))
         Swal.fire({
           title: "Eliminado!",
           text: "El cliente ha sido eliminado.",
@@ -117,7 +169,7 @@ const TablaClientes = () => {
         cliente.nombrecliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
         cliente.apellidocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
         cliente.correocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase())
+        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase()),
     )
   }
 
@@ -141,7 +193,7 @@ const TablaClientes = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando clientes...</p>
@@ -151,14 +203,39 @@ const TablaClientes = () => {
   }
 
   if (error) {
-    return <div className="alert alert-error">{error}</div>
+    return (
+      <div className="p-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+        <button
+          className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => obtenerClientes()}
+        >
+          <FontAwesomeIcon icon="sync" className="mr-2" />
+          Reintentar
+        </button>
+      </div>
+    )
   }
 
   return (
-    <div className="tabla-container transition-all duration-100 dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Clientes</h2>
+    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">Gestión de Clientes</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
+        <button
+          className="btn-add bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          onClick={() => {
+            setClienteSeleccionado(null)
+            setModalIsOpen(true)
+          }}
+        >
+          <FontAwesomeIcon icon={faPlus} className="mr-2" />
+          Nuevo Cliente
+        </button>
+
         <div className="search-container">
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input
@@ -171,38 +248,60 @@ const TablaClientes = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-4">
-        <table className="serv-tabla-moderna w-full">
-          <thead className="dark:card-gradient-4">
+      <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
+        <table className="w-full border-collapse separate border-spacing-0 bg-white rounded-lg overflow-hidden dark:bg-zinc-900/80">
+          <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Correo</th>
-              <th>Celular</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Nombre</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Apellido</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Correo</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Celular</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Estado</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50 text-foreground">Acciones</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="dark:bg-zinc-900/80">
             {clientesActuales.length > 0 ? (
               clientesActuales.map((cliente) => (
-                <tr key={cliente._id}>
-                  <td className="font-medium">{cliente.nombrecliente}</td>
-                  <td>{cliente.apellidocliente}</td>
-                  <td>{cliente.correocliente}</td>
-                  <td>{cliente.celularcliente}</td>
-                  <td>
-                    <span className={`estado-badge ${cliente.estadocliente ? "activo" : "inactivo"}`}>
+                <tr
+                  key={cliente._id}
+                  className="dark:hover:bg-gray-500/50 text-foreground border-b border-gray-200 dark:border-gray-700"
+                >
+                  <td className="py-3 px-4 font-medium">{cliente.nombrecliente}</td>
+                  <td className="py-3 px-4">{cliente.apellidocliente}</td>
+                  <td className="py-3 px-4">{cliente.correocliente}</td>
+                  <td className="py-3 px-4">{cliente.celularcliente}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${cliente.estadocliente ? "bg-emerald-500/50 dark:bg-emerald-500 text-foreground" : "bg-red-500/80"}`}
+                    >
                       {cliente.estadocliente ? "Activo" : "Inactivo"}
                     </span>
                   </td>
-                  <td>
-                    <div className="flex space-x-2">
-                      <button className="btn-edit" onClick={() => manejarEditar(cliente)} title="Editar">
+                  <td className="py-3 px-4">
+                    <div className="flex space-x-2 center">
+                      <button
+                        className="w-8 h-8 rounded flex items-center justify-center bg-indigo-500/50 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90 text-white transition-all duration-200 relative overflow-hidden"
+                        onClick={() => manejarEditar(cliente)}
+                        title="Editar"
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
-                      <button className="btn-delete" onClick={() => manejarEliminar(cliente._id)} title="Eliminar">
+
+                      <button
+                        className="w-8 h-8 rounded flex items-center justify-center bg-rose-500 dark:bg-rose-950/100 dark:hover:bg-rose-800/90 text-white transition-all duration-200 relative overflow-hidden"
+                        onClick={() => manejarEliminar(cliente._id)}
+                        title="Eliminar"
+                      >
                         <FontAwesomeIcon icon={faTrash} />
+                      </button>
+
+                      <button
+                        className={`w-8 h-8 rounded flex items-center justify-center ${cliente.estadocliente ? "bg-amber-500 dark:bg-amber-900/100 dark:hover:bg-amber-400/90" : "bg-gray-500"} text-white transition-all duration-200 relative overflow-hidden`}
+                        onClick={() => manejarToggleEstado(cliente._id, cliente.estadocliente)}
+                        title={cliente.estadocliente ? "Desactivar" : "Activar"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
                       </button>
                     </div>
                   </td>
@@ -211,7 +310,7 @@ const TablaClientes = () => {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center py-4 text-gray-500">
-                  No se encontraron clientes
+                  No se encontraron clientes con ese criterio de búsqueda
                 </td>
               </tr>
             )}
@@ -225,17 +324,23 @@ const TablaClientes = () => {
           <button
             onClick={paginaAnterior}
             disabled={paginaActual === 1}
-            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
+            className={`w-9 h-9 border border-gray-300 bg-white rounded flex items-center justify-center cursor-pointer transition-all ${
+              paginaActual === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
           >
             &lt;
           </button>
 
-          <div className="pagination-pages">
+          <div className="flex mx-2">
             {Array.from({ length: paginasTotales }, (_, index) => (
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+                className={`w-9 h-9 border ${
+                  paginaActual === index + 1
+                    ? "bg-pink-500 border-pink-500 text-white"
+                    : "border-gray-300 bg-white hover:bg-gray-100"
+                } rounded flex items-center justify-center mx-1 cursor-pointer transition-all`}
               >
                 {index + 1}
               </button>
@@ -245,7 +350,9 @@ const TablaClientes = () => {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+            className={`w-9 h-9 border border-gray-300 bg-white rounded flex items-center justify-center cursor-pointer transition-all ${
+              paginaActual === paginasTotales ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+            }`}
           >
             &gt;
           </button>
@@ -256,8 +363,8 @@ const TablaClientes = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={manejarCerrarModal}
-        className="modal-content"
-        overlayClassName="modal-overlay"
+        className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto relative"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       >
         <div className="relative">
           <button

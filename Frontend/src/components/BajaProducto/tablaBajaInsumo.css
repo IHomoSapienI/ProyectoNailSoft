@@ -102,7 +102,7 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 9999px;
+    /* border-radius: 9999px; */
     transition: all 0.3s;
     border: none;
     cursor: pointer;
@@ -125,13 +125,13 @@
     background-color: #dc2626;
   }
   
-  .btn-info {
+  /* .btn-info {
     background-color: #6366f1;
   }
   
   .btn-info:hover {
     background-color: #4f46e5;
-  }
+  } */
   
   .btn-toggle {
     background-color: #9ca3af;

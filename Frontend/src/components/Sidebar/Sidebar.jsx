@@ -5,7 +5,7 @@ import React from "react"
 import { useState, useEffect, useRef, createContext, useContext } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
-import { BiSolidDiscount } from "react-icons/bi";
+import { BiAlbum, BiSolidDiscount } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FaUsers,
@@ -313,6 +313,16 @@ const Sidebar = () => {
                   >
                     Ventas de servicios
                   </MenuItem> */}
+
+                  <MenuItem
+                    icon={FaCalendarCheck}
+                    to="/citas-en-progreso"
+                    isActive={location.pathname === "/citas-en-progreso"}
+                    collapsed={isCollapsed}
+                  >
+                    Citas en Progreso
+                  </MenuItem>    
+
                   <MenuItem
                   icon={MdOutlineMonetizationOn }
                   to="/ventas-unificadas"
@@ -348,6 +358,14 @@ const Sidebar = () => {
                   >
                     Tipo De Descuentos
                   </MenuItem>
+                   <MenuItem
+                    icon={BiAlbum}
+                    to="/tiposervicioss"
+                    isActive={location.pathname === "/tiposervicioss"}
+                    collapsed={isCollapsed}
+                  >
+                    Tipo De Servicios
+                  </MenuItem>
                   <MenuItem
                     icon={MdOutlineVrpano}
                     to="/articles"
@@ -380,14 +398,7 @@ const Sidebar = () => {
                   >
                     Citas
                   </MenuItem>
-                  <MenuItem
-                    icon={FaCalendarCheck}
-                    to="/citas-en-progreso"
-                    isActive={location.pathname === "/citas-en-progreso"}
-                    collapsed={isCollapsed}
-                  >
-                    Citas en Progreso
-                  </MenuItem>
+                  
                   <MenuItem
                     icon={FaCalendarWeek}
                     to="/agenda-empleado"

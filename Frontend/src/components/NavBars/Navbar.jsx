@@ -13,12 +13,11 @@ import {
   FaUserCircle,
   FaClipboardList,
   FaAsymmetrik,
-  FaDashcube,
-  FaFileAlt
+  FaFileAlt,
 } from "react-icons/fa"
 
 // Actualizamos la importación para usar una ruta relativa
-import { Navbar, NavbarLogo, NavbarDropdownMenu, NavbarLogoutButton } from "../ui/navbar"
+import { Navbar, NavbarLogo, NavbarDropdownMenu, AvatarMenu } from "../ui/navbar"
 
 export default function MainNavbar() {
   const navigate = useNavigate()
@@ -32,6 +31,10 @@ export default function MainNavbar() {
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userRole")
+    localStorage.removeItem("userId")
+    localStorage.removeItem("userName")
+    localStorage.removeItem("userEmail")
+    localStorage.removeItem("clienteId")
     navigate("/login")
   }
 
@@ -84,7 +87,7 @@ export default function MainNavbar() {
       ],
       usuario: [
         {
-          icon: FaUserCircle, 
+          icon: FaUserCircle,
           label: "Mi Perfil",
           items: [
             { icon: FaUserCircle, label: "Ver Perfil", path: "/profile" },
@@ -101,39 +104,25 @@ export default function MainNavbar() {
         },
       ],
       cliente: [
-
-        {
-          icon: FaUserCircle,
-          label: "Mi Perfil",
-          items: [
-            { icon: FaUserCircle, label: "Ver Perfil", path: "/profile" },
-            
-          ],
-        },
         {
           icon: FaTachometerAlt,
           label: "Dashboard",
           items: [{ icon: FaShoppingCart, label: "Historial de Compras", path: "/mi-cuenta" }],
         },
-        
         {
           icon: FaCalendarAlt,
           label: "Servicios",
           items: [
             { icon: FaAsymmetrik, label: "Agendar Cita", path: "/seleccionarservicios" },
             { icon: FaCamera, label: "Portafolio de Servicios", path: "/articles" },
-           
           ],
         },
-        // Nuevo menú para políticas
         {
           icon: FaFileAlt,
           label: "Políticas",
           items: [{ icon: FaFileAlt, label: "Políticas del Salón", path: "/politicas" }],
-        },
-      ],
-        
-      
+        },
+      ],
       empleado: [
         {
           icon: FaUserCircle,
@@ -165,9 +154,11 @@ export default function MainNavbar() {
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">{renderMenuItems()}</div>
-        <NavbarLogoutButton onClick={handleLogout} />
+        {/* Añadir ThemeToggle si lo tienes */}
+        {/* <ThemeToggle /> */}
+        <AvatarMenu userName={localStorage.getItem("userName") || ""} onLogout={handleLogout} />
+
       </div>
     </Navbar>
   )
 }
-

@@ -2,12 +2,55 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react"
 import axios from "axios"
-import { useLocation } from "react-router-dom"
 import Swal from "sweetalert2"
-import { FaCalendarAlt, FaClock, FaUser, FaCut, FaTimes } from "react-icons/fa"
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaUser,
+  FaCut,
+  FaTimes,
+  FaChevronLeft,
+  FaChevronRight,
+  FaCheck,
+  FaMoneyBillWave,
+  FaRegClock,
+  FaPlus,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaRedo,
+  FaCalendarCheck,
+  FaClipboardList,
+  FaUserClock,
+} from "react-icons/fa"
+import { useLocation } from "react-router-dom"
+
+// Datos de respaldo en caso de fallo de API
+const DATOS_RESPALDO = {
+  empleados: [
+    {
+      _id: "emp1",
+      nombreempleado: "Empleado Demo",
+      especialidades: ["Corte", "Peinado", "Tinte"],
+      schedule: [
+        { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 4, startTime: "09:00", endTime: "18:00" },
+        { dayOfWeek: 5, startTime: "09:00", endTime: "18:00" },
+      ],
+    },
+  ],
+  clientes: [{ _id: "cli1", nombrecliente: "Cliente Demo", apellidocliente: "Apellido" }],
+  servicios: [
+    { _id: "serv1", nombreServicio: "Corte de Cabello", precio: 150, tiempo: 30 },
+    { _id: "serv2", nombreServicio: "Peinado", precio: 200, tiempo: 45 },
+    { _id: "serv3", nombreServicio: "Tinte", precio: 350, tiempo: 90 },
+  ],
+}
 
 export default function FormularioCita({ cita, fechaSeleccionada, servicioSeleccionado, onCitaActualizada, onClose }) {
   const location = useLocation()
+
   const totalDesdeSeleccionarServicios = location.state?.total || 0
   const empleadoIdPredeterminado = location.state?.empleadoId || ""
   const serviciosDesdeSeleccionarServicios = location.state?.serviciosSeleccionados || []
@@ -35,6 +78,9 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
   const [empleadosFiltrados, setEmpleadosFiltrados] = useState([])
   const [paso, setPaso] = useState(1)
   const [currentMonth, setCurrentMonth] = useState(fechaSeleccionada ? new Date(fechaSeleccionada) : new Date())
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [usandoDatosRespaldo, setUsandoDatosRespaldo] = useState(false)
+  const [intentosConexion, setIntentosConexion] = useState(0)
 
   // Definir la función actualizarHorariosDisponibles con useCallback ANTES de usarla
   const actualizarHorariosDisponibles = useCallback(
@@ -58,22 +104,39 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
       )
 
       try {
-        const token = localStorage.getItem("token")
-        const headers = { Authorization: `Bearer ${token}` }
-        const fechaStr = fecha.toISOString().split("T")[0]
-
         // Generar horarios disponibles básicos sin verificar conflictos
-        // Esto es temporal para asegurar que siempre haya horarios disponibles
         const [horaInicio, minInicio] = horario.startTime.split(":").map(Number)
         const [horaFin, minFin] = horario.endTime.split(":").map(Number)
         const inicioMinutos = horaInicio * 60 + minInicio
         const finMinutos = horaFin * 60 + minFin
 
+        // NUEVA IMPLEMENTACIÓN: Calcular la hora actual más 6 horas de anticipación
+        const ahora = new Date()
+        const fechaActual = new Date(fecha)
+        fechaActual.setHours(0, 0, 0, 0) // Resetear a inicio del día
+
+        // Verificar si la fecha seleccionada es hoy
+        const esHoy =
+          fechaActual.getDate() === ahora.getDate() &&
+          fechaActual.getMonth() === ahora.getMonth() &&
+          fechaActual.getFullYear() === ahora.getFullYear()
+
+        // Calcular la hora mínima permitida (actual + 6 horas)
+        let horaMinima = 0
+        if (esHoy) {
+          const horaActual = ahora.getHours()
+          const minutosActuales = ahora.getMinutes()
+          horaMinima = (horaActual + 6) * 60 + minutosActuales // Convertir a minutos desde inicio del día
+        }
+
         const horarios = []
         for (let minutos = inicioMinutos; minutos <= finMinutos - duracionTotal; minutos += 30) {
-          const hora = Math.floor(minutos / 60)
-          const min = minutos % 60
-          horarios.push(`${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}`)
+          // NUEVA CONDICIÓN: Solo agregar horarios que cumplan con la anticipación de 6 horas
+          if (!esHoy || minutos >= horaMinima) {
+            const hora = Math.floor(minutos / 60)
+            const min = minutos % 60
+            horarios.push(`${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}`)
+          }
         }
 
         setHorariosDisponibles(horarios)
@@ -83,59 +146,70 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
           setFormData((prev) => ({ ...prev, horacita: horarios[0] }))
         }
 
-        // Ahora intentamos obtener las citas existentes para filtrar los horarios
-        try {
-          const citasResponse = await axios.get(`https://gitbf.onrender.com/api/citas`, { headers })
-          const citasDelDia = citasResponse.data.citas.filter((c) => {
-            if (!c.fechacita || !c.nombreempleado) return false
-            const citaFecha = new Date(c.fechacita).toISOString().split("T")[0]
-            const citaEmpleadoId = typeof c.nombreempleado === "object" ? c.nombreempleado._id : c.nombreempleado
-            return citaFecha === fechaStr && citaEmpleadoId === empleadoId && c._id !== (cita?._id || "")
-          })
+        // Si no estamos usando datos de respaldo, intentamos obtener las citas existentes
+        if (!usandoDatosRespaldo) {
+          try {
+            const token = localStorage.getItem("token")
+            const headers = { Authorization: `Bearer ${token}` }
+            const fechaStr = fecha.toISOString().split("T")[0]
 
-          // Si no hay citas, mantenemos los horarios básicos
-          if (citasDelDia.length === 0) return
-
-          // Crear bloques ocupados
-          const bloquesOcupados = citasDelDia
-            .map((c) => {
-              if (!c.horacita) return null
-              const [hora, min] = c.horacita.split(":").map(Number)
-              const inicioBloque = hora * 60 + min
-              const duracionCita = c.duracionTotal || 60
-              return {
-                inicio: inicioBloque,
-                fin: inicioBloque + duracionCita,
-              }
+            const citasResponse = await axios.get(`https://gitbf.onrender.com/api/citas`, { headers })
+            const citasDelDia = citasResponse.data.citas.filter((c) => {
+              if (!c.fechacita || !c.nombreempleado) return false
+              const citaFecha = new Date(c.fechacita).toISOString().split("T")[0]
+              const citaEmpleadoId = typeof c.nombreempleado === "object" ? c.nombreempleado._id : c.nombreempleado
+              return (
+                citaFecha === fechaStr &&
+                citaEmpleadoId === empleadoId &&
+                c._id !== (cita?._id || "") &&
+                !(c.horarioLiberado || c.estadocita === "Cancelada") // Ignorar citas con horario liberado o canceladas
+              )
             })
-            .filter(Boolean)
 
-          // Filtrar horarios disponibles
-          const horariosDisponiblesFiltrados = horarios.filter((horaStr) => {
-            const [hora, min] = horaStr.split(":").map(Number)
-            const inicioMinutos = hora * 60 + min
-            const finMinutos = inicioMinutos + duracionTotal
+            // Si no hay citas, mantenemos los horarios básicos
+            if (citasDelDia.length === 0) return
 
-            return !bloquesOcupados.some(
-              (bloque) =>
-                (inicioMinutos >= bloque.inicio && inicioMinutos < bloque.fin) ||
-                (finMinutos > bloque.inicio && finMinutos <= bloque.fin) ||
-                (inicioMinutos <= bloque.inicio && finMinutos >= bloque.fin),
-            )
-          })
+            // Crear bloques ocupados
+            const bloquesOcupados = citasDelDia
+              .map((c) => {
+                if (!c.horacita) return null
+                const [hora, min] = c.horacita.split(":").map(Number)
+                const inicioBloque = hora * 60 + min
+                const duracionCita = c.duracionTotal || 60
+                return {
+                  inicio: inicioBloque,
+                  fin: inicioBloque + duracionCita,
+                }
+              })
+              .filter(Boolean)
 
-          // Solo actualizamos si hay horarios disponibles después de filtrar
-          if (horariosDisponiblesFiltrados.length > 0) {
-            setHorariosDisponibles(horariosDisponiblesFiltrados)
+            // Filtrar horarios disponibles
+            const horariosDisponiblesFiltrados = horarios.filter((horaStr) => {
+              const [hora, min] = horaStr.split(":").map(Number)
+              const inicioMinutos = hora * 60 + min
+              const finMinutos = inicioMinutos + duracionTotal
 
-            if (!horaSeleccionada || !horariosDisponiblesFiltrados.includes(horaSeleccionada)) {
-              setHoraSeleccionada(horariosDisponiblesFiltrados[0])
-              setFormData((prev) => ({ ...prev, horacita: horariosDisponiblesFiltrados[0] }))
+              return !bloquesOcupados.some(
+                (bloque) =>
+                  (inicioMinutos >= bloque.inicio && inicioMinutos < bloque.fin) ||
+                  (finMinutos > bloque.inicio && finMinutos <= bloque.fin) ||
+                  (inicioMinutos <= bloque.inicio && finMinutos >= bloque.fin),
+              )
+            })
+
+            // Solo actualizamos si hay horarios disponibles después de filtrar
+            if (horariosDisponiblesFiltrados.length > 0) {
+              setHorariosDisponibles(horariosDisponiblesFiltrados)
+
+              if (!horaSeleccionada || !horariosDisponiblesFiltrados.includes(horaSeleccionada)) {
+                setHoraSeleccionada(horariosDisponiblesFiltrados[0])
+                setFormData((prev) => ({ ...prev, horacita: horariosDisponiblesFiltrados[0] }))
+              }
             }
+          } catch (error) {
+            console.error("Error al obtener citas:", error)
+            // Si hay error al obtener citas, mantenemos los horarios básicos
           }
-        } catch (error) {
-          console.error("Error al obtener citas:", error)
-          // Si hay error al obtener citas, mantenemos los horarios básicos
         }
       } catch (error) {
         console.error("Error general:", error)
@@ -145,11 +219,33 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         const inicioMinutos = horaInicio * 60 + minInicio
         const finMinutos = horaFin * 60 + minFin
 
+        // NUEVA IMPLEMENTACIÓN: Calcular la hora actual más 6 horas de anticipación
+        const ahora = new Date()
+        const fechaActual = new Date(fecha)
+        fechaActual.setHours(0, 0, 0, 0) // Resetear a inicio del día
+
+        // Verificar si la fecha seleccionada es hoy
+        const esHoy =
+          fechaActual.getDate() === ahora.getDate() &&
+          fechaActual.getMonth() === ahora.getMonth() &&
+          fechaActual.getFullYear() === ahora.getFullYear()
+
+        // Calcular la hora mínima permitida (actual + 6 horas)
+        let horaMinima = 0
+        if (esHoy) {
+          const horaActual = ahora.getHours()
+          const minutosActuales = ahora.getMinutes()
+          horaMinima = (horaActual + 6) * 60 + minutosActuales // Convertir a minutos desde inicio del día
+        }
+
         const horarios = []
         for (let minutos = inicioMinutos; minutos <= finMinutos - duracionTotal; minutos += 30) {
-          const hora = Math.floor(minutos / 60)
-          const min = minutos % 60
-          horarios.push(`${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}`)
+          // NUEVA CONDICIÓN: Solo agregar horarios que cumplan con la anticipación de 6 horas
+          if (!esHoy || minutos >= horaMinima) {
+            const hora = Math.floor(minutos / 60)
+            const min = minutos % 60
+            horarios.push(`${hora.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}`)
+          }
         }
 
         setHorariosDisponibles(horarios)
@@ -160,29 +256,43 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         }
       }
     },
-    [empleados, serviciosSeleccionados, cita, horaSeleccionada],
+    [empleados, serviciosSeleccionados, cita, horaSeleccionada, usandoDatosRespaldo],
   )
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const token = localStorage.getItem("token")
-        const headers = { Authorization: `Bearer ${token}` }
+  // Función para cargar datos con manejo de errores mejorado
+  const cargarDatos = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-        const [empleadosResponse, clientesResponse, serviciosResponse] = await Promise.all([
-          axios.get("https://gitbf.onrender.com/api/empleados", { headers }),
-          axios.get("https://gitbf.onrender.com/api/clientes", { headers }),
-          axios.get("https://gitbf.onrender.com/api/servicios", { headers }),
-        ])
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación. Por favor, inicie sesión nuevamente.")
+      }
 
-        setEmpleados(empleadosResponse.data)
-        setEmpleadosFiltrados(empleadosResponse.data)
-        setClientes(clientesResponse.data)
+      const headers = { Authorization: `Bearer ${token}` }
 
-        const serviciosData =
-          serviciosResponse.data.servicios || (Array.isArray(serviciosResponse.data) ? serviciosResponse.data : [])
+      // Usar Promise.allSettled para manejar mejor los errores parciales
+      const resultados = await Promise.allSettled([
+        axios.get("https://gitbf.onrender.com/api/empleados", { headers }),
+        axios.get("https://gitbf.onrender.com/api/clientes", { headers }),
+        axios.get("https://gitbf.onrender.com/api/servicios", { headers }),
+      ])
+
+      // Verificar si todas las peticiones fueron exitosas
+      const todasExitosas = resultados.every((resultado) => resultado.status === "fulfilled")
+
+      if (todasExitosas) {
+        // Extraer los datos de las respuestas exitosas
+        const [empleadosResponse, clientesResponse, serviciosResponse] = resultados.map(
+          (resultado) => resultado.value.data,
+        )
+
+        setEmpleados(empleadosResponse)
+        setEmpleadosFiltrados(empleadosResponse)
+        setClientes(clientesResponse)
+
+        const serviciosData = serviciosResponse.servicios || (Array.isArray(serviciosResponse) ? serviciosResponse : [])
         setServicios(serviciosData)
 
         // Inicializar datos de la cita si existe
@@ -206,16 +316,46 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
           setHoraSeleccionada(`${hora.toString().padStart(2, "0")}:${minutos.toString().padStart(2, "0")}`)
           setCurrentMonth(new Date(cita.fechacita))
         }
-      } catch (error) {
-        setError("Error al cargar los datos. Por favor, intente de nuevo.")
-        Swal.fire("Error", "No se pudieron cargar los datos necesarios", "error")
-      } finally {
-        setIsLoading(false)
-      }
-    }
 
-    fetchData()
-  }, [cita])
+        setUsandoDatosRespaldo(false)
+      } else {
+        // Si alguna petición falló, usar datos de respaldo
+        console.error("Algunas peticiones fallaron, usando datos de respaldo")
+        throw new Error("No se pudieron cargar todos los datos necesarios")
+      }
+    } catch (error) {
+      console.error("Error al cargar datos:", error)
+
+      // Usar datos de respaldo
+      setEmpleados(DATOS_RESPALDO.empleados)
+      setEmpleadosFiltrados(DATOS_RESPALDO.empleados)
+      setClientes(DATOS_RESPALDO.clientes)
+      setServicios(DATOS_RESPALDO.servicios)
+      setUsandoDatosRespaldo(true)
+
+      // Mostrar mensaje de error solo si no estamos usando datos de respaldo
+      if (intentosConexion > 0) {
+        setError(
+          "No se pudieron cargar los datos del servidor. Se están utilizando datos de demostración. " +
+            "Algunas funcionalidades pueden estar limitadas.",
+        )
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [cita, intentosConexion])
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    cargarDatos()
+  }, [cargarDatos])
+
+  // Función para reintentar la conexión
+  const reintentarConexion = () => {
+    setIntentosConexion(intentosConexion + 1)
+    setError(null)
+    cargarDatos()
+  }
 
   // Inicializar formData con datos de location
   useEffect(() => {
@@ -307,7 +447,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
       console.log("Cargando horarios disponibles iniciales")
       actualizarHorariosDisponibles(new Date(formData.fechacita), formData.nombreempleado)
     }
-  }, [isLoading]) // Solo se ejecuta cuando cambia isLoading (cuando termina de cargar)
+  }, [isLoading, formData.fechacita, formData.nombreempleado, actualizarHorariosDisponibles]) // Solo se ejecuta cuando cambia isLoading (cuando termina de cargar)
 
   const precioTotal = useMemo(() => {
     return serviciosSeleccionados.reduce((total, servicio) => total + (servicio.precio || 0), 0)
@@ -357,10 +497,20 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         ])
         setNuevoServicio({ id: "", nombre: "" })
       } else {
-        Swal.fire("Error", "Este servicio ya fue agregado o no existe.", "error")
+        Swal.fire({
+          title: "Error",
+          text: "Este servicio ya fue agregado o no existe.",
+          icon: "error",
+          confirmButtonColor: "#ff69b4",
+        })
       }
     } else {
-      Swal.fire("Error", "Debes seleccionar un servicio antes de agregar.", "error")
+      Swal.fire({
+        title: "Error",
+        text: "Debes seleccionar un servicio antes de agregar.",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
   }
 
@@ -368,35 +518,62 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
     setServiciosSeleccionados((prev) => prev.filter((servicio) => servicio._id !== id))
   }
 
-  // Reemplazar la función manejarSubmit con esta versión
+  // Función para manejar el envío del formulario con mejor manejo de errores
   const manejarSubmit = async (e) => {
     e.preventDefault()
 
+    if (isSubmitting) return
+
     if (serviciosSeleccionados.length === 0) {
-      return Swal.fire("Error", "Debe seleccionar al menos un servicio", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar al menos un servicio",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     if (!formData.nombreempleado) {
-      return Swal.fire("Error", "Debe seleccionar un empleado", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un empleado",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     if (!formData.nombrecliente) {
-      return Swal.fire("Error", "Debe seleccionar un cliente", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un cliente",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     if (!horaSeleccionada) {
-      return Swal.fire("Error", "Debe seleccionar una hora", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar una hora",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
+
+    // Si estamos usando datos de respaldo, mostrar mensaje informativo
+    if (usandoDatosRespaldo) {
+      return Swal.fire({
+        title: "Modo demostración",
+        text: "Esta función no está disponible en modo demostración. Intente conectarse al servidor para usar todas las funcionalidades.",
+        icon: "info",
+        confirmButtonColor: "#ff69b4",
+      })
+    }
+
+    setIsSubmitting(true)
 
     // Obtener la fecha actual del estado
     const fechaActual = new Date(formData.fechacita)
-    console.log("FECHA ACTUAL EN SUBMIT:", {
-      fechaISO: fechaActual.toISOString(),
-      fechaLocal: fechaActual.toLocaleDateString(),
-      año: fechaActual.getFullYear(),
-      mes: fechaActual.getMonth() + 1,
-      día: fechaActual.getDate(),
-    })
 
     // Extraer componentes de la fecha
     const year = fechaActual.getFullYear()
@@ -408,15 +585,6 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
     // Crear una nueva fecha combinando fecha y hora
     const fechaCompleta = new Date(year, month, day, horas, minutos, 0)
-
-    console.log("FECHA FINAL PARA ENVIAR:", {
-      fechaISO: fechaCompleta.toISOString(),
-      fechaLocal: fechaCompleta.toLocaleDateString(),
-      hora: horaSeleccionada,
-      año: year,
-      mes: month + 1,
-      día: day,
-    })
 
     // Preparar los servicios en el formato que espera el backend
     const serviciosFormateados = serviciosSeleccionados.map((servicio) => ({
@@ -435,20 +603,32 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
       montototal: precioTotal,
     }
 
-    console.log("DATOS COMPLETOS A ENVIAR:", dataToSend)
-
     try {
       const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación. Por favor, inicie sesión nuevamente.")
+      }
+
       const headers = { Authorization: `Bearer ${token}` }
 
       if (cita) {
         const response = await axios.put(`https://gitbf.onrender.com/api/citas/${cita._id}`, dataToSend, { headers })
         console.log("RESPUESTA DEL SERVIDOR (ACTUALIZACIÓN):", response.data)
-        Swal.fire("Éxito", "Cita actualizada correctamente", "success")
+        Swal.fire({
+          title: "¡Éxito!",
+          text: "Cita actualizada correctamente",
+          icon: "success",
+          confirmButtonColor: "#ff69b4",
+        })
       } else {
         const response = await axios.post("https://gitbf.onrender.com/api/citas", dataToSend, { headers })
         console.log("RESPUESTA DEL SERVIDOR (CREACIÓN):", response.data)
-        Swal.fire("Éxito", "Cita creada correctamente", "success")
+        Swal.fire({
+          title: "¡Éxito!",
+          text: "Cita creada correctamente",
+          icon: "success",
+          confirmButtonColor: "#ff69b4",
+        })
       }
 
       onCitaActualizada()
@@ -461,7 +641,14 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         mensajeError = `Error: ${error.response.data.message}`
       }
       console.error("ERROR COMPLETO:", error)
-      Swal.fire("Error", mensajeError, "error")
+      Swal.fire({
+        title: "Error",
+        text: mensajeError,
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -475,33 +662,78 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
         confirmButtonColor: "#ff69b4",
         cancelButtonColor: "#d33",
         confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
       }).then((result) => result.isConfirmed)
     ) {
       try {
+        setIsSubmitting(true)
+
+        // Si estamos usando datos de respaldo, mostrar mensaje informativo
+        if (usandoDatosRespaldo) {
+          Swal.fire({
+            title: "Modo demostración",
+            text: "Esta función no está disponible en modo demostración. Intente conectarse al servidor para usar todas las funcionalidades.",
+            icon: "info",
+            confirmButtonColor: "#ff69b4",
+          })
+          return
+        }
+
         const token = localStorage.getItem("token")
+        if (!token) {
+          throw new Error("No se encontró el token de autenticación. Por favor, inicie sesión nuevamente.")
+        }
+
         const headers = { Authorization: `Bearer ${token}` }
 
         await axios.delete(`https://gitbf.onrender.com/api/citas/${cita._id}`, { headers })
-        Swal.fire("Eliminado", "La cita ha sido eliminada.", "success")
+        Swal.fire({
+          title: "Eliminado",
+          text: "La cita ha sido eliminada correctamente.",
+          icon: "success",
+          confirmButtonColor: "#ff69b4",
+        })
         onCitaActualizada()
         onClose()
       } catch (error) {
-        Swal.fire("Error", "No se pudo eliminar la cita.", "error")
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo eliminar la cita.",
+          icon: "error",
+          confirmButtonColor: "#ff69b4",
+        })
+      } finally {
+        setIsSubmitting(false)
       }
     }
   }
 
   const avanzarPaso = () => {
     if (paso === 1 && serviciosSeleccionados.length === 0) {
-      return Swal.fire("Error", "Debe seleccionar al menos un servicio", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar al menos un servicio",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     if (paso === 2 && !formData.nombreempleado) {
-      return Swal.fire("Error", "Debe seleccionar un empleado", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un empleado",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     if (paso === 3 && !formData.nombrecliente) {
-      return Swal.fire("Error", "Debe seleccionar un cliente", "error")
+      return Swal.fire({
+        title: "Error",
+        text: "Debe seleccionar un cliente",
+        icon: "error",
+        confirmButtonColor: "#ff69b4",
+      })
     }
 
     setPaso(paso + 1)
@@ -511,523 +743,737 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
     setPaso(paso - 1)
   }
 
-  // Cambiar mes en el calendario
-  // Añadir este useEffect dentro del componente, justo antes del return
-  useEffect(() => {
-    console.log("CAMBIO EN FECHA:", {
-      nuevaFecha: formData.fechacita,
-      fechaLocal: new Date(formData.fechacita).toLocaleDateString(),
-    })
-  }, [formData.fechacita])
-
   // Renderizar el indicador de carga
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-64 bg-white rounded-xl shadow-lg p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500 mb-4"></div>
-        <p className="text-pink-500 font-medium">Cargando datos...</p>
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all animate-fadeIn">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-pink-500 mb-4"></div>
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">Cargando datos</h2>
+            <p className="text-gray-500 text-sm">Estamos preparando todo para ti...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
-  // Renderizar mensaje de error
+  // Renderizar mensaje de error con opción para reintentar
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        <p>{error}</p>
-        <button onClick={onClose} className="mt-3 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded">
-          Cerrar
-        </button>
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+          <div className="text-center mb-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 text-red-500 mb-4">
+              <FaExclamationTriangle size={24} />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Ha ocurrido un error</h2>
+            <p className="text-gray-600 mb-4 text-sm">{error}</p>
+
+            {usandoDatosRespaldo && (
+              <div className="bg-blue-50 p-3 rounded-lg text-blue-700 mb-4 text-sm">
+                <p className="font-medium">Estás utilizando datos de demostración.</p>
+                <p>Algunas funcionalidades pueden estar limitadas.</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-center space-x-3">
+            <button
+              onClick={reintentarConexion}
+              className="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-200 transform hover:translate-y-[-2px] flex items-center"
+            >
+              <FaRedo className="mr-2" />
+              Reintentar conexión
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-200"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
   // Renderizar el formulario por pasos
   return (
-    <div className="max-w-5xl mx-auto relative bg-gradient-to-br from-white to-pink-50 rounded-xl shadow-xl overflow-hidden border border-pink-100">
-      {/* Botón de cerrar mejorado */}
-      <button
-        onClick={onClose}
-        className="absolute top-2 right-2 bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-700 rounded-full p-2 shadow-md transition-all duration-200 z-20 transform hover:scale-110"
-        aria-label="Cerrar"
-      >
-        <FaTimes size={18} />
-      </button>
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-0 sm:p-4 overflow-hidden">
+      <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" onClick={onClose}></div>
 
-      {/* Indicador de pasos */}
-      <div className="mb-8 px-6 pt-6">
-        <div className="flex items-center justify-between">
-          <div className={`step ${paso >= 1 ? "active" : ""}`}>
-            <div className="step-circle">
-              <FaCut className="step-icon" />
+      <div className="relative bg-white rounded-xl shadow-2xl border border-pink-100 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Botón de cerrar mejorado */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 bg-white hover:bg-pink-50 text-pink-500 hover:text-pink-700 rounded-full p-2 shadow-md transition-all duration-200 z-20 transform hover:scale-110 hover:rotate-90"
+          aria-label="Cerrar"
+        >
+          <FaTimes size={16} />
+        </button>
+
+        {/* Encabezado con título */}
+        <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white py-3 px-5">
+          <h1 className="text-lg font-bold">{cita ? "Modificar Cita" : "Nueva Cita"}</h1>
+
+          {/* Mostrar indicador de modo demostración si es necesario */}
+          {usandoDatosRespaldo && (
+            <div className="mt-1 text-xs bg-white bg-opacity-20 rounded px-2 py-0.5 inline-block">
+              Modo demostración
             </div>
-            <div className="step-text">Servicios</div>
-          </div>
-          <div className="step-line"></div>
-          <div className={`step ${paso >= 2 ? "active" : ""}`}>
-            <div className="step-circle">
-              <FaUser className="step-icon" />
+          )}
+        </div>
+
+        {/* Indicador de pasos */}
+        <div className="sticky top-0 bg-white bg-opacity-95 pt-3 pb-2 px-4 z-10 border-b border-pink-100 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className={`step ${paso >= 1 ? "active" : ""}`}>
+              <div className="step-circle">
+                <FaCut className="step-icon" />
+              </div>
+              <div className="step-text">Servicios</div>
             </div>
-            <div className="step-text">Empleado</div>
-          </div>
-          <div className="step-line"></div>
-          <div className={`step ${paso >= 3 ? "active" : ""}`}>
-            <div className="step-circle">
-              <FaCalendarAlt className="step-icon" />
+            <div className="step-line"></div>
+            <div className={`step ${paso >= 2 ? "active" : ""}`}>
+              <div className="step-circle">
+                <FaUser className="step-icon" />
+              </div>
+              <div className="step-text">Empleado</div>
             </div>
-            <div className="step-text">Fecha y Hora</div>
-          </div>
-          <div className="step-line"></div>
-          <div className={`step ${paso >= 4 ? "active" : ""}`}>
-            <div className="step-circle">
-              <FaClock className="step-icon" />
+            <div className="step-line"></div>
+            <div className={`step ${paso >= 3 ? "active" : ""}`}>
+              <div className="step-circle">
+                <FaCalendarAlt className="step-icon" />
+              </div>
+              <div className="step-text">Fecha y Hora</div>
             </div>
-            <div className="step-text">Confirmar</div>
+            <div className="step-line"></div>
+            <div className={`step ${paso >= 4 ? "active" : ""}`}>
+              <div className="step-circle">
+                <FaCheck className="step-icon" />
+              </div>
+              <div className="step-text">Confirmar</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <form onSubmit={manejarSubmit} className="space-y-6">
-        {/* Paso 1: Selección de servicios */}
-        {paso === 1 && (
-          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona los servicios</h2>
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
+          <form onSubmit={manejarSubmit} className="p-3 sm:p-4">
+            {/* Paso 1: Selección de servicios */}
+            {paso === 1 && (
+              <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-3 animate-fadeIn">
+                <h2 className="text-base font-semibold mb-3 text-gray-800 flex items-center">
+                  <FaCut className="mr-2 text-pink-500" />
+                  Selecciona los servicios
+                </h2>
 
-            {/* NUEVO: Mostrar mensaje cuando los servicios ya están seleccionados */}
-            {vieneDePaginaServicios && serviciosSeleccionados.length > 0 ? (
-              <div className="bg-pink-50 p-4 rounded-lg mb-4">
-                <p className="text-pink-700 font-medium">
-                  Ya has seleccionado {serviciosSeleccionados.length} servicios desde la página anterior.
-                </p>
-                <div className="mt-3 bg-white p-3 rounded border border-pink-200">
-                  {serviciosSeleccionados.map((servicio, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-2 border-b border-pink-100 last:border-0"
-                    >
-                      <span>{servicio.nombreServicio}</span>
-                      <div className="flex items-center">
-                        <span className="font-medium mr-4">${servicio.precio}</span>
-                        <button
-                          type="button"
-                          onClick={() => eliminarServicio(servicio._id)}
-                          className="text-red-500 hover:text-red-700"
+                {/* NUEVO: Mostrar mensaje cuando los servicios ya están seleccionados */}
+                {vieneDePaginaServicios && serviciosSeleccionados.length > 0 ? (
+                  <div className="bg-pink-50 p-3 rounded-lg mb-3 border border-pink-200">
+                    <p className="text-pink-700 font-medium flex items-center text-sm">
+                      <FaCheck className="mr-2" />
+                      Ya has seleccionado {serviciosSeleccionados.length} servicios desde la página anterior.
+                    </p>
+                    <div className="mt-2 bg-white p-2 rounded-lg border border-pink-200 max-h-48 overflow-y-auto custom-scrollbar">
+                      {serviciosSeleccionados.map((servicio, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-1.5 px-2 border-b border-pink-100 last:border-0 hover:bg-pink-50 rounded-md transition-colors"
                         >
-                          Eliminar
-                        </button>
+                          <span className="truncate mr-2 font-medium text-sm">{servicio.nombreServicio}</span>
+                          <div className="flex items-center shrink-0">
+                            <span className="font-medium mr-3 text-pink-600 text-sm">${servicio.precio}</span>
+                            <button
+                              type="button"
+                              onClick={() => eliminarServicio(servicio._id)}
+                              className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-full transition-colors"
+                              aria-label="Eliminar servicio"
+                            >
+                              <FaTimes size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={avanzarPaso}
+                      className="mt-3 bg-pink-500 hover:bg-pink-600 text-white px-3 py-1.5 rounded-lg shadow-md transition-all duration-200 transform hover:translate-y-[-2px] flex items-center justify-center text-sm"
+                    >
+                      Continuar con estos servicios
+                      <FaChevronRight className="ml-2" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Servicios disponibles:</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <select
+                        value={nuevoServicio.id}
+                        onChange={(e) =>
+                          setNuevoServicio({
+                            id: e.target.value,
+                            nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
+                          })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200 text-gray-700 bg-white text-sm"
+                      >
+                        <option value="">Selecciona un servicio</option>
+                        {servicios.map((servicio) => (
+                          <option key={servicio._id} value={servicio._id}>
+                            {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={agregarServicio}
+                        className="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-200 transform hover:translate-y-[-2px] shadow-md flex items-center justify-center text-sm"
+                      >
+                        <FaPlus className="mr-1.5" />
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {serviciosSeleccionados.length > 0 && !vieneDePaginaServicios ? (
+                  <div className="mt-4">
+                    <h3 className="font-medium mb-2 text-gray-700 flex items-center text-sm">
+                      <FaCheck className="mr-2 text-green-500" />
+                      Servicios seleccionados:
+                    </h3>
+                    <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-3 rounded-lg max-h-48 overflow-y-auto custom-scrollbar border border-pink-200">
+                      {serviciosSeleccionados.map((servicio, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-2 px-3 mb-1.5 border-b border-pink-100 last:border-0 bg-white rounded-lg shadow-sm hover:shadow-md transition-all"
+                        >
+                          <div className="truncate mr-2">
+                            <span className="font-medium text-gray-800 text-sm">{servicio.nombreServicio}</span>
+                            <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                              <FaRegClock className="mr-1" size={10} />
+                              <span>{servicio.tiempo} min</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center shrink-0">
+                            <span className="font-medium mr-3 text-pink-600">${servicio.precio}</span>
+                            <button
+                              type="button"
+                              onClick={() => eliminarServicio(servicio._id)}
+                              className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-full transition-colors"
+                              aria-label="Eliminar servicio"
+                            >
+                              <FaTimes size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center pt-3 font-bold bg-white mt-2 p-2.5 rounded-lg shadow-sm border border-pink-100">
+                        <div className="flex items-center">
+                          <FaMoneyBillWave className="mr-2 text-green-500" />
+                          <span className="text-sm">Total</span>
+                          <div className="flex items-center ml-3 text-xs font-normal text-gray-500">
+                            <FaRegClock className="mr-1" size={10} />
+                            <span>{totalTiempo} min</span>
+                          </div>
+                        </div>
+                        <span className="text-pink-600 text-lg">${precioTotal.toFixed(2)}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={avanzarPaso}
-                  className="mt-4 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded transition-all duration-200 transform hover:translate-y-[-2px]"
-                >
-                  Continuar con estos servicios
-                </button>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Servicios disponibles:</label>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <select
-                    value={nuevoServicio.id}
-                    onChange={(e) =>
-                      setNuevoServicio({
-                        id: e.target.value,
-                        nombre: servicios.find((s) => s._id === e.target.value)?.nombreServicio || "",
-                      })
-                    }
-                    className="w-full p-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200"
+                  </div>
+                ) : (
+                  !vieneDePaginaServicios && (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                      <FaCut className="mx-auto mb-2 text-gray-400" size={24} />
+                      <p className="font-medium text-sm">No has seleccionado ningún servicio</p>
+                      <p className="text-xs mt-1">Selecciona al menos un servicio para continuar</p>
+                    </div>
+                  )
+                )}
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="button"
+                    onClick={avanzarPaso}
+                    disabled={serviciosSeleccionados.length === 0}
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px] transition-all duration-200 shadow-md flex items-center text-sm"
                   >
-                    <option value="">Selecciona un servicio</option>
-                    {servicios.map((servicio) => (
-                      <option key={servicio._id} value={servicio._id}>
-                        {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                    Siguiente
+                    <FaChevronRight className="ml-2" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 2: Selección de empleado */}
+            {paso === 2 && (
+              <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-3 animate-fadeIn">
+                <h2 className="text-base font-semibold mb-3 text-gray-800 flex items-center">
+                  <FaUser className="mr-2 text-pink-500" />
+                  Selecciona un empleado
+                </h2>
+
+                <div className="mb-4">
+                  <p className="text-xs text-gray-600 mb-3 bg-blue-50 p-2.5 rounded-lg border border-blue-100 flex items-start">
+                    <FaInfoCircle className="text-blue-500 mr-2 mt-0.5 shrink-0" />
+                    Estos son los empleados disponibles que pueden realizar los servicios seleccionados:
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                    {empleadosFiltrados.length > 0 ? (
+                      empleadosFiltrados.map((empleado) => (
+                        <div
+                          key={empleado._id}
+                          className={`border rounded-lg p-3 cursor-pointer transition-all duration-200 ${
+                            formData.nombreempleado === empleado._id
+                              ? "border-pink-500 bg-pink-50 shadow-md"
+                              : "hover:border-pink-300 hover:bg-pink-50 border-gray-200"
+                          }`}
+                          onClick={() => setFormData({ ...formData, nombreempleado: empleado._id })}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3 shrink-0 ${
+                                formData.nombreempleado === empleado._id ? "bg-pink-500" : "bg-gray-400"
+                              }`}
+                            >
+                              {empleado.nombreempleado.charAt(0)}
+                            </div>
+                            <div className="overflow-hidden">
+                              <h3 className="font-medium truncate text-gray-800 text-sm">{empleado.nombreempleado}</h3>
+                              <p className="text-xs text-gray-500 truncate">
+                                Especialidades: {(empleado.especialidades || []).join(", ")}
+                              </p>
+                            </div>
+                            {formData.nombreempleado === empleado._id && (
+                              <div className="ml-auto">
+                                <div className="bg-pink-500 text-white rounded-full p-1">
+                                  <FaCheck size={10} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-2 text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                        <FaUser className="mx-auto mb-2 text-gray-400" size={24} />
+                        <p className="font-medium text-sm">
+                          No hay empleados disponibles para los servicios seleccionados
+                        </p>
+                        <p className="text-xs mt-1">Intenta seleccionar otros servicios</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between mt-4">
+                  <button
+                    type="button"
+                    onClick={retrocederPaso}
+                    className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-sm transition-all duration-200 flex items-center text-sm"
+                  >
+                    <FaChevronLeft className="mr-2" />
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={avanzarPaso}
+                    disabled={!formData.nombreempleado}
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px] flex items-center text-sm"
+                  >
+                    Siguiente
+                    <FaChevronRight className="ml-2" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 3: Selección de fecha, hora y cliente */}
+            {paso === 3 && (
+              <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-3 animate-fadeIn">
+                <h2 className="text-base font-semibold mb-3 text-gray-800 flex items-center">
+                  <FaCalendarAlt className="mr-2 text-pink-500" />
+                  Selecciona cliente y hora
+                </h2>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Cliente:</label>
+                  <select
+                    name="nombrecliente"
+                    value={formData.nombrecliente}
+                    onChange={manejarCambio}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200 text-gray-700 bg-white text-sm"
+                    required
+                  >
+                    <option value="">Selecciona un cliente</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente._id} value={cliente._id}>
+                        {cliente.nombrecliente} {cliente.apellidocliente || ""}
                       </option>
                     ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={agregarServicio}
-                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded whitespace-nowrap transition-all duration-200 transform hover:translate-y-[-2px]"
-                  >
-                    Agregar
-                  </button>
                 </div>
-              </div>
-            )}
 
-            {serviciosSeleccionados.length > 0 && !vieneDePaginaServicios ? (
-              <div className="mt-6">
-                <h3 className="font-medium mb-2 text-pink-700">Servicios seleccionados:</h3>
-                <div className="bg-pink-50 p-4 rounded-lg">
-                  {serviciosSeleccionados.map((servicio, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center py-2 border-b border-pink-100 last:border-0"
-                    >
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-3 rounded-lg mb-4 border border-pink-200">
+                  <h3 className="font-medium mb-2 text-gray-700 flex items-center text-sm">
+                    <FaInfoCircle className="text-pink-500 mr-1.5" />
+                    Información de la cita
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white p-2.5 rounded-lg shadow-sm">
+                    <div className="flex items-start">
+                      <FaCalendarAlt className="text-pink-500 mt-0.5 mr-1.5 shrink-0" size={14} />
                       <div>
-                        <span className="font-medium">{servicio.nombreServicio}</span>
-                        <span className="text-sm text-gray-500 ml-2">({servicio.tiempo} min)</span>
+                        <p className="text-xs text-gray-500 font-medium">Fecha seleccionada:</p>
+                        <p className="text-gray-800 text-sm">
+                          {new Date(formData.fechacita).toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
                       </div>
-                      <div className="flex items-center">
-                        <span className="font-medium mr-4">${servicio.precio}</span>
-                        <button
-                          type="button"
-                          onClick={() => eliminarServicio(servicio._id)}
-                          className="text-red-500 hover:text-red-700"
+                    </div>
+                    <div className="flex items-start">
+                      <FaUser className="text-pink-500 mt-0.5 mr-1.5 shrink-0" size={14} />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Empleado:</p>
+                        <p className="text-gray-800 text-sm">
+                          {empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado ||
+                            "No seleccionado"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <FaRegClock className="text-pink-500 mt-0.5 mr-1.5 shrink-0" size={14} />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Duración total:</p>
+                        <p className="text-gray-800 text-sm">{totalTiempo} minutos</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <FaMoneyBillWave className="text-pink-500 mt-0.5 mr-1.5 shrink-0" size={14} />
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">Precio total:</p>
+                        <p className="text-gray-800 font-bold text-sm">${precioTotal.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Horarios disponibles */}
+                <div className="mt-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5 md:mb-0 flex items-center">
+                      <FaClock className="mr-1.5 text-pink-500" size={14} />
+                      Selecciona un horario disponible:
+                    </label>
+                    <div className="text-xs text-gray-500 bg-blue-50 p-1.5 rounded border border-blue-100">
+                      <p className="flex items-center">
+                        <FaInfoCircle className="text-blue-500 mr-1" size={12} />
+                        <strong>Horario:</strong> {(() => {
+                          const empleado = empleados.find((e) => e._id === formData.nombreempleado)
+                          if (!empleado) return "No seleccionado"
+
+                          const diaSemana = new Date(formData.fechacita).getDay()
+                          const horario = empleado.schedule?.find((s) => s.dayOfWeek === diaSemana)
+
+                          if (horario) {
+                            return `${horario.startTime} - ${horario.endTime}`
+                          } else {
+                            return "9:00 - 18:00"
+                          }
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {horariosDisponibles.length > 0 ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1 max-h-32 overflow-y-auto custom-scrollbar p-2 bg-gray-50 rounded-lg border border-gray-200">
+                      {horariosDisponibles.map((hora) => (
+                        <div
+                          key={hora}
+                          className={`p-1.5 border rounded-lg text-center cursor-pointer transition-all duration-200 text-xs ${
+                            horaSeleccionada === hora
+                              ? "bg-pink-500 text-white border-pink-500 shadow-md transform scale-105"
+                              : "hover:bg-pink-50 hover:border-pink-300 bg-white border-gray-200"
+                          }`}
+                          onClick={() => {
+                            setHoraSeleccionada(hora)
+                            setFormData({ ...formData, horacita: hora })
+                          }}
                         >
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="flex justify-between items-center pt-4 font-bold">
-                    <div>
-                      <span>Total</span>
-                      <span className="text-sm text-gray-500 ml-2">({totalTiempo} min)</span>
-                    </div>
-                    <span className="text-pink-600">${precioTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              !vieneDePaginaServicios && (
-                <div className="text-center py-8 text-gray-500">No has seleccionado ningún servicio</div>
-              )
-            )}
-
-            <div className="flex justify-end mt-6">
-              <button
-                type="button"
-                onClick={avanzarPaso}
-                disabled={serviciosSeleccionados.length === 0}
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px] transition-all duration-200"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 2: Selección de empleado */}
-        {paso === 2 && (
-          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona un empleado</h2>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Estos son los empleados disponibles que pueden realizar los servicios seleccionados:
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {empleadosFiltrados.length > 0 ? (
-                  empleadosFiltrados.map((empleado) => (
-                    <div
-                      key={empleado._id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                        formData.nombreempleado === empleado._id
-                          ? "border-pink-500 bg-pink-50 shadow-md"
-                          : "hover:border-pink-300 hover:bg-pink-50"
-                      }`}
-                      onClick={() => setFormData({ ...formData, nombreempleado: empleado._id })}
-                    >
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center text-pink-700 font-bold mr-4">
-                          {empleado.nombreempleado.charAt(0)}
+                          {hora}
                         </div>
-                        <div>
-                          <h3 className="font-medium">{empleado.nombreempleado}</h3>
-                          <p className="text-sm text-gray-500">
-                            Especialidades: {(empleado.especialidades || []).join(", ")}
-                          </p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-2 text-center py-8 text-gray-500">
-                    No hay empleados disponibles para los servicios seleccionados
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between mt-6">
-              <button
-                type="button"
-                onClick={retrocederPaso}
-                className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200"
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                onClick={avanzarPaso}
-                disabled={!formData.nombreempleado}
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px]"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 3: Selección de fecha, hora y cliente */}
-        {paso === 3 && (
-          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-pink-500">Selecciona cliente y hora</h2>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cliente:</label>
-              <select
-                name="nombrecliente"
-                value={formData.nombrecliente}
-                onChange={manejarCambio}
-                className="w-full p-2 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none transition-all duration-200"
-                required
-              >
-                <option value="">Selecciona un cliente</option>
-                {clientes.map((cliente) => (
-                  <option key={cliente._id} value={cliente._id}>
-                    {cliente.nombrecliente} {cliente.apellidocliente || ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="bg-pink-50 p-4 rounded-lg mb-6">
-              <h3 className="font-medium mb-3 text-pink-700">Información de la cita</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Fecha seleccionada:</span>{" "}
-                    <span className="text-pink-600">
-                      {new Date(formData.fechacita).toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Empleado:</span>{" "}
-                    <span className="text-pink-600">
-                      {empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado || "No seleccionado"}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Duración total:</span>{" "}
-                    <span className="text-pink-600">{totalTiempo} minutos</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Precio total:</span>{" "}
-                    <span className="text-pink-600 font-bold">${precioTotal.toFixed(2)}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Horarios disponibles */}
-            <div className="mt-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2 md:mb-0">
-                  Selecciona un horario disponible:
-                </label>
-                <div className="text-xs text-gray-500 bg-pink-50 p-2 rounded">
-                  <p>
-                    <strong>Horario del empleado:</strong> {(() => {
-                      const empleado = empleados.find((e) => e._id === formData.nombreempleado)
-                      if (!empleado) return "No seleccionado"
-
-                      const diaSemana = new Date(formData.fechacita).getDay()
-                      const horario = empleado.schedule?.find((s) => s.dayOfWeek === diaSemana)
-
-                      if (horario) {
-                        return `${horario.startTime} - ${horario.endTime}`
-                      } else {
-                        return "9:00 - 18:00 (horario predeterminado)"
-                      }
-                    })()}
-                  </p>
-                </div>
-              </div>
-
-              {horariosDisponibles.length > 0 ? (
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                  {horariosDisponibles.map((hora) => (
-                    <div
-                      key={hora}
-                      className={`p-2 border rounded-lg text-center cursor-pointer transition-all duration-200 ${
-                        horaSeleccionada === hora
-                          ? "bg-pink-500 text-white border-pink-500 shadow-md"
-                          : "hover:bg-pink-50 hover:border-pink-300"
-                      }`}
-                      onClick={() => {
-                        setHoraSeleccionada(hora)
-                        setFormData({ ...formData, horacita: hora })
-                      }}
-                    >
-                      {hora}
+                  ) : (
+                    <div className="text-center py-4 bg-yellow-50 text-yellow-700 rounded-lg border border-yellow-200">
+                      <svg
+                        className="w-8 h-8 text-yellow-400 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                      <p className="font-medium text-sm">
+                        No hay horarios disponibles para la fecha y empleado seleccionados.
+                      </p>
+                      <p className="text-xs mt-1">
+                        Prueba con otra fecha o selecciona otro empleado en el paso anterior.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 bg-yellow-50 text-yellow-700 rounded">
-                  <p className="font-medium">No hay horarios disponibles para la fecha y empleado seleccionados.</p>
-                  <p className="text-sm mt-2">Prueba con otra fecha o selecciona otro empleado en el paso anterior.</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-between mt-6">
-              <button
-                type="button"
-                onClick={retrocederPaso}
-                className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200"
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                onClick={avanzarPaso}
-                disabled={!formData.nombrecliente || !horaSeleccionada}
-                className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px]"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Paso 4: Confirmación */}
-        {paso === 4 && (
-          <div className="bg-white p-6 rounded-lg shadow-md border border-pink-100 mx-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-pink-500">Confirma tu cita</h2>
-
-            <div className="bg-pink-50 p-6 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium text-pink-700">Cliente</h3>
-                  <p>{clientes.find((c) => c._id === formData.nombrecliente)?.nombrecliente || "No seleccionado"}</p>
+                  )}
                 </div>
 
-                <div>
-                  <h3 className="font-medium text-pink-700">Empleado</h3>
-                  <p>{empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado || "No seleccionado"}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-pink-700">Fecha y Hora</h3>
-                  <p>
-                    {new Date(formData.fechacita).toLocaleDateString()} a las {horaSeleccionada}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-pink-700">Duración Total</h3>
-                  <p>{totalTiempo} minutos</p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-pink-700">Estado</h3>
-                  <p>{formData.estadocita}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-pink-700">Precio Total</h3>
-                  <p className="font-bold text-pink-600">${precioTotal.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h3 className="font-medium text-pink-700 mb-2">Servicios</h3>
-                <ul className="list-disc pl-5">
-                  {serviciosSeleccionados.map((servicio, index) => (
-                    <li key={index}>
-                      {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex justify-between mt-6">
-              <div>
-                <button
-                  type="button"
-                  onClick={retrocederPaso}
-                  className="bg-white border border-pink-300 hover:bg-pink-50 text-gray-800 px-6 py-2 rounded-lg shadow-sm transition-all duration-200 mr-2"
-                >
-                  Anterior
-                </button>
-
-                {cita && (
+                <div className="flex justify-between mt-4">
                   <button
                     type="button"
-                    onClick={manejarEliminar}
-                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded"
+                    onClick={retrocederPaso}
+                    className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-sm transition-all duration-200 flex items-center text-sm"
                   >
-                    Eliminar
+                    <FaChevronLeft className="mr-2" />
+                    Anterior
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={avanzarPaso}
+                    disabled={!formData.nombrecliente || !horaSeleccionada}
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:translate-y-[-2px] flex items-center text-sm"
+                  >
+                    Siguiente
+                    <FaChevronRight className="ml-2" />
+                  </button>
+                </div>
               </div>
+            )}
 
-              <button
-                type="submit"
-                className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg shadow-md transition-all duration-200 font-medium transform hover:translate-y-[-2px]"
-              >
-                {cita ? "Actualizar Cita" : "Crear Cita"}
-              </button>
-            </div>
-          </div>
-        )}
-      </form>
+            {/* Paso 4: Confirmación */}
+            {paso === 4 && (
+              <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200 mb-3 animate-fadeIn">
+                <h2 className="text-base font-semibold mb-3 text-gray-800 flex items-center">
+                  <FaCheck className="mr-2 text-pink-500" />
+                  Confirma tu cita
+                </h2>
+
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-lg max-h-[45vh] overflow-y-auto custom-scrollbar border border-pink-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaUser className="mr-1.5" size={12} />
+                        Cliente
+                      </h3>
+                      <p className="text-gray-800 text-sm">
+                        {clientes.find((c) => c._id === formData.nombrecliente)?.nombrecliente || "No seleccionado"}
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaUserClock className="mr-1.5" size={12} />
+                        Empleado
+                      </h3>
+                      <p className="text-gray-800 text-sm">
+                        {empleados.find((e) => e._id === formData.nombreempleado)?.nombreempleado || "No seleccionado"}
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaCalendarAlt className="mr-1.5" size={12} />
+                        Fecha y Hora
+                      </h3>
+                      <p className="text-gray-800 text-sm">
+                        {new Date(formData.fechacita).toLocaleDateString()} a las {horaSeleccionada}
+                      </p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaRegClock className="mr-1.5" size={12} />
+                        Duración Total
+                      </h3>
+                      <p className="text-gray-800 text-sm">{totalTiempo} minutos</p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaCalendarCheck className="mr-1.5" size={12} />
+                        Estado
+                      </h3>
+                      <p className="text-gray-800 text-sm">{formData.estadocita}</p>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                      <h3 className="font-medium text-pink-700 mb-1 flex items-center text-sm">
+                        <FaMoneyBillWave className="mr-1.5" size={12} />
+                        Precio Total
+                      </h3>
+                      <p className="font-bold text-pink-600 text-base">${precioTotal.toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-white p-3 rounded-lg shadow-sm border border-pink-100">
+                    <h3 className="font-medium text-pink-700 mb-2 flex items-center text-sm">
+                      <FaClipboardList className="mr-1.5" size={12} />
+                      Servicios
+                    </h3>
+                    <ul className="space-y-1.5">
+                      {serviciosSeleccionados.map((servicio, index) => (
+                        <li
+                          key={index}
+                          className="flex justify-between items-center py-1.5 px-2.5 bg-pink-50 rounded-lg text-sm"
+                        >
+                          <div className="flex items-center">
+                            <span className="h-1.5 w-1.5 bg-pink-500 rounded-full mr-1.5"></span>
+                            <span className="font-medium">{servicio.nombreServicio}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="text-gray-600 mr-2 text-xs">({servicio.tiempo} min)</span>
+                            <span className="font-medium text-pink-600">${servicio.precio}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex justify-between mt-4">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={retrocederPaso}
+                      className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-sm transition-all duration-200 mr-2 flex items-center text-sm"
+                    >
+                      <FaChevronLeft className="mr-2" />
+                      Anterior
+                    </button>
+
+                    {cita && (
+                      <button
+                        type="button"
+                        onClick={manejarEliminar}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 flex items-center text-sm"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white mr-2"></div>
+                            Eliminando...
+                          </div>
+                        ) : (
+                          <>
+                            <FaTimes className="mr-1.5" />
+                            Eliminar
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg shadow-md transition-all duration-200 font-medium transform hover:translate-y-[-2px] flex items-center text-sm"
+                    disabled={isSubmitting || usandoDatosRespaldo}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white mr-2"></div>
+                        {cita ? "Actualizando..." : "Creando..."}
+                      </div>
+                    ) : (
+                      <>
+                        <FaCheck className="mr-1.5" />
+                        {cita ? "Actualizar Cita" : "Crear Cita"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+        </div>
+      </div>
 
       <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #ffb6c1;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #ff69b4;
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .step {
           display: flex;
           flex-direction: column;
           align-items: center;
-          width: 80px;
+          width: 60px;
           z-index: 10;
         }
         
         .step-circle {
-          width: 40px;
-          height: 40px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background-color: #f9f0ff;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 8px;
+          margin-bottom: 4px;
           transition: all 0.3s;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           color: #6b7280;
         }
         
         .step.active .step-circle {
           background-color: #ff69b4;
           color: white;
-          box-shadow: 0 4px 6px rgba(255, 105, 180, 0.3);
+          box-shadow: 0 3px 5px rgba(255, 105, 180, 0.3);
           transform: scale(1.1);
         }
         
         .step-icon {
-          font-size: 18px;
+          font-size: 12px;
         }
         
         .step-text {
-          font-size: 14px;
+          font-size: 10px;
           color: #6b7280;
           text-align: center;
         }
@@ -1041,11 +1487,29 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
           flex-grow: 1;
           height: 2px;
           background-color: #f9f0ff;
-          margin-top: -28px;
+          margin-top: -18px;
           z-index: 0;
+        }
+
+        @media (max-width: 640px) {
+          .step {
+            width: 50px;
+          }
+          
+          .step-circle {
+            width: 22px;
+            height: 22px;
+          }
+          
+          .step-icon {
+            font-size: 10px;
+          }
+          
+          .step-text {
+            font-size: 9px;
+          }
         }
       `}</style>
     </div>
   )
 }
-

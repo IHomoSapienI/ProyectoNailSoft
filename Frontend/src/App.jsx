@@ -40,6 +40,7 @@ import ForgotPassword from "./components/Login_Register/ForgotPassword/ForgotPas
 import VerifyToken from "./components/Login_Register/VerifyToken/VerifyToken"
 import ResetPassword from "./components/Login_Register/ResetPassword/ResetPassword"
 import TablaTipoServicios from "./components/Servicios/TablaTipoServicios"
+import TablaTipoServicioss from "./components/TipoServicios/TablaTipoServicioss"
 
 import TablaPermisos from "./components/Permisos/TablaPermisos"
 import axios from "axios"
@@ -303,6 +304,16 @@ function App() {
             <PrivateRoute allowedRoles={["admin"]}>
               <Layout>
                 <TablaTipoServicios />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/tiposervicioss"
+          element={
+            <PrivateRoute allowedRoles={["admin"]}>
+              <Layout>
+                <TablaTipoServicioss />
               </Layout>
             </PrivateRoute>
           }

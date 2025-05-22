@@ -1,89 +1,100 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import axios from "axios"
-import Modal from "react-modal"
-import FormularioCategoriaProducto from "./FormularioCategoriaProducto"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faSearch, faSync, faPowerOff } from "@fortawesome/free-solid-svg-icons"
-import Swal from "sweetalert2"
-import "./TablaCategorias.css" 
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Modal from "react-modal";
+import FormularioCategoriaProducto from "./FormularioCategoriaProducto";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faSearch,
+  faSync,
+  faToggleOn,
+  faToggleOff,
+} from "@fortawesome/free-solid-svg-icons";
+import Swal from "sweetalert2";
+import "./TablaCategorias.css";
 
 // Configura el contenedor del modal
-Modal.setAppElement("#root")
+Modal.setAppElement("#root");
 
 const TablaCategorias = () => {
-  const [categorias, setCategorias] = useState([])
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null)
-  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
-  const [busqueda, setBusqueda] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+  const [formModalIsOpen, setFormModalIsOpen] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Estado para paginación
-  const [paginaActual, setPaginaActual] = useState(1)
-  const categoriasPorPagina = 5 // Cantidad de categorías a mostrar por página
+  const [paginaActual, setPaginaActual] = useState(1);
+  const categoriasPorPagina = 5; // Cantidad de categorías a mostrar por página
 
   useEffect(() => {
-    obtenerCategorias()
-  }, [])
+    obtenerCategorias();
+  }, []);
 
   const obtenerCategorias = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token");
     if (!token) {
       await Swal.fire({
         title: "Error",
         text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
         icon: "error",
         confirmButtonColor: "#db2777",
-      })
-      setIsLoading(false)
-      return
+      });
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const respuesta = await axios.get("https://gitbf.onrender.com/api/categoriaproductos", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      setCategorias(respuesta.data.categorias || [])
+      const respuesta = await axios.get(
+        "https://gitbf.onrender.com/api/categoriaproductos",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setCategorias(respuesta.data.categorias || []);
     } catch (error) {
-      console.error("Error al obtener las categorías:", error)
-      setError("No se pudieron cargar las categorías. Por favor, intenta de nuevo.")
+      console.error("Error al obtener las categorías:", error);
+      setError(
+        "No se pudieron cargar las categorías. Por favor, intenta de nuevo."
+      );
       Swal.fire({
         title: "Error",
         text: "No tienes permiso para estar aquí. Tu token no es válido.",
         icon: "error",
         confirmButtonColor: "#db2777",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const manejarAgregarNuevo = () => {
-    setCategoriaSeleccionada(null)
-    setFormModalIsOpen(true)
-  }
+    setCategoriaSeleccionada(null);
+    setFormModalIsOpen(true);
+  };
 
   const manejarCerrarModal = () => {
-    setFormModalIsOpen(false)
-    setCategoriaSeleccionada(null)
-  }
+    setFormModalIsOpen(false);
+    setCategoriaSeleccionada(null);
+  };
 
   const manejarCategoriaAgregadaOActualizada = () => {
-    obtenerCategorias()
-    manejarCerrarModal()
-  }
+    obtenerCategorias();
+    manejarCerrarModal();
+  };
 
   const manejarEditar = (categoria) => {
-    setCategoriaSeleccionada(categoria)
-    setFormModalIsOpen(true)
-  }
+    setCategoriaSeleccionada(categoria);
+    setFormModalIsOpen(true);
+  };
 
   const manejarEliminarCategoria = async (id) => {
     const result = await Swal.fire({
@@ -95,48 +106,51 @@ const TablaCategorias = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminarlo!",
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (!token) {
         await Swal.fire({
           title: "Error",
           text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        })
-        return
+        });
+        return;
       }
 
       try {
-        await axios.delete(`https://gitbf.onrender.com/api/categoriaproductos/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        obtenerCategorias()
+        await axios.delete(
+          `https://gitbf.onrender.com/api/categoriaproductos/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        obtenerCategorias();
         Swal.fire({
           title: "Eliminado!",
           text: "La categoría ha sido eliminada.",
           icon: "success",
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error("Error al eliminar la categoría:", error)
+        console.error("Error al eliminar la categoría:", error);
         Swal.fire({
           title: "Error",
           text: "No se pudo eliminar la categoría.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual
-    const accion = nuevoEstado ? "activar" : "desactivar"
+    const nuevoEstado = !estadoActual;
+    const accion = nuevoEstado ? "activar" : "desactivar";
 
     const result = await Swal.fire({
       title: `¿Estás seguro?`,
@@ -147,100 +161,118 @@ const TablaCategorias = () => {
       cancelButtonColor: "#6c757d",
       confirmButtonText: `Sí, ${accion}!`,
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (!token) {
         await Swal.fire({
           title: "Error",
           text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        })
-        return
+        });
+        return;
       }
 
       try {
         const categoriaActualizada = {
           ...categorias.find((categoria) => categoria._id === id),
           activo: nuevoEstado,
-        }
+        };
 
-        await axios.put(`https://gitbf.onrender.com/api/categoriaproductos/${id}`, categoriaActualizada, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        await axios.put(
+          `https://gitbf.onrender.com/api/categoriaproductos/${id}`,
+          categoriaActualizada,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         // Actualizar el estado local
         setCategorias(
-          categorias.map((categoria) => (categoria._id === id ? { ...categoria, activo: nuevoEstado } : categoria)),
-        )
+          categorias.map((categoria) =>
+            categoria._id === id
+              ? { ...categoria, activo: nuevoEstado }
+              : categoria
+          )
+        );
 
         Swal.fire({
           icon: "success",
           title: `${nuevoEstado ? "Activada" : "Desactivada"}!`,
-          text: `La categoría ha sido ${nuevoEstado ? "activada" : "desactivada"}.`,
+          text: `La categoría ha sido ${
+            nuevoEstado ? "activada" : "desactivada"
+          }.`,
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error(`Error al ${accion} la categoría:`, error)
+        console.error(`Error al ${accion} la categoría:`, error);
         Swal.fire({
           icon: "error",
           title: "Error",
           text: `No se pudo ${accion} la categoría`,
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   // Funciones de búsqueda
   const handleBusquedaChange = (e) => {
-    setBusqueda(e.target.value)
-  }
+    setBusqueda(e.target.value);
+  };
 
   const categoriasFiltradas = categorias.filter(
     (categoria) =>
       categoria.nombreCp.toLowerCase().includes(busqueda.toLowerCase()) ||
-      categoria.descripcionCp.toLowerCase().includes(busqueda.toLowerCase()),
-  )
+      categoria.descripcionCp.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   // Funciones de paginación
-  const indiceUltimaCategoria = paginaActual * categoriasPorPagina
-  const indicePrimeraCategoria = indiceUltimaCategoria - categoriasPorPagina
-  const categoriasActuales = categoriasFiltradas.slice(indicePrimeraCategoria, indiceUltimaCategoria)
+  const indiceUltimaCategoria = paginaActual * categoriasPorPagina;
+  const indicePrimeraCategoria = indiceUltimaCategoria - categoriasPorPagina;
+  const categoriasActuales = categoriasFiltradas.slice(
+    indicePrimeraCategoria,
+    indiceUltimaCategoria
+  );
 
   const cambiarPagina = (numeroPagina) => {
-    setPaginaActual(numeroPagina)
-  }
+    setPaginaActual(numeroPagina);
+  };
 
-  const paginasTotales = Math.ceil(categoriasFiltradas.length / categoriasPorPagina)
+  const paginasTotales = Math.ceil(
+    categoriasFiltradas.length / categoriasPorPagina
+  );
 
   const paginaAnterior = () => {
-    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
-  }
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1);
+  };
 
   const paginaSiguiente = () => {
-    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
-  }
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh] ">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando categorías...</p>
+          <p className="mt-4 text-foreground">Cargando categorías...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -252,16 +284,23 @@ const TablaCategorias = () => {
           Reintentar
         </button>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Categorías</h2>
+    // Eliminado transition-all duration-500 para evitar transiciones globales
+    <div className="tabla-container dark:bg-primary">
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
+        Gestión de Categorías
+      </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
-          <button className="btn-add" onClick={manejarAgregarNuevo} title="Agregar nueva categoría">
+          <button
+            className="btn-add"
+            onClick={manejarAgregarNuevo}
+            title="Agregar nueva categoría"
+          >
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
             Nueva Categoría
           </button>
@@ -283,41 +322,82 @@ const TablaCategorias = () => {
         <table className="categoria-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Nombre de la Categoría</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Descripción</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Estado</th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Acciones</th>
+              <th className="dark:bg-gray-500/50" style={{ width: "25%" }}>
+                Nombre de la Categoría
+              </th>
+              <th className="dark:bg-gray-500/50" style={{ width: "25%" }}>
+                Descripción
+              </th>
+              <th className="dark:bg-gray-500/50" style={{ width: "25%" }}>
+                Estado
+              </th>
+              <th className="dark:bg-gray-500/50" style={{ width: "25%" }}>
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="dark:bg-zinc-900/80">
             {categoriasActuales.length > 0 ? (
               categoriasActuales.map((categoria) => (
-                <tr key={categoria._id} className="dark:hover:bg-gray-500/50 text-foreground">
+                <tr key={categoria._id} className="text-foreground">
                   <td className="font-medium">{categoria.nombreCp}</td>
                   <td>{categoria.descripcionCp}</td>
                   <td>
-                    <span className={`estado-badge ${categoria.activo ? "activo" : "inactivo"}`}>
+                    <span
+                      className={`usuario-estado-badge ${
+                        categoria.activo 
+                        ? "activo bg-emerald-300/70 dark:bg-emerald-500"
+                          : "inactivo bg-red-500/80"
+                      }`}
+                    >
                       {categoria.activo ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
-                    <div className="flex space-x-2 center">
-                      <button className="btn-edit" onClick={() => manejarEditar(categoria)} title="Editar categoría">
+                    {/* Modificado para usar clases similares a TablaPermisos */}
+                    <div className="flex justify-center space-x-2">
+                      <button
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
+                        onClick={() => manejarEditar(categoria)}
+                        title="Editar categoría"
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-delete"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminarCategoria(categoria._id)}
                         title="Eliminar categoría"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
-                      <button
-                        className={`btn-toggle ${categoria.activo ? "active" : "inactive"}`}
+                      {/* <button
+                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${categoria.activo ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(categoria._id, categoria.activo)}
                         title={categoria.activo ? "Desactivar categoría" : "Activar categoría"}
                       >
                         <FontAwesomeIcon icon={faPowerOff} />
+                      </button> */}
+
+                      <button
+                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                                              ${
+                                                categoria.activo
+                                                  ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                                                  : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                                              }`}
+                        onClick={() =>
+                          manejarToggleEstado(categoria._id, categoria.activo)
+                        }
+                        title={
+                          categoria.activo
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={categoria.activo ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>
@@ -350,7 +430,9 @@ const TablaCategorias = () => {
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+                className={`pagination-number ${
+                  paginaActual === index + 1 ? "active" : ""
+                }`}
               >
                 {index + 1}
               </button>
@@ -360,7 +442,9 @@ const TablaCategorias = () => {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+            className={`pagination-btn ${
+              paginaActual === paginasTotales ? "disabled" : ""
+            }`}
           >
             &gt;
           </button>
@@ -387,13 +471,14 @@ const TablaCategorias = () => {
           <FormularioCategoriaProducto
             categoria={categoriaSeleccionada}
             onClose={manejarCerrarModal}
-            onCategoriaAgregadaOActualizada={manejarCategoriaAgregadaOActualizada}
+            onCategoriaAgregadaOActualizada={
+              manejarCategoriaAgregadaOActualizada
+            }
           />
         </div>
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default TablaCategorias
-
+export default TablaCategorias;

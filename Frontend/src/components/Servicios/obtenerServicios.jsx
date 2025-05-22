@@ -45,7 +45,7 @@ export const obtenerServiciosConDescuento = async () => {
     const serviciosActivos = servicios.filter((servicio) => servicio.estado === true)
 
     // Calcular precios con descuento
-    const serviciosConDescuento = serviciosActivos.map((servicio) => {
+    const serviciosConDescuento = servicios.map((servicio) => {
       // Manejar el caso en que tipoServicio sea null o undefined
       if (!servicio.tipoServicio) {
         // Si no hay tipo de servicio, no hay descuento

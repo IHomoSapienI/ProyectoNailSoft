@@ -91,7 +91,9 @@ const ArticlesGrid = () => {
                 </div>
               </motion.div>
             ))
-          : servicios.map((servicio) => (
+          : servicios
+    .filter((servicio) => servicio.estado === true)
+    .map((servicio) => (
               <motion.article
                 key={servicio._id}
                 className="service-card"

@@ -3,6 +3,8 @@ const mongoose = require("mongoose")
 const Rol = require("../modules/rol") // Importar el modelo de Rol
 const Permiso = require("../modules/permiso") // Importar el modelo de Permiso
 const ExcelJS = require("exceljs") // Importar ExcelJS para generar archivos Excel
+const { rolSchema, rolUpdateSchema } = require("../validators/rol.validator") // Importar los esquemas de validación
+
 
 // Método GET para obtener los roles
 const rolesGet = async (req, res = response) => {
@@ -26,101 +28,217 @@ const rolesGet = async (req, res = response) => {
 
 // Método POST para crear un nuevo rol
 const rolesPost = async (req, res = response) => {
-  const { nombreRol, permisoRol, estadoRol } = req.body // Extraer datos del cuerpo de la solicitud
-  console.log("Datos recibidos en backend:", { nombreRol, permisoRol, estadoRol })
 
-  // Asegúrate de que permisoRol sea un arreglo
-  let permisosArray
-  if (typeof permisoRol === "string") {
-    permisosArray = [permisoRol]
-  } else if (Array.isArray(permisoRol)) {
-    permisosArray = permisoRol
-  } else {
+  const {error, value} = rolSchema.validate(req.body, {abortEarly: false}) // Validar los datos de entrada
+  
+  if (error) {
     return res.status(400).json({
-      msg: "El campo permisoRol debe ser un ID de permiso o un arreglo de IDs de permisos.",
-    })
+      msg: error.details.map((err) => err.message),
+    });
   }
-
-  // Verificar que los IDs de permisos sean válidos
-  if (!permisosArray.every((id) => mongoose.Types.ObjectId.isValid(id))) {
-    return res.status(400).json({
-      msg: "Lista de permisos inválida o IDs de permisos no válidos.",
-    })
-  }
-
-  // Verificar que todos los permisos existan
+  const { nombreRol, permisoRol, estadoRol } = value;
+  
+  const permisoArray = Array.isArray(permisoRol) ? permisoRol : [permisoRol]; // Asegúrate de que permisoRol sea un arreglo
+  
   try {
-    const permisosExistentes = await Permiso.find({ _id: { $in: permisosArray } })
-    if (permisosExistentes.length !== permisosArray.length) {
+    const permisosExistentes = await Permiso.find({_id: { $in:permisoArray }});
+    if (permisosExistentes.length !== permisoArray.length) {
       return res.status(400).json({
         msg: "Uno o más permisos no existen.",
-      })
+      });
     }
+    
+    const isAdmin = nombreRol.toLowerCase() === "admin" // Compara con "admin" en minúsculas
+
+    const rol = new Rol({
+      nombreRol,
+      permisoRol: permisoArray,
+      estadoRol,
+      esAdmin: isAdmin,
+    });
+    await rol.save();
+    res.status(201).json({
+      msg: "Rol creado exitosamente",
+      rol,
+    });
   } catch (error) {
-    return res.status(500).json({
-      msg: "Error al verificar permisos.",
-    })
-  }
-
-  // Determinar si es un rol admin
-  const isAdmin = nombreRol.toLowerCase() === "admin" // Compara con "admin" en minúsculas
-
-  // Crear una nueva instancia del modelo Rol
-  const rol = new Rol({ nombreRol, permisoRol: permisosArray, estadoRol, esAdmin: isAdmin })
-
-  try {
-    // Guardar el nuevo rol en la base de datos
-    await rol.save()
-    res.status(201).json({ msg: "Rol asignado correctamente", rol })
-  } catch (error) {
-    console.log(error)
-    if (error.name === "ValidationError") {
-      console.error(Object.values(error.errors).map((val) => val.message))
-      res.status(400).json({
-        msg: Object.values(error.errors)
-          .map((val) => val.message)
-          .join(", "),
-      })
-    } else {
-      res.status(500).json({ msg: "Error al crear el rol" })
+    console.error(error);
+    if (error.code === 11000){
+      return res.status(400).json({
+        msg: "Ya existe un rol con ese nombre",
+      });
     }
+    res.status(500).json({
+      msg: "Error al crear el rol",
+    });
+
   }
+    
+  // Extraer datos del cuerpo de la solicitud
+  // const { nombreRol, permisoRol, estadoRol } = req.body // Extraer datos del cuerpo de la solicitud
+  // console.log("Datos recibidos en backend:", { nombreRol, permisoRol, estadoRol })
+
+  // //Validación del nombreRol 
+  // const regexNombre = /^[a-zA-Z0-9\s]+$/ // Expresión regular para permitir solo letras, números y espacios
+  
+  // if (!nombreRol || nombreRol.trim()=== ""){
+  //   return res.status(400).json({ msg: "El campo nombreRol es obligatorio." });
+  // }
+  
+  // // Verificar que el nombreRol no contenga caracteres especiales
+  // if (nombreRol.length < 5 || nombreRol.length > 30) {
+  //   return res.status(400).json({ msg: "El campo nombreRol debe tener entre 5 y 30 caracteres." });
+  // }
+
+  // if (!regexNombre.test(nombreRol)) {
+  //   return res.status(400).json({ msg: "El campo Nombre Rol solo puede contener letras, números y espacios." });
+  // }
+
+  // // Asegúrate de que permisoRol sea un arreglo
+  // let permisosArray
+  // if (typeof permisoRol === "string") {
+  //   permisosArray = [permisoRol]
+  // } else if (Array.isArray(permisoRol)) {
+  //   permisosArray = permisoRol
+  // } else {
+  //   return res.status(400).json({
+  //     msg: "El campo permisoRol debe ser un ID de permiso o un arreglo de IDs de permisos.",
+  //   })
+  // }
+
+  // // Verificar que los IDs de permisos sean válidos
+  // if (!permisosArray.every((id) => mongoose.Types.ObjectId.isValid(id))) {
+  //   return res.status(400).json({
+  //     msg: "Lista de permisos inválida o IDs de permisos no válidos.",
+  //   })
+  // }
+
+  // // Verificar que todos los permisos existan
+  // try {
+  //   const permisosExistentes = await Permiso.find({ _id: { $in: permisosArray } })
+  //   if (permisosExistentes.length !== permisosArray.length) {
+  //     return res.status(400).json({
+  //       msg: "Uno o más permisos no existen.",
+  //     })
+  //   }
+  // } catch (error) {
+  //   return res.status(500).json({
+  //     msg: "Error al verificar permisos.",
+  //   })
+  // }
+
+  // // Determinar si es un rol admin
+  // const isAdmin = nombreRol.toLowerCase() === "admin" // Compara con "admin" en minúsculas
+
+  // // Crear una nueva instancia del modelo Rol
+  // const rol = new Rol({ nombreRol, permisoRol: permisosArray, estadoRol, esAdmin: isAdmin })
+
+  // try {
+  //   // Guardar el nuevo rol en la base de datos
+  //   await rol.save()
+  //   res.status(201).json({ msg: "Rol asignado correctamente", rol })
+  // } catch (error) {
+  //   console.log(error)
+  //   if (error.name === "ValidationError") {
+  //     console.error(Object.values(error.errors).map((val) => val.message))
+  //     res.status(400).json({
+  //       msg: Object.values(error.errors)
+  //         .map((val) => val.message)
+  //         .join(", "),
+  //     })
+  //   } else {
+  //     res.status(500).json({ msg: "Error al crear el rol, No pueden haber 2 Roles con el mismo nombre" })
+  //   }
+  // }
 }
 
 // Método PUT para actualizar un rol por su id
 const rolesPut = async (req, res = response) => {
-  const { id } = req.params
-  const { nombreRol, permisoRol, estadoRol } = req.body // No necesitas esAdmin aquí, ya que se establece automáticamente
 
-  try {
-    // Verifica que el rol existe antes de actualizar
-    const rolExistente = await Rol.findById(id)
-    if (!rolExistente) {
+  const {id} = req.params
+  const schemaPut = rolSchema.fork(
+    ["nombreRol", "permisoRol", "estadoRol"],
+    (field) => field.optional()
+  )
+
+  const {error, value} = schemaPut.validate(req.body, {abortEarly: false}) // Validar los datos de entrada
+  if (error) {
+    return res.status(400).json({
+      msg: error.details.map((e)=> e.message).join(", "),
+    });
+  }
+
+  try{
+    const rolExistente = await Rol.findBy(id);
+    if(!rolExistente){
       return res.status(404).json({
         msg: "Rol no encontrado",
-      })
+      });
     }
 
-    // Actualiza los campos del rol
-    rolExistente.nombreRol = nombreRol || rolExistente.nombreRol
-    rolExistente.permisoRol = permisoRol || rolExistente.permisoRol
-    rolExistente.estadoRol = estadoRol !== undefined ? estadoRol : rolExistente.estadoRol
+    const { nombreRol, permisoRol, estadoRol } = value; // Extraer los valores validados
 
-    // Determinar si es un rol admin al actualizar
-    rolExistente.esAdmin = rolExistente.nombreRol.toLowerCase() === "admin"
+    if (nombreRol) {
+      rolExistente.nombreRol = nombreRol;
+      rolExistente.esAdmin = nombreRol.toLowerCase() === "admin"; // Actualizar esAdmin
+    }
 
-    await rolExistente.save()
+    if(permisoRol){
+      const permisosArray = Array.isArray(permisoRol) ? permisoRol : [permisoRol]; // Asegúrate de que permisoRol sea un arreglo
+      const permisosExistentes = await Permiso.find({ _id: { $in: permisosArray } });
+      if (permisosExistentes.length !== permisosArray.length) {
+        return res.status(400).json({
+          msg: "Uno o más permisos no existen.",
+        });
+      }
+      rolExistente.permisoRol = permisosArray;
+    }
+    
+    if (estadoRol !== undefined) {
+      rolExistente.estadoRol = estadoRol;
+    }
+    await rolExistente.save();
 
-    res.json({
-      msg: "Rol actualizado exitosamente",
-      rol: rolExistente,
-    })
+    res.json({ msg: "Rol actualizado exitosamente", rol: rolExistente });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
       msg: "Error al actualizar el rol",
-    })
+    });
   }
+
+  //   const { id } = req.params
+//   const { nombreRol, permisoRol, estadoRol } = req.body // No necesitas esAdmin aquí, ya que se establece automáticamente
+
+//   try {
+//     // Verifica que el rol existe antes de actualizar
+//     const rolExistente = await Rol.findById(id)
+//     if (!rolExistente) {
+//       return res.status(404).json({
+//         msg: "Rol no encontrado",
+//       })
+//     }
+
+//     // Actualiza los campos del rol
+//     rolExistente.nombreRol = nombreRol || rolExistente.nombreRol
+//     rolExistente.permisoRol = permisoRol || rolExistente.permisoRol
+//     rolExistente.estadoRol = estadoRol !== undefined ? estadoRol : rolExistente.estadoRol
+
+//     // Determinar si es un rol admin al actualizar
+//     rolExistente.esAdmin = rolExistente.nombreRol.toLowerCase() === "admin"
+
+//     await rolExistente.save()
+
+//     res.json({
+//       msg: "Rol actualizado exitosamente",
+//       rol: rolExistente,
+//     })
+//   } catch (error) {
+//     console.error(error)
+//     res.status(500).json({
+//       msg: "Error al actualizar el rol",
+//     })
+//   }
 }
 
 // Método para cambiar el estado de un rol (activar/desactivar)

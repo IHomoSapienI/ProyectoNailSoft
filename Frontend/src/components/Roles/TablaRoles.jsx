@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Modal from "react-modal"
-import FormularioRol from "./FormularioRol"
-import FormularioPermiso from "../Permisos/FormularioPermiso"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useState, useEffect } from "react";
+import Modal from "react-modal";
+import FormularioRol from "./FormularioRol";
+import FormularioPermiso from "../Permisos/FormularioPermiso";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
   faEdit,
@@ -13,115 +13,125 @@ import {
   faShieldAlt,
   faPowerOff,
   faFileExcel,
+  faToggleOn,
+  faToggleOff,
   faSync,
   faSearch,
-} from "@fortawesome/free-solid-svg-icons"
-import Swal from "sweetalert2"
-import "./tablaRol.css"
+} from "@fortawesome/free-solid-svg-icons";
+import Swal from "sweetalert2";
+import "./tablaRol.css";
 
-Modal.setAppElement("#root")
+Modal.setAppElement("#root");
 
 export default function TablaRoles() {
-  const [roles, setRoles] = useState([])
-  const [permisoMap, setPermisoMap] = useState({})
-  const [modalRolIsOpen, setModalRolIsOpen] = useState(false)
-  const [modalDetallesIsOpen, setModalDetallesIsOpen] = useState(false)
-  const [modalPermisoIsOpen, setModalPermisoIsOpen] = useState(false)
-  const [rolSeleccionado, setRolSeleccionado] = useState(null)
-  const [paginaActual, setPaginaActual] = useState(1)
-  const rolesPorPagina = 5
-  const [busqueda, setBusqueda] = useState("")
-  const [exportando, setExportando] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [roles, setRoles] = useState([]);
+  const [permisoMap, setPermisoMap] = useState({});
+  const [modalRolIsOpen, setModalRolIsOpen] = useState(false);
+  const [modalDetallesIsOpen, setModalDetallesIsOpen] = useState(false);
+  const [modalPermisoIsOpen, setModalPermisoIsOpen] = useState(false);
+  const [rolSeleccionado, setRolSeleccionado] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const rolesPorPagina = 5;
+  const [busqueda, setBusqueda] = useState("");
+  const [exportando, setExportando] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const obtenerRoles = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      const token = localStorage.getItem("token")
-      const rolesResponse = await fetch("https://gitbf.onrender.com/api/roles", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (!rolesResponse.ok) throw new Error(`HTTP error! status: ${rolesResponse.status}`)
-      const rolesData = await rolesResponse.json()
-      setRoles(rolesData.roles || [])
+      const token = localStorage.getItem("token");
+      const rolesResponse = await fetch(
+        "https://gitbf.onrender.com/api/roles",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!rolesResponse.ok)
+        throw new Error(`HTTP error! status: ${rolesResponse.status}`);
+      const rolesData = await rolesResponse.json();
+      setRoles(rolesData.roles || []);
 
-      const permisosResponse = await fetch("https://gitbf.onrender.com/api/permisos", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (!permisosResponse.ok) throw new Error(`HTTP error! status: ${permisosResponse.status}`)
-      const permisosData = await permisosResponse.json()
-      const permisoMap = {}
+      const permisosResponse = await fetch(
+        "https://gitbf.onrender.com/api/permisos",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!permisosResponse.ok)
+        throw new Error(`HTTP error! status: ${permisosResponse.status}`);
+      const permisosData = await permisosResponse.json();
+      const permisoMap = {};
       permisosData.permisos.forEach((permiso) => {
-        permisoMap[permiso._id] = permiso.nombrePermiso
-      })
-      setPermisoMap(permisoMap)
+        permisoMap[permiso._id] = permiso.nombrePermiso;
+      });
+      setPermisoMap(permisoMap);
     } catch (error) {
-      console.error("Error al obtener los datos:", error)
-      setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.")
+      console.error("Error al obtener los datos:", error);
+      setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
       Swal.fire({
         title: "Error",
         text: "No tienes permiso para estar aquí. Tu token no es válido.",
         icon: "error",
         confirmButtonColor: "#db2777",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    obtenerRoles()
-  }, [])
+    obtenerRoles();
+  }, []);
 
   const manejarAgregarNuevo = () => {
-    setRolSeleccionado(null)
-    setModalRolIsOpen(true)
-  }
+    setRolSeleccionado(null);
+    setModalRolIsOpen(true);
+  };
 
   const manejarAgregarPermiso = () => {
-    setModalPermisoIsOpen(true)
-  }
+    setModalPermisoIsOpen(true);
+  };
   const manejarCerrarModal = () => {
-    setModalRolIsOpen(false)
-  }
+    setModalRolIsOpen(false);
+  };
 
   const manejarCerrarModalDetalles = () => {
-    setModalDetallesIsOpen(false)
-  }
+    setModalDetallesIsOpen(false);
+  };
 
   const manejarCerrarModalPermiso = () => {
-    setModalPermisoIsOpen(false)
-  }
+    setModalPermisoIsOpen(false);
+  };
 
   const manejarRolAgregadoOActualizado = () => {
-    manejarCerrarModal()
-    obtenerRoles()
-  }
+    manejarCerrarModal();
+    obtenerRoles();
+  };
 
   const manejarPermisoCreado = () => {
-    manejarCerrarModalPermiso()
-    obtenerRoles()
-  }
+    manejarCerrarModalPermiso();
+    obtenerRoles();
+  };
 
   const manejarEditar = (rol) => {
-    setRolSeleccionado(rol)
-    setModalRolIsOpen(true)
-  }
+    setRolSeleccionado(rol);
+    setModalRolIsOpen(true);
+  };
 
   const manejarVerDetalles = (rol) => {
-    setRolSeleccionado(rol)
-    setModalDetallesIsOpen(true)
-  }
+    setRolSeleccionado(rol);
+    setModalDetallesIsOpen(true);
+  };
 
   const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual
-    const accion = nuevoEstado ? "activar" : "desactivar"
+    const nuevoEstado = !estadoActual;
+    const accion = nuevoEstado ? "activar" : "desactivar";
 
     const result = await Swal.fire({
       title: `¿Estás seguro?`,
@@ -132,59 +142,69 @@ export default function TablaRoles() {
       cancelButtonColor: "#6c757d",
       confirmButtonText: `Sí, ${accion}!`,
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token")
-        const response = await fetch(`https://gitbf.onrender.com/api/roles/${id}/toggle-estado`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `https://gitbf.onrender.com/api/roles/${id}/toggle-estado`,
+          {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json()
+        const data = await response.json();
 
         // Actualizar el estado local
-        setRoles(roles.map((rol) => (rol._id === id ? { ...rol, estadoRol: nuevoEstado } : rol)))
+        setRoles(
+          roles.map((rol) =>
+            rol._id === id ? { ...rol, estadoRol: nuevoEstado } : rol
+          )
+        );
 
         Swal.fire({
           icon: "success",
           title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
           text: `El rol ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error(`Error al ${accion} el rol:`, error)
+        console.error(`Error al ${accion} el rol:`, error);
         Swal.fire({
           icon: "error",
           title: "Error",
           text: `No se pudo ${accion} el rol`,
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   const manejarEliminar = async (id) => {
     // Obtener el rol para verificar si es Admin
-    const rolAEliminar = roles.find((rol) => rol._id === id)
+    const rolAEliminar = roles.find((rol) => rol._id === id);
 
     // Si es un rol Admin, mostrar mensaje de error sin intentar eliminar
-    if (rolAEliminar && (rolAEliminar.nombreRol.toLowerCase() === "admin" || rolAEliminar.esAdmin)) {
+    if (
+      rolAEliminar &&
+      (rolAEliminar.nombreRol.toLowerCase() === "admin" || rolAEliminar.esAdmin)
+    ) {
       Swal.fire({
         icon: "error",
         title: "Acción no permitida",
         text: "No se puede eliminar el rol de Administrador",
         confirmButtonColor: "#db2777",
-      })
-      return
+      });
+      return;
     }
 
     const result = await Swal.fire({
@@ -196,52 +216,55 @@ export default function TablaRoles() {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminarlo!",
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token")
-        const response = await fetch(`https://gitbf.onrender.com/api/roles/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `https://gitbf.onrender.com/api/roles/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
-          const errorData = await response.json()
+          const errorData = await response.json();
 
           // Si el backend indica que es un rol Admin
           if (errorData.isAdminRole) {
-            throw new Error("No se puede eliminar el rol de Administrador")
+            throw new Error("No se puede eliminar el rol de Administrador");
           }
 
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        setRoles(roles.filter((rol) => rol._id !== id))
+        setRoles(roles.filter((rol) => rol._id !== id));
         Swal.fire({
           icon: "success",
           title: "Eliminado!",
           text: "El rol ha sido eliminado.",
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error("Error al eliminar el rol:", error)
+        console.error("Error al eliminar el rol:", error);
         Swal.fire({
           icon: "error",
           title: "Error",
           text: error.message || "No se pudo eliminar el rol",
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   const exportarExcel = async () => {
     try {
-      setExportando(true)
-      const token = localStorage.getItem("token")
+      setExportando(true);
+      const token = localStorage.getItem("token");
 
       // Mostrar notificación de inicio de descarga
       const toast = Swal.mixin({
@@ -250,78 +273,83 @@ export default function TablaRoles() {
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-      })
+      });
 
       toast.fire({
         icon: "info",
         title: "Preparando la descarga...",
-      })
+      });
 
       // Realizar la solicitud para descargar el archivo
-      const response = await fetch("https://gitbf.onrender.com/api/roles/export-excel", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const response = await fetch(
+        "https://gitbf.onrender.com/api/roles/export-excel",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       // Obtener el blob del archivo
-      const blob = await response.blob()
+      const blob = await response.blob();
 
       // Crear un objeto URL para el blob
-      const url = window.URL.createObjectURL(blob)
+      const url = window.URL.createObjectURL(blob);
 
       // Crear un elemento <a> para descargar el archivo
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "roles.xlsx"
-      document.body.appendChild(a)
-      a.click()
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "roles.xlsx";
+      document.body.appendChild(a);
+      a.click();
 
       // Limpiar
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
 
       // Mostrar notificación de éxito
       toast.fire({
         icon: "success",
         title: "Archivo descargado correctamente",
-      })
+      });
     } catch (error) {
-      console.error("Error al exportar a Excel:", error)
+      console.error("Error al exportar a Excel:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "No se pudo exportar la lista de roles a Excel",
         confirmButtonColor: "#db2777",
-      })
+      });
     } finally {
-      setExportando(false)
+      setExportando(false);
     }
-  }
+  };
 
-  const indiceUltimoRol = paginaActual * rolesPorPagina
-  const indicePrimerRol = indiceUltimoRol - rolesPorPagina
-  const rolesActuales = roles.slice(indicePrimerRol, indiceUltimoRol)
+  const indiceUltimoRol = paginaActual * rolesPorPagina;
+  const indicePrimerRol = indiceUltimoRol - rolesPorPagina;
+  const rolesActuales = roles.slice(indicePrimerRol, indiceUltimoRol);
 
   const cambiarPagina = (numeroPagina) => {
-    setPaginaActual(numeroPagina)
-  }
+    setPaginaActual(numeroPagina);
+  };
 
-  const paginasTotales = Math.ceil(roles.length / rolesPorPagina)
+  const paginasTotales = Math.ceil(roles.length / rolesPorPagina);
 
   const paginaAnterior = () => {
-    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
-  }
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1);
+  };
 
   const paginaSiguiente = () => {
-    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
-  }
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
+  };
 
-  const rolesFiltrados = rolesActuales.filter((rol) => rol.nombreRol.toLowerCase().includes(busqueda.toLowerCase()))
+  const rolesFiltrados = rolesActuales.filter((rol) =>
+    rol.nombreRol.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -331,13 +359,16 @@ export default function TablaRoles() {
           <p className="mt-4 text-foreground">Cargando roles...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -349,12 +380,14 @@ export default function TablaRoles() {
           Reintentar
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="tabla-container  dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Roles</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
+        Gestión de Roles
+      </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4 ">
         <div className="flex space-x-2">
@@ -363,12 +396,21 @@ export default function TablaRoles() {
             Nuevo Rol
           </button>
 
-          <button className="btn-secondary" onClick={manejarAgregarPermiso} title="Agregar nuevo permiso">
+          <button
+            className="btn-secondary"
+            onClick={manejarAgregarPermiso}
+            title="Agregar nuevo permiso"
+          >
             <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
             Nuevo Permiso
           </button>
 
-          <button className="btn-export" onClick={exportarExcel} disabled={exportando} title="Exportar a Excel">
+          <button
+            className="btn-export"
+            onClick={exportarExcel}
+            disabled={exportando}
+            title="Exportar a Excel"
+          >
             {exportando ? (
               <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
             ) : (
@@ -391,7 +433,10 @@ export default function TablaRoles() {
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow mx-4 w-full mx-auto">
-        <table className="rol-tabla-moderna w-full dark:bg-foreground" style={{ width: "100%", tableLayout: "fixed" }}>
+        <table
+          className="rol-tabla-moderna w-full dark:bg-foreground"
+          style={{ width: "100%", tableLayout: "fixed" }}
+        >
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th className="dark:hover:bg-gray-500/50">Nombre del Rol</th>
@@ -402,33 +447,76 @@ export default function TablaRoles() {
           <tbody className="dark:bg-zinc-900/80 text-foreground">
             {rolesFiltrados.length > 0 ? (
               rolesFiltrados.map((rol) => (
-                <tr key={rol._id} className="dark:hover:bg-gray-500/50 text-foreground">
+                <tr
+                  key={rol._id}
+                  className="dark:hover:bg-gray-500/50 text-foreground"
+                >
                   <td className="font-medium">{rol.nombreRol}</td>
                   <td>
-                    <span className={`rol-estado-badge ${rol.estadoRol ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
+                    <span
+                      className={`rol-estado-badge ${
+                        rol.estadoRol
+                          ? "activo bg-emerald-300/70 dark:bg-emerald-500"
+                          : "inactivo bg-red-500/80"
+                      }`}
+                    >
                       {rol.estadoRol ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     <div className="flex space-x-2 center">
-                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => manejarEditar(rol)} title="Editar rol">
+                      <button
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
+                        onClick={() => manejarEditar(rol)}
+                        title="Editar rol"
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
 
-                      <button className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90" onClick={() => manejarEliminar(rol._id)} title="Eliminar rol">
+                      <button
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
+                        onClick={() => manejarEliminar(rol._id)}
+                        title="Eliminar rol"
+                      >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
-                      <button className="btn-info" onClick={() => manejarVerDetalles(rol)} title="Ver detalles">
+                      <button
+                        className="btn-info"
+                        onClick={() => manejarVerDetalles(rol)}
+                        title="Ver detalles"
+                      >
                         <FontAwesomeIcon icon={faInfoCircle} />
                       </button>
 
-                      <button
+                      {/* <button
                         className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${rol.estadoRol ? "active" : "inactive"}`}
                         onClick={() => manejarToggleEstado(rol._id, rol.estadoRol)}
                         title={rol.estadoRol ? "Desactivar rol" : "Activar rol"}
                       >
                         <FontAwesomeIcon icon={faPowerOff} />
+                      </button> */}
+
+                      <button
+                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                          ${
+                            rol.estadoRol
+                              ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                              : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                          }`}
+                        onClick={() =>
+                          manejarToggleEstado(rol._id, rol.estadoRol)
+                        }
+                        title={
+                          rol.estadoRol
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={rol.estadoRol ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>
@@ -461,7 +549,9 @@ export default function TablaRoles() {
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
+                className={`pagination-number ${
+                  paginaActual === index + 1 ? "active" : ""
+                }`}
               >
                 {index + 1}
               </button>
@@ -471,7 +561,9 @@ export default function TablaRoles() {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
+            className={`pagination-btn ${
+              paginaActual === paginasTotales ? "disabled" : ""
+            }`}
           >
             &gt;
           </button>
@@ -515,19 +607,27 @@ export default function TablaRoles() {
             &times;
           </button>
           <div className="p-6">
-            <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">Detalles del Rol</h2>
-            {rolSeleccionado && permisoMap && Object.keys(permisoMap).length > 0 ? (
+            <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+              Detalles del Rol
+            </h2>
+            {rolSeleccionado &&
+            permisoMap &&
+            Object.keys(permisoMap).length > 0 ? (
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="mb-2">
                     <strong className="text-gray-700">Nombre del Rol:</strong>{" "}
-                    <span className="text-gray-900">{rolSeleccionado.nombreRol}</span>
+                    <span className="text-gray-900">
+                      {rolSeleccionado.nombreRol}
+                    </span>
                   </p>
                   <p className="mb-2">
                     <strong className="text-gray-700">Estado:</strong>{" "}
                     <span
                       className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        rolSeleccionado.estadoRol ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        rolSeleccionado.estadoRol
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {rolSeleccionado.estadoRol ? "Activo" : "Inactivo"}
@@ -536,14 +636,17 @@ export default function TablaRoles() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium text-gray-800 mb-3">Permisos asignados:</h3>
+                  <h3 className="text-lg font-medium text-gray-800 mb-3">
+                    Permisos asignados:
+                  </h3>
                   <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
                     <ul className="space-y-2">
                       {rolSeleccionado.permisoRol.map((permiso) => (
                         <li key={permiso._id} className="flex items-center">
                           <span className="h-2 w-2 bg-pink-500 rounded-full mr-2"></span>
                           <span className="text-gray-700">
-                            {permisoMap[String(permiso._id)] || "Permiso desconocido"}
+                            {permisoMap[String(permiso._id)] ||
+                              "Permiso desconocido"}
                           </span>
                         </li>
                       ))}
@@ -559,7 +662,10 @@ export default function TablaRoles() {
             )}
 
             <div className="mt-6 flex justify-end">
-              <button onClick={manejarCerrarModalDetalles} className="btn-secondary">
+              <button
+                onClick={manejarCerrarModalDetalles}
+                className="btn-secondary"
+              >
                 Cerrar
               </button>
             </div>
@@ -581,9 +687,12 @@ export default function TablaRoles() {
           >
             &times;
           </button>
-          <FormularioPermiso onClose={manejarCerrarModalPermiso} onPermisoCreated={manejarPermisoCreado} />
+          <FormularioPermiso
+            onClose={manejarCerrarModalPermiso}
+            onPermisoCreated={manejarPermisoCreado}
+          />
         </div>
       </Modal>
     </div>
-  )
+  );
 }

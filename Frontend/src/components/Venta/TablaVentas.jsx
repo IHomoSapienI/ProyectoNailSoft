@@ -7,7 +7,7 @@ import Modal from "react-modal"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faEdit, faTrash, faInfoCircle, faSearch, faCheck, faTag } from "@fortawesome/free-solid-svg-icons"
+import { faPlus, faInfoCircle, faSearch, faCheck, faTag } from "@fortawesome/free-solid-svg-icons"
 import "./tablaVentaServicio.css"
 
 Modal.setAppElement("#root")
@@ -26,17 +26,20 @@ const TablaVentas = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const API_URL = "https://gitbf.onrender.com/api"
 
   const fetchVentas = async () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get("https://gitbf.onrender.com/api/ventas", {
+      // Agregar un parámetro de tiempo para evitar el caché
+      const timestamp = new Date().getTime()
+      const response = await axios.get(`https://gitbf.onrender.com/api/ventas?t=${timestamp}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log(ventas)
+      console.log("Ventas obtenidas:", response.data.ventas?.length || 0)
       setVentas(response.data.ventas || [])
     } catch (error) {
       console.error("Error al obtener las ventas:", error)
@@ -48,7 +51,8 @@ const TablaVentas = () => {
 
   useEffect(() => {
     fetchVentas()
-  }, [])
+    // Agregar location.pathname como dependencia para que se actualice cuando cambie la ruta
+  }, [location.pathname])
 
   const formatearFechaHora = (fecha) => {
     return new Date(fecha).toLocaleString("es-ES", {
@@ -159,15 +163,122 @@ const TablaVentas = () => {
       setIsProcessing(true)
       try {
         const token = localStorage.getItem("token")
+
+        // Primero, obtener los detalles de la venta para encontrar la cita asociada
+        const ventaResponse = await axios.get(`${API_URL}/ventas/${idVenta}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        const ventaData = ventaResponse.data.venta || ventaResponse.data
+        const citaId = ventaData.cita?._id || ventaData.cita
+
+        // Finalizar la venta
         await axios.put(
-          `https://gitbf.onrender.com/api/ventas/${idVenta}/finalizar`,
+          `${API_URL}/ventas/${idVenta}/finalizar`,
           { metodoPago },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         )
+
+        // Si hay una cita asociada, actualizar su estado y liberar el horario
+        if (citaId) {
+          try {
+            // Obtener detalles de la cita
+            const citaResponse = await axios.get(`${API_URL}/citas/${citaId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+
+            const citaData = citaResponse.data.cita || citaResponse.data
+            const empleadoId = citaData.nombreempleado?._id || citaData.nombreempleado
+
+            // Actualizar la cita a "Completada" y liberar el horario
+            await axios.put(
+              `${API_URL}/citas/${citaId}`,
+              {
+                estadocita: "Completada",
+                horarioLiberado: true,
+              },
+              { headers: { Authorization: `Bearer ${token}` } },
+            )
+
+            // Notificar al sistema de agenda que el horario ha sido liberado
+            try {
+              // Primero, intentar liberar el horario con el endpoint específico
+              const liberarResponse = await axios.post(
+                `${API_URL}/horarios/liberar`,
+                {
+                  citaId: citaId,
+                  empleadoId: empleadoId,
+                  fecha: citaData.fechacita,
+                  hora: citaData.horacita,
+                  duracion: citaData.duracionTotal || 60,
+                },
+                { headers: { Authorization: `Bearer ${token}` } },
+              )
+              console.log("Respuesta de liberación de horario:", liberarResponse.data)
+
+              // Como respaldo, también actualizar directamente la disponibilidad del empleado
+              try {
+                // Obtener la fecha en formato YYYY-MM-DD
+                const fechaFormateada = new Date(citaData.fechacita).toISOString().split("T")[0]
+
+                // Intentar actualizar directamente la disponibilidad del empleado
+                await axios.put(
+                  `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                  {
+                    fecha: fechaFormateada,
+                    hora: citaData.horacita,
+                    disponible: true, // Marcar como disponible
+                    citaId: citaId,
+                    accion: "liberar",
+                  },
+                  { headers: { Authorization: `Bearer ${token}` } },
+                )
+                console.log("Disponibilidad del empleado actualizada directamente")
+              } catch (dispError) {
+                console.error("Error al actualizar disponibilidad directamente:", dispError)
+              }
+
+              console.log("Horario liberado correctamente al finalizar venta desde tabla")
+            } catch (horarioError) {
+              console.error("Error al liberar horario:", horarioError)
+
+              // Si falla el endpoint principal, intentar con un enfoque alternativo
+              try {
+                // Obtener la fecha en formato YYYY-MM-DD
+                const fechaFormateada = new Date(citaData.fechacita).toISOString().split("T")[0]
+
+                // Intentar actualizar directamente la disponibilidad del empleado
+                await axios.put(
+                  `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                  {
+                    fecha: fechaFormateada,
+                    hora: citaData.horacita,
+                    disponible: true, // Marcar como disponible
+                    citaId: citaId,
+                    accion: "liberar",
+                  },
+                  { headers: { Authorization: `Bearer ${token}` } },
+                )
+                console.log("Disponibilidad del empleado actualizada como respaldo")
+              } catch (dispError) {
+                console.error("Error en método alternativo de liberación:", dispError)
+                // Mostrar una advertencia al usuario
+                Swal.fire({
+                  title: "Advertencia",
+                  text: "Es posible que el horario no se haya liberado correctamente. Por favor, verifique la agenda del empleado.",
+                  icon: "warning",
+                  confirmButtonText: "Entendido",
+                })
+              }
+            }
+
+            console.log("Horario liberado correctamente al finalizar venta desde tabla")
+          } catch (citaError) {
+            console.error("Error al actualizar cita o liberar horario:", citaError)
+            // No interrumpir el flujo principal si falla la actualización de la cita
+          }
+        }
+
         await fetchVentas()
         Swal.fire("Finalizado!", "La venta ha sido finalizada correctamente.", "success")
       } catch (error) {
@@ -320,7 +431,7 @@ const TablaVentas = () => {
       </div>
     )
   }
-  
+
   return (
     <div className="tabla-container dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-8 text-foreground">Gestión de Ventas</h2>
@@ -424,9 +535,14 @@ const TablaVentas = () => {
                     </span>
                   </td>
                   <td>{formatearFechaHora(venta.fechaCreacion || venta.fecha)}</td>
-                  <td>${venta.total.toFixed(2)}</td>
                   <td>
-                    <span className={`venta-estado-badge ${venta.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}>
+                    
+                    {/* ${venta.total.toFixed(2)} */}
+                    </td>
+                  <td>
+                    <span
+                      className={`venta-estado-badge ${venta.estado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}
+                    >
                       {venta.estado ? "Completada" : "Pendiente"}
                     </span>
                   </td>
@@ -538,8 +654,8 @@ const TablaVentas = () => {
       <Modal
         isOpen={modalDetallesAbierto}
         onRequestClose={() => setModalDetallesAbierto(false)}
-        className="modal-content"
-        overlayClassName="modal-overlay"
+        className="modal-content-1"
+        overlayClassName="modal-overlay-1"
       >
         <div className="relative">
           <button
@@ -606,7 +722,7 @@ const TablaVentas = () => {
               {detallesVenta.productos && detallesVenta.productos.length > 0 && (
                 <div className="form-group">
                   <p className="text-sm font-medium text-gray-500">Productos:</p>
-                  <table className="tabla-servicios mt-2">
+                  <table className="tabla-servicios-2 mt-2">
                     <thead>
                       <tr>
                         <th>Nombre</th>
@@ -618,17 +734,24 @@ const TablaVentas = () => {
                     <tbody>
                       {detallesVenta.productos.map((producto, index) => (
                         <tr key={`producto-${index}`}>
-                          <td>{producto.nombreProducto}</td>
-                          <td className="text-right">${Number.parseFloat(producto.precio).toFixed(2)}</td>
+                          <td className="">{producto.nombreProducto}</td>
+
+                          <td className="text-right"> ${Number(producto.precio).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </td>
+                            {/* ${Number.parseFloat(producto.precio).toFixed(2)}</td> */}
+
                           <td className="text-right">{producto.cantidad}</td>
-                          <td className="text-right">${Number.parseFloat(producto.subtotal).toFixed(2)}</td>
+
+                          <td className="text-right"> ${Number(producto.subtotal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </td>        
+                            {/* ${Number.parseFloat(producto.subtotal).toFixed(2)} */}
+
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr>
                         <td colSpan="3">Subtotal Productos</td>
-                        <td className="text-right">${detallesVenta.subtotalProductos.toFixed(2)}</td>
+                        <td className="text-right"> ${Number(detallesVenta.subtotalProductos).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                          {/* ${detallesVenta.subtotalProductos.toFixed(2)} */}
                       </tr>
                     </tfoot>
                   </table>
@@ -639,7 +762,7 @@ const TablaVentas = () => {
               {detallesVenta.servicios && detallesVenta.servicios.length > 0 && (
                 <div className="form-group">
                   <p className="text-sm font-medium text-gray-500">Servicios:</p>
-                  <table className="tabla-servicios mt-2">
+                  <table className="tabla-servicios-2 mt-2">
                     <thead>
                       <tr>
                         <th>Nombre</th>
@@ -660,22 +783,25 @@ const TablaVentas = () => {
                         return (
                           <tr key={`servicio-${index}`}>
                             <td>{servicio.nombreServicio}</td>
-                            <td className="text-right">${precioOriginal.toFixed(2)}</td>
+                            <td className="text-right"> ${Number(precioOriginal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </td> 
+                              {/* ${precioOriginal.toFixed(2)}< */}
                             <td className="text-center">
                               {servicio.tieneDescuento && servicio.porcentajeDescuento > 0 ? (
-                                <span className="discount-badge">
-                                  <FontAwesomeIcon icon={faTag} className="mr-1" />
+                                <span className="discount-badge-1 bg-green-600  text-black font-semibold px-2 py-1 rounded-full">
+                                  <FontAwesomeIcon icon={faTag} className="mr-2" />
                                   {servicio.porcentajeDescuento || 0}% OFF
                                 </span>
                               ) : (
-                                <span className="text-gray-400">-</span>
+                                <span className="text-black">-</span>
                               )}
                             </td>
                             <td className="text-right">
                               {servicio.tieneDescuento ? (
-                                <span className="discounted-price">${precioFinal.toFixed(2)}</span>
+                                <span className="discounted-price-1 font-semibold text-emerald-800">${Number(precioFinal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </span>
+                                  // ${precioFinal.toFixed(2)}</span>
                               ) : (
-                                <span>${precioFinal.toFixed(2)}</span>
+                                <span> ${Number(precioFinal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </span>
+                                  // ${precioFinal.toFixed(2)}</span>
                               )}
                             </td>
                             <td className="text-right">{servicio.tiempo} min</td>
@@ -686,7 +812,8 @@ const TablaVentas = () => {
                     <tfoot>
                       <tr>
                         <td colSpan="4">Subtotal Servicios</td>
-                        <td className="text-right">${detallesVenta.subtotalServicios.toFixed(2)}</td>
+                        <td className="text-right">${Number(detallesVenta.subtotalServicios).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>  
+                          {/* ${detallesVenta.subtotalServicios.toFixed(2)}*/}
                       </tr>
                     </tfoot>
                   </table>
@@ -716,20 +843,25 @@ const TablaVentas = () => {
                               </div>
                               <div className="text-right">
                                 <div>
-                                  <span className="original-price">${precioOriginal.toFixed(2)}</span>
+                                  <span className="original-price"> ${Number(precioOriginal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </span>
+                                    {/* ${precioOriginal.toFixed(2)}</span> */}
                                 </div>
                                 <div>
-                                  <span className="discounted-price">${precioFinal.toFixed(2)}</span>
+                                  <span className="discounted-price-1 text-semibold text-emerald-800 "> ${Number(precioFinal).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </span>
+                                    {/* ${precioFinal.toFixed(2)}</span> */}
                                 </div>
-                                <div className="text-green-600 font-semibold">Ahorro: ${ahorro.toFixed(2)}</div>
+                                <div className="text-emerald-800 font-semibold flex gap-[2vh] underline"><p className="text-black"> Ahorro:</p> ${Number(ahorro).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </div>
+                                  {/* ${ahorro.toFixed(2)}</div> */}
                               </div>
                             </li>
                           )
                         })}
                     </ul>
-                    <div className="mt-4 text-right">
-                      <p className="text-lg font-bold text-green-600">
-                        Total ahorrado: $
+                    <div className="mt-4 text-right text-emerald-800 font-semibold gap-[2vh] flex ml-auto">
+                      <p className="text-lg font-bold text-black">
+                        Total ahorrado: </p>
+                        
+                        $
                         {detallesVenta.servicios
                           .filter((s) => s.tieneDescuento)
                           .reduce((total, servicio) => {
@@ -737,8 +869,8 @@ const TablaVentas = () => {
                             const precioFinal = Number.parseFloat(servicio.precioConDescuento || servicio.precio || 0)
                             return total + (precioOriginal - precioFinal)
                           }, 0)
-                          .toFixed(2)}
-                      </p>
+                          .toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      
                     </div>
                   </div>
                 </div>
@@ -746,7 +878,8 @@ const TablaVentas = () => {
 
               <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Total:</p>
-                <p className="text-xl font-bold">${detallesVenta.total.toFixed(2)}</p>
+                <p className="text-xl font-bold"> ${Number(detallesVenta.total).toLocaleString("es-CO", {minimumFractionDigits: 2, maximumFractionDigits: 2})} </p>
+                  {/* ${detallesVenta.total.toFixed(2)}</p> */}
               </div>
 
               <div className="form-group">

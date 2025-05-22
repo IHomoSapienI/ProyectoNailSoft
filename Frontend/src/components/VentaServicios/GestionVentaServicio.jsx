@@ -5,7 +5,15 @@ import { useParams, useNavigate } from "react-router-dom"
 import axios from "axios"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faTrash, faSave, faArrowLeft, faCheck, faBoxOpen, faCut, faSquarePollVertical, faShoppingBag, faCompassDrafting } from "@fortawesome/free-solid-svg-icons"
+import {
+  faPlus,
+  faTrash,
+  faSave,
+  faArrowLeft,
+  faCheck,
+  faShoppingBag,
+  faCompassDrafting,
+} from "@fortawesome/free-solid-svg-icons"
 import "./gestionVentaServicio.css"
 
 const GestionVentaServicio = () => {
@@ -1284,6 +1292,7 @@ const GestionVentaServicio = () => {
           total: precioTotal,
           metodoPago: metodoPago,
           tipoVenta: getTipoVenta(),
+          estado: true, // Establecer explícitamente como completada
         }
 
         console.log("Creando venta unificada:", ventaUnificadaData)
@@ -1292,6 +1301,18 @@ const GestionVentaServicio = () => {
           // Crear la venta unificada
           const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
           console.log("Respuesta de creación de venta unificada:", createResponse.data)
+
+          // Asegurar que la venta esté marcada como finalizada
+          const ventaId = createResponse.data.venta?._id || createResponse.data._id
+          if (ventaId) {
+            try {
+              await axios.put(`${API_URL}/ventas/${ventaId}/finalizar`, { metodoPago }, { headers })
+              console.log("Venta marcada explícitamente como finalizada")
+            } catch (finalizarError) {
+              console.error("Error al marcar la venta como finalizada:", finalizarError)
+              // No interrumpir el flujo principal si falla esta operación
+            }
+          }
 
           // Actualizar el estado de la cita a "Completada" y liberar el horario
           await axios.put(
@@ -1313,7 +1334,8 @@ const GestionVentaServicio = () => {
 
           // Notificar al sistema de agenda que el horario ha sido liberado
           try {
-            await axios.post(
+            // Primero, intentar liberar el horario con el endpoint específico
+            const liberarResponse = await axios.post(
               `${API_URL}/horarios/liberar`,
               {
                 citaId: cita._id,
@@ -1324,10 +1346,62 @@ const GestionVentaServicio = () => {
               },
               { headers },
             )
+            console.log("Respuesta de liberación de horario:", liberarResponse.data)
+
+            // Como respaldo, también actualizar directamente la disponibilidad del empleado
+            try {
+              // Obtener la fecha en formato YYYY-MM-DD
+              const fechaFormateada = new Date(cita.fechacita).toISOString().split("T")[0]
+
+              // Intentar actualizar directamente la disponibilidad del empleado
+              await axios.put(
+                `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                {
+                  fecha: fechaFormateada,
+                  hora: cita.horacita,
+                  disponible: true, // Marcar como disponible
+                  citaId: cita._id,
+                  accion: "liberar",
+                },
+                { headers },
+              )
+              console.log("Disponibilidad del empleado actualizada directamente")
+            } catch (dispError) {
+              console.error("Error al actualizar disponibilidad directamente:", dispError)
+            }
+
             console.log("Horario liberado correctamente en el sistema de agenda")
           } catch (horarioError) {
             console.error("Error al liberar horario:", horarioError)
-            // No interrumpir el flujo principal si falla la liberación del horario
+
+            // Si falla el endpoint principal, intentar con un enfoque alternativo
+            try {
+              // Obtener la fecha en formato YYYY-MM-DD
+              const fechaFormateada = new Date(cita.fechacita).toISOString().split("T")[0]
+
+              // Intentar actualizar directamente la disponibilidad del empleado
+              await axios.put(
+                `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                {
+                  fecha: fechaFormateada,
+                  hora: cita.horacita,
+                  disponible: true, // Marcar como disponible
+                  citaId: cita._id,
+                  accion: "liberar",
+                },
+                { headers },
+              )
+              console.log("Disponibilidad del empleado actualizada como respaldo")
+            } catch (dispError) {
+              console.error("Error en método alternativo de liberación:", dispError)
+              // Mostrar una advertencia al usuario
+              Swal.fire({
+                title: "Advertencia",
+                text: "Es posible que el horario no se haya liberado correctamente. Por favor, verifique la agenda del empleado.",
+                icon: "warning",
+                confirmButtonText: "Entendido",
+              })
+            }
           }
 
           // Limpiar localStorage
@@ -1423,9 +1497,82 @@ const GestionVentaServicio = () => {
               productos: productosFormateados,
               montototal: precioTotal,
               estadocita: "Completada", // Cambiar estado a "Completada"
+              horarioLiberado: true, // Marcar que el horario ha sido liberado
             },
             { headers },
           )
+
+          // Notificar al sistema de agenda que el horario ha sido liberado
+          try {
+            // Primero, intentar liberar el horario con el endpoint específico
+            const liberarResponse = await axios.post(
+              `${API_URL}/horarios/liberar`,
+              {
+                citaId: cita._id,
+                empleadoId: empleadoId,
+                fecha: cita.fechacita,
+                hora: cita.horacita,
+                duracion: duracionTotal,
+              },
+              { headers },
+            )
+            console.log("Respuesta de liberación de horario:", liberarResponse.data)
+
+            // Como respaldo, también actualizar directamente la disponibilidad del empleado
+            try {
+              // Obtener la fecha en formato YYYY-MM-DD
+              const fechaFormateada = new Date(cita.fechacita).toISOString().split("T")[0]
+
+              // Intentar actualizar directamente la disponibilidad del empleado
+              await axios.put(
+                `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                {
+                  fecha: fechaFormateada,
+                  hora: cita.horacita,
+                  disponible: true, // Marcar como disponible
+                  citaId: cita._id,
+                  accion: "liberar",
+                },
+                { headers },
+              )
+              console.log("Disponibilidad del empleado actualizada directamente")
+            } catch (dispError) {
+              console.error("Error al actualizar disponibilidad directamente:", dispError)
+            }
+
+            console.log("Horario liberado correctamente en el sistema de agenda")
+          } catch (horarioError) {
+            console.error("Error al liberar horario:", horarioError)
+
+            // Si falla el endpoint principal, intentar con un enfoque alternativo
+            try {
+              // Obtener la fecha en formato YYYY-MM-DD
+              const fechaFormateada = new Date(cita.fechacita).toISOString().split("T")[0]
+
+              // Intentar actualizar directamente la disponibilidad del empleado
+              await axios.put(
+                `${API_URL}/empleados/${empleadoId}/disponibilidad`,
+                {
+                  fecha: fechaFormateada,
+                  hora: cita.horacita,
+                  disponible: true, // Marcar como disponible
+                  citaId: cita._id,
+                  accion: "liberar",
+                },
+                { headers },
+              )
+              console.log("Disponibilidad del empleado actualizada como respaldo")
+            } catch (dispError) {
+              console.error("Error en método alternativo de liberación:", dispError)
+              // Mostrar una advertencia al usuario
+              Swal.fire({
+                title: "Advertencia",
+                text: "Es posible que el horario no se haya liberado correctamente. Por favor, verifique la agenda del empleado.",
+                icon: "warning",
+                confirmButtonText: "Entendido",
+              })
+            }
+          }
 
           // Limpiar localStorage
           try {
@@ -1539,7 +1686,7 @@ const GestionVentaServicio = () => {
           <span className="error-message">{error}</span>
         </div>
         <button onClick={() => navigate("/citas-en-progreso")} className="btn-back mt-4 bg-red-500 text-foreground">
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2"/>
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Volver a citas
         </button>
       </div>
@@ -1626,7 +1773,9 @@ const GestionVentaServicio = () => {
           </div>
           <div className="info-item">
             <p className="info-label-1 text-foreground">Empleado:</p>
-            <p className="info-value-1 text-foreground">{cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}</p>
+            <p className="info-value-1 text-foreground">
+              {cita?.nombreempleado?.nombreempleado || "Empleado no disponible"}
+            </p>
           </div>
           <div className="info-item">
             <p className="info-label-1 text-foreground ">Fecha:</p>
@@ -1643,7 +1792,9 @@ const GestionVentaServicio = () => {
           </div>
           <div className="info-item">
             <p className="info-label-1 text-foreground">Estado:</p>
-            <span><p className="info-value-1 text-foreground">{cita?.estadocita || "Estado no disponible"}</p></span>
+            <span>
+              <p className="info-value-1 text-foreground">{cita?.estadocita || "Estado no disponible"}</p>
+            </span>
           </div>
         </div>
       </div>
@@ -1675,38 +1826,45 @@ const GestionVentaServicio = () => {
             <h2 className="card-title-1 text-foreground">Servicios Seleccionados</h2>
             {serviciosSeleccionados.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="tabla-servicios">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th>Servicio</th>
-                      <th className="text-right">Precio</th>
-                      <th className="text-right">Tiempo (min)</th>
-                      <th className="text-center">Acciones</th>
+                <table className="tabla-servicios-1 w-full">
+                  <thead className="bg-pink-200 text-black dark:card-gradient-4">
+                    <tr className="text-foreground">
+                      <th className="text-left dark:hover:bg-gray-500/50">Servicio</th>
+                      <th className="text-left dark:hover:bg-gray-500/50">Precio</th>
+                      <th className="text-right dark:hover:bg-gray-500/50">Tiempo (min)</th>
+                      <th className="text-center dark:hover:bg-gray-500/50">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="dark:bg-zinc-900/80 text-foreground">
                     {serviciosSeleccionados.map((servicio, index) => (
-                      <tr key={index}>
-                        <td>{servicio.nombreServicio}</td>
-                        <td className="text-right">
+                      <tr className="dark:hover:bg-gray-500/50 text-foreground" key={index}>
+                        <td className="text-left">{servicio.nombreServicio}</td>
+                        <td className="text-left">
                           {servicio.tieneDescuento ? (
-                            <div className="price-with-discount">
-                              <span className="original-price">
-                                ${Number.parseFloat(servicio.precioOriginal || servicio.precio).toFixed(2)}
+                            <div className="price-with-discount-1">
+                              <span className="text-left original-price-1 text-foreground ">
+                                ${Number(servicio.precioOriginal || servicio.precio).toLocaleString('es-ES', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}
                               </span>
-                              <span className="discounted-price">
-                                ${Number.parseFloat(servicio.precioConDescuento || servicio.precio).toFixed(2)}
+                              <span className="text-left discounted-price-1 text-green-700">
+                              <span>${Number(servicio.precioConDescuento || servicio.precio).toLocaleString('es-ES', {
+                                   minimumFractionDigits: 2,
+                                   maximumFractionDigits: 2
+                                })}</span>
                               </span>
                             </div>
                           ) : (
-                            <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
+                            <span>${Number(servicio.precio).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+
                           )}
                         </td>
                         <td className="text-right">{servicio.tiempo}</td>
                         <td className="text-center">
                           <button
                             onClick={() => eliminarServicio(servicio.servicio)}
-                            className="btn-icon delete"
+                            className="btn-delete-gv text-center dark:bg-rose-800"
                             title="Eliminar servicio"
                           >
                             <FontAwesomeIcon icon={faTrash} />
@@ -1718,7 +1876,9 @@ const GestionVentaServicio = () => {
                   <tfoot>
                     <tr>
                       <td>Total Servicios</td>
-                      <td className="text-right">${precioTotalServicios.toFixed(2)}</td>
+                      {/* <span>${Number(servicio.precio).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> */}
+                      <td className="text-left">${(precioTotalServicios).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                      {/* <td className="text-right">${precioTotalServicios.toFixed(2)}</td> */}
                       <td className="text-right">{tiempoTotal} min</td>
                       <td></td>
                     </tr>
@@ -1730,8 +1890,8 @@ const GestionVentaServicio = () => {
             )}
 
             {/* Agregar servicios */}
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">Agregar Servicio</h3>
+            <div className="mt-4 ">
+              <h3 className="text-lg font-semibold mb-2 ">Agregar Servicio</h3>
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-grow">
                   <select
@@ -1793,30 +1953,34 @@ const GestionVentaServicio = () => {
 
           {/* Tab de Productos */}
           <div className={`tab-content ${activeTab === "productos" ? "block" : "hidden"}`}>
-            <h2 className="card-title">Productos Seleccionados</h2>
+            <h2 className="card-title-1">Productos Seleccionados</h2>
             {productosSeleccionados.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="tabla-servicios">
-                  <thead>
-                    <tr>
+                <table className="tabla-servicios-1 w-full">
+                  <thead className="bg-pink-200 text-black dark:card-gradient-4">
+                    <tr className="text-foreground">
                       <th>Producto</th>
-                      <th className="text-right">Precio</th>
-                      <th className="text-right">Cantidad</th>
-                      <th className="text-right">Subtotal</th>
-                      <th className="text-center">Acciones</th>
+                      <th className="text-right dark:hover:bg-gray-500/50">Precio</th>
+                      <th className="text-right dark:hover:bg-gray-500/50">Cantidad</th>
+                      <th className="text-right dark:hover:bg-gray-500/50">Subtotal</th>
+                      <th className="text-center dark:hover:bg-gray-500/50">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="dark:bg-zinc-900/80 text-foreground">
                     {productosSeleccionados.map((producto, index) => (
-                      <tr key={index}>
+                      <tr className="dark:hover:bg-gray-500/50 text-foreground" key={index}>
                         <td>{producto.nombreProducto}</td>
-                        <td className="text-right">${Number.parseFloat(producto.precio).toFixed(2)}</td>
+
+                        <td className="text-right">
+                          ${Number(producto.precio).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                          </td>
+
                         <td className="text-right">
                           <div className="flex items-center justify-end">
                             <button
                               type="button"
                               onClick={() => actualizarCantidadProducto(producto.producto, producto.cantidad - 1)}
-                              className="btn-icon-sm"
+                              className="btn-icon-sm bg-pink-200 dark:card-gradient-5"
                             >
                               -
                             </button>
@@ -1824,17 +1988,20 @@ const GestionVentaServicio = () => {
                             <button
                               type="button"
                               onClick={() => actualizarCantidadProducto(producto.producto, producto.cantidad + 1)}
-                              className="btn-icon-sm"
+                              className="btn-icon-sm bg-pink-200 dark:card-gradient-5"
                             >
                               +
                             </button>
                           </div>
                         </td>
-                        <td className="text-right">${Number.parseFloat(producto.subtotal).toFixed(2)}</td>
+                        <td className="text-right">
+                          ${Number(producto.subtotal).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                          {/* ${Number.parseFloat(producto.subtotal).toFixed(2)} */}
+                          </td>
                         <td className="text-center">
                           <button
                             onClick={() => eliminarProducto(producto.producto)}
-                            className="btn-icon delete"
+                            className="btn-delete-gv dark:bg-rose-800"
                             title="Eliminar producto"
                           >
                             <FontAwesomeIcon icon={faTrash} />
@@ -1846,7 +2013,9 @@ const GestionVentaServicio = () => {
                   <tfoot>
                     <tr>
                       <td colSpan="3">Total Productos</td>
-                      <td className="text-right">${precioTotalProductos.toFixed(2)}</td>
+                      <td className="text-right">
+                        ${Number(precioTotalProductos).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                        </td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -1918,28 +2087,34 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Resumen de la venta */}
-      <div className="card">
-        <h2 className="card-title">Resumen de la Venta</h2>
-        <div className="info-grid">
+      <div className="card-1 dark:card-gradient-4 text-foreground">
+        <h2 className="card-title-1 text-foreground">Resumen de la Venta</h2>
+        <div className="info-grid text-foreground">
           {serviciosSeleccionados.length > 0 && (
             <div className="info-item">
-              <p className="info-label">Total Servicios:</p>
-              <p className="info-value">${precioTotalServicios.toFixed(2)}</p>
+              <p className="info-label-1">Total Servicios:</p>
+              <p className="info-value-1">
+                ${Number(precioTotalServicios).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                </p>
             </div>
           )}
           {productosSeleccionados.length > 0 && (
             <div className="info-item">
-              <p className="info-label">Total Productos:</p>
-              <p className="info-value">${precioTotalProductos.toFixed(2)}</p>
+              <p className="info-label-1">Total Productos:</p>
+              <p className="info-value-1">
+                ${Number(precioTotalProductos).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                </p>
             </div>
           )}
           <div className="info-item">
-            <p className="info-label">Total General:</p>
-            <p className="info-value font-bold text-xl">${precioTotal.toFixed(2)}</p>
+            <p className="info-label-1 underline">Total General:</p>
+            <p className="info-value-1 font-bold text-x underline cursor-pointer">
+              ${Number(precioTotal).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+              </p>
           </div>
           <div className="info-item">
-            <p className="info-label">Tipo de Venta:</p>
-            <p className="info-value">
+            <p className="info-label-1">Tipo de Venta:</p>
+            <p className="info-value-1">
               {getTipoVenta() === "mixta"
                 ? "Mixta (Servicios y Productos)"
                 : getTipoVenta() === "servicios"
@@ -1951,10 +2126,10 @@ const GestionVentaServicio = () => {
       </div>
 
       {/* Finalizar venta */}
-      <div className="card">
-        <h2 className="card-title">Finalizar Venta</h2>
+      <div className="card-1 dark:card-gradient-4 text-foreground">
+        <h2 className="card-title-1 text-foreground">Finalizar Venta</h2>
         <div className="form-group">
-          <label className="form-label">Método de Pago:</label>
+          <label className="form-label-1 text-foreground">Método de Pago:</label>
           <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} className="form-select">
             <option value="Efectivo">Efectivo</option>
             <option value="Tarjeta">Tarjeta</option>

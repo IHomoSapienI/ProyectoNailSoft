@@ -439,7 +439,10 @@ const ClientDashboard = () => {
       // The correct endpoint should be /api/citas/{id}/cancelar
       await axios.put(
         `https://gitbf.onrender.com/api/citas/${citaId}/cancelar`,
-        { motivo: motivoCancelacion }, // Send the cancellation reason in the request body
+        {
+          motivo: motivoCancelacion,
+          horarioLiberado: true, // Asegurar que el horario se libere
+        }, // Send the cancellation reason in the request body
         { headers: { Authorization: `Bearer ${token}` } },
       )
 

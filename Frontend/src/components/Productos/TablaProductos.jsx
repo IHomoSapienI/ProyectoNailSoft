@@ -13,7 +13,8 @@ import {
   faSearch,
   faSync,
   faPrint,
-  faPowerOff,
+  faToggleOn,
+  faToggleOff
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import * as XLSX from "xlsx"
@@ -395,10 +396,10 @@ const TablaProductos = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh] ">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando productos...</p>
+          <p className="mt-4 text-foreground">Cargando productos...</p>
         </div>
       </div>
     )
@@ -423,7 +424,8 @@ const TablaProductos = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+    // Eliminado transition-all duration-500 para evitar transiciones globales
+    <div className="tabla-container dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Productos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
@@ -479,22 +481,23 @@ const TablaProductos = () => {
         <table className="prducto-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              {/* Cambiado dark:hover:bg-gray-500/50 por dark:bg-gray-500/50 para evitar efectos hover */}
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Nombre del Producto
               </th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Categoría
               </th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Precio
               </th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Stock
               </th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Estado
               </th>
-              <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>
+              <th className="dark:bg-gray-500/50" style={{ width: "15%" }}>
                 Acciones
               </th>
             </tr>
@@ -502,34 +505,52 @@ const TablaProductos = () => {
           <tbody className="dark:bg-zinc-900/80">
             {productosActuales.length > 0 ? (
               productosActuales.map((producto) => (
-                <tr key={producto._id} className="dark:hover:bg-gray-500/50 text-foreground">
+                <tr key={producto._id} className="text-foreground">
                   <td className="font-medium">{producto.nombreProducto}</td>
                   <td>{typeof producto.categoria === "object" ? producto.categoria.nombreCp : producto.categoria}</td>
                   <td>${producto.precio}</td>
                   <td>{producto.stock}</td>
                   <td>
-                    <span className={`estado-badge ${producto.estado ? "activo" : "inactivo"}`}>
+                    <span className={`usuario-estado-badge ${producto.estado 
+                       ? "activo bg-emerald-300/70 dark:bg-emerald-500"
+                          : "inactivo bg-red-500/80"
+                      }`}>
                       {producto.estado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
-                    <div className="flex space-x-2 center">
-                      <button className="btn-edit" onClick={() => abrirFormulario(producto)} title="Editar producto">
+                    {/* Modificado para usar clases similares a TablaPermisos */}
+                    <div className="flex justify-center space-x-2">
+                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => abrirFormulario(producto)} title="Editar producto">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-delete"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminarProducto(producto._id)}
                         title="Eliminar producto"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                       <button
-                        className={`btn-toggle ${producto.estado ? "active" : "inactive"}`}
-                        onClick={() => manejarToggleEstado(producto._id, producto.estado)}
-                        title={producto.estado ? "Desactivar producto" : "Activar producto"}
+                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                                              ${
+                                                producto.estado
+                                                  ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                                                  : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                                              }`}
+                        onClick={() =>
+                          manejarToggleEstado(producto._id, producto.estado)
+                        }
+                        title={
+                          producto.estado
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
                       >
-                        <FontAwesomeIcon icon={faPowerOff} />
+                        <FontAwesomeIcon
+                          icon={producto.estado ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>

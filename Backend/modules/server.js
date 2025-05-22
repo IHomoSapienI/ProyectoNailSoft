@@ -13,6 +13,7 @@ class Server {
         this.rolesPath = '/api/roles';
         this.permisosPath = '/api/permisos';
         this.tiposerviciosPath = '/api/tiposervicios';
+        this.tiposerviciossPath = '/api/tiposervicioss';
         this.serviciosPath = '/api/servicios';
         this.detalleserviciosPath = '/api/detalleservicios';
         this.ventaserviciosPath = '/api/ventaservicios';
@@ -61,6 +62,7 @@ class Server {
         this.app.use(this.rolesPath, require('../routes/roles'));
         this.app.use(this.permisosPath, require('../routes/permisos'));
         this.app.use(this.tiposerviciosPath, require('../routes/tiposervs'));
+        this.app.use(this.tiposerviciossPath, require('../routes/tiposervicioss'));
         this.app.use(this.serviciosPath, require('../routes/servicios')); 
         this.app.use(this.detalleserviciosPath, require('../routes/detalleservicios'));
         this.app.use(this.ventaserviciosPath, require('../routes/ventaservicios'));

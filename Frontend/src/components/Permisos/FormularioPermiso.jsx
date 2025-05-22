@@ -105,7 +105,8 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           value={formData.nombrePermiso}
           onChange={handleChange}
           required
-          minLength={3}
+          minLength={5}
+          maxLength={30}
           className="form-input"
           placeholder="Ejemplo: crearUsuarios, verRoles, eliminarProductos"
         />
@@ -123,7 +124,8 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           onChange={handleChange}
           required
           minLength={10}
-          rows={3}
+          maxLength={80}
+          rows={1}
           className="form-textarea"
           placeholder="Descripción detallada del permiso"
         />

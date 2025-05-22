@@ -396,7 +396,7 @@ const CitasEnProgreso = () => {
       Swal.fire("Error", "ID de cita no válido", "error")
       return
     }
-
+  
     const { value: motivo } = await Swal.fire({
       title: "Cancelar cita",
       input: "textarea",
@@ -414,7 +414,7 @@ const CitasEnProgreso = () => {
         }
       },
     })
-
+  
     if (motivo) {
       try {
         Swal.fire({
@@ -425,56 +425,31 @@ const CitasEnProgreso = () => {
             Swal.showLoading()
           },
         })
-
+  
         const token = localStorage.getItem("token")
         if (!token) {
           throw new Error("No se encontró token de autenticación")
         }
-
+  
         const headers = { Authorization: `Bearer ${token}` }
-
+  
+        // Obtener los datos actuales de la cita antes de cancelarla
+        const citaResponse = await axios.get(`${API_URL}/citas/${citaId}`, { headers})
+        const citaActual = citaResponse.data.cita || citaResponse.data
+  
         // Crear objeto de datos completo para la cancelación
         const fechaCancelacion = new Date().toISOString()
-
-        // IMPORTANTE: Asegurarnos de que los nombres de los campos coincidan exactamente con el esquema
+  
         const datosCancelacion = {
           estadocita: "Cancelada",
           motivo: motivo,
           fechacancelacion: fechaCancelacion,
+          horarioLiberado: true // Añadir este campo para indicar que el horario está disponible
         }
-
-        console.log("Enviando datos de cancelación:", JSON.stringify(datosCancelacion))
-
-        // Obtener datos actuales de la cita para comparar después
-        const citaAntes = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
-        console.log("Datos de la cita ANTES de cancelar:", citaAntes.data)
-
+  
         // Enviar la solicitud para cancelar la cita
         const response = await axios.put(`${API_URL}/citas/${citaId}`, datosCancelacion, { headers })
-        console.log("Respuesta de cancelación:", response.data)
-
-        // Verificar que los datos se guardaron correctamente
-        const citaDespues = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
-        console.log("Datos de la cita DESPUÉS de cancelar:", citaDespues.data)
-
-        // Verificar específicamente los campos de cancelación
-        const citaActualizada = citaDespues.data.cita || citaDespues.data
-        console.log("Campos de cancelación guardados:", {
-          estadocita: citaActualizada.estadocita,
-          motivo: citaActualizada.motivo,
-          fechacancelacion: citaActualizada.fechacancelacion,
-        })
-
-        // Guardar también en localStorage como respaldo
-        const datosRespaldo = {
-          citaId: citaId,
-          motivo: motivo,
-          fechacancelacion: fechaCancelacion,
-          timestamp: Date.now(),
-        }
-        localStorage.setItem(`cancelacion_${citaId}`, JSON.stringify(datosRespaldo))
-        console.log("Datos de cancelación guardados en localStorage como respaldo")
-
+  
         // Actualizar la cita en el estado local
         setCitas((prevCitas) =>
           prevCitas.map((cita) =>
@@ -484,14 +459,15 @@ const CitasEnProgreso = () => {
                   estadocita: "Cancelada",
                   motivo: motivo,
                   fechacancelacion: fechaCancelacion,
+                  horarioLiberado: true
                 }
-              : cita,
-          ),
+              : cita
+          )
         )
-
+  
         Swal.fire({
           title: "¡Cita cancelada!",
-          text: "La cita ha sido cancelada exitosamente",
+          text: "La cita ha sido cancelada exitosamente y el horario ha sido liberado",
           icon: "success",
           confirmButtonText: "Aceptar",
         }).then(() => {

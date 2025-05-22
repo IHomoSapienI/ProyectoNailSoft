@@ -10,16 +10,15 @@ import {
   faSearch,
   faPowerOff,
   faToggleOn,
-  faToggleOff,
-  faPercent,
+  faToggleOff
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import "./tablaTipoServ.css";
-import FormularioTipoServicio from "./FormularioTipoServicios";
+import FormularioTipoServicios from "./FormularioTipoServ";
 
 Modal.setAppElement("#root");
 
-export default function TablaTipoServicios() {
+export default function TablaTipoServicioss() {
   const [tipoServicios, setTipoServicios] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [tipoServicioSeleccionado, setTipoServicioSeleccionado] =
@@ -36,7 +35,7 @@ export default function TablaTipoServicios() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "https://gitbf.onrender.com/api/tiposervicios",
+        "https://gitbf.onrender.com/api/tiposervicioss",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,7 +45,7 @@ export default function TablaTipoServicios() {
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      setTipoServicios(data.tiposervicios || []);
+      setTipoServicios(data.tiposerviciosts || []);
     } catch (error) {
       console.error("Error al obtener los datos:", error);
       setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
@@ -103,7 +102,7 @@ export default function TablaTipoServicios() {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://gitbf.onrender.com/api/tiposervicios/${id}/toggle-estado`,
+          `https://gitbf.onrender.com/api/tiposervicioss/${id}/toggle-estado`,
           {
             method: "PATCH",
             headers: {
@@ -160,7 +159,7 @@ export default function TablaTipoServicios() {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `https://gitbf.onrender.com/api/tiposervicios/${id}`,
+          `https://gitbf.onrender.com/api/tiposervicioss/${id}`,
           {
             method: "DELETE",
             headers: {
@@ -196,7 +195,7 @@ export default function TablaTipoServicios() {
 
   // Filtrar por búsqueda
   const tipoServiciosFiltrados = tipoServicios.filter((ts) =>
-    ts.nombreTs.toLowerCase().includes(busqueda.toLowerCase())
+    ts.nombreTipoServicio.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const tipoServiciosActuales = tipoServiciosFiltrados.slice(
@@ -253,16 +252,16 @@ export default function TablaTipoServicios() {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full  dark:bg-primary">
+    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">
-        Gestión de Tipos de Descuentos
+        Gestión de Tipos de Servicios
       </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
           <button className="btn-add" onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Nuevo Tipo de Descuento
+            Nuevo Tipo de Servicio
           </button>
         </div>
 
@@ -286,8 +285,6 @@ export default function TablaTipoServicios() {
           <thead className="bg-pink-200 dark:card-gradient-4 ">
             <tr className="text-foreground">
               <th className="dark:hover:bg-gray-500/50">Nombre</th>
-              <th className="dark:hover:bg-gray-500/50">Descuento</th>
-              <th className="dark:hover:bg-gray-500/50">Tipo</th>
               <th className="dark:hover:bg-gray-500/50">Estado</th>
               <th className="dark:hover:bg-gray-500/50 text-foreground">
                 Acciones
@@ -301,32 +298,14 @@ export default function TablaTipoServicios() {
                   key={tipoServicio._id}
                   className="dark:hover:bg-gray-500/50 text-foreground"
                 >
-                  <td className="font-medium ">{tipoServicio.nombreTs}</td>
-                  <td>
-                    <div className="flex items-center">
-                      <FontAwesomeIcon
-                        icon={faPercent}
-                        className="text-pink-500 mr-2"
-                      />
-                      <span>{tipoServicio.descuento || 0}%</span>
-                    </div>
+                  <td className="font-medium ">
+                    {tipoServicio.nombreTipoServicio}
                   </td>
                   <td>
                     <span
-                      className={`tipo-badge bg-indigo-500/50 dark:bg-indigo-500 dark:text-foreground ${
-                        tipoServicio.esPromocional
-                          ? "promocional bg-amber-500/50 dark:bg-amber-500"
-                          : "normal"
-                      }`}
-                    >
-                      {tipoServicio.esPromocional ? "Promocional" : "Normal"}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className={`estado-badge1  text-foreground ${
+                      className={`estado-badge1 text-foreground ${
                         tipoServicio.activo
-                          ? "activo bg-emerald-300/70 dark:bg-emerald-500"
+                          ? "activo bg-emerald-500/50 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
                       }`}
                     >
@@ -351,13 +330,21 @@ export default function TablaTipoServicios() {
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
+                      {/* <button
+                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${tipoServicio.activo ? "active" : "inactive"}`}
+                        onClick={() => manejarToggleEstado(tipoServicio._id, tipoServicio.activo)}
+                        title={tipoServicio.activo ? "Desactivar" : "Activar"}
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} />
+                      </button> */}
+
                       <button
                         className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
-                          ${
-                            tipoServicio.activo
-                              ? "bg-emerald-400/70  dark:bg-emerald-700 "
-                              : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
-                          }`}
+                                                  ${
+                                                    tipoServicio.activo
+                                                      ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                                                      : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                                                  }`}
                         onClick={() =>
                           manejarToggleEstado(tipoServicio._id, tipoServicio.activo)
                         }
@@ -378,7 +365,7 @@ export default function TablaTipoServicios() {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center py-4 text-gray-500">
+                <td colSpan="3" className="text-center py-4 text-gray-500">
                   No se encontraron tipos de servicios con ese criterio de
                   búsqueda
                 </td>
@@ -439,7 +426,7 @@ export default function TablaTipoServicios() {
           >
             &times;
           </button>
-          <FormularioTipoServicio
+          <FormularioTipoServicios
             tipoServicioSeleccionado={tipoServicioSeleccionado}
             onTipoServicioActualizado={manejarTipoServicioAgregadoOActualizado}
             onClose={manejarCerrarModal}

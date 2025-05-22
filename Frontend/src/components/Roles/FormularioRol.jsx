@@ -116,6 +116,22 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     e.preventDefault()
     setEnviando(true)
 
+    //VAlidación en el frontend del nombre rol
+    const regex = /^[a-zA-Z0-9\s]{5,30}$/
+
+
+    if (!regex.test(nombreRol.trim())) {
+      Swal.fire({
+        icon: "warning",
+        title: "Nombre no válido",
+        text: "El nombre del rol debe tener entre 5 y 20 caracteres y solo contener letras y espacios.",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#db2777",
+      })
+      setEnviando(false)
+      return
+    }
+
     if (permisosSeleccionados.length === 0) {
       Swal.fire({
         icon: "warning",
@@ -165,10 +181,14 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
         if (onClose) onClose()
       } else {
         const errorData = await response.json()
+        const mensageError = Array.isArray(errorData.errors)
+        ? errorData.errors.join("\n")
+        : errorData.msg || errorData.message || errorData.statusText
+        
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: errorData.msg || errorData.message || response.statusText,
+          text: mensageError,
           confirmButtonColor: "#db2777",
         })
       }
@@ -201,6 +221,8 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
             value={nombreRol}
             onChange={(e) => setNombreRol(e.target.value)}
             required
+            minLength={5}
+            maxLength={20}
             className="form-input"
             placeholder="Ingrese nombre del rol"
           />

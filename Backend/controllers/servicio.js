@@ -1,6 +1,8 @@
 const { response } = require("express")
 const Servicio = require("../modules/servicio")
 const TipoServicio = require("../modules/tiposerv")
+const {servicioSchema} = require("../validators/servicio.validator")
+
 
 // Obtener todos los servicios
 const serviciosGet = async (req, res = response) => {
@@ -26,81 +28,212 @@ const serviciosGet = async (req, res = response) => {
 
 // Crear un nuevo servicio
 const serviciosPost = async (req, res = response) => {
-  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body
+  
+    // El archivo de imagen debe venir en req.file
+  // if (!req.file) {
+  //   return res.status(400).json({
+  //     msg: "La imagen es obligatoria.",
+  //   });
+  // }
 
-  if (
-    !nombreServicio ||
-    !descripcion ||
-    precio === undefined ||
-    tiempo === undefined ||
-    !tipoServicio ||
-    estado === undefined ||
-    !req.file
-  ) {
+  if (req.file) {
+  req.body.imagenUrl = req.file.filename;
+}
+
+  const { error, value } = servicioSchema.validate(req.body, { abortEarly: false });
+  
+  if (error) {
     return res.status(400).json({
-      msg: "Nombre, descripción, precio, tiempo, tipo de servicio, estado e imagen son obligatorios.",
-    })
+      msg: "Error en validación de datos.",
+      errors: error.details.map(e => e.message)
+    });
   }
 
-  const imagenUrl = req.file.filename // Solo guardamos el nombre del archivo
+  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = value;
+  const imagenUrl = req.file.filename; // nombre del archivo guardado
 
   try {
-    const existeTipoServicio = await TipoServicio.findById(tipoServicio)
-    if (!existeTipoServicio) {
-      return res.status(400).json({
-        msg: "El tipo de servicio especificado no existe en la base de datos.",
-      })
+    // Verificar que tipoServicio(s) existan en DB
+    const tipos = Array.isArray(tipoServicio) ? tipoServicio : [tipoServicio];
+    
+    for (const tipoId of tipos) {
+      const existeTipoServicio = await TipoServicio.findById(tipoId);
+      if (!existeTipoServicio) {
+        return res.status(400).json({
+          msg: `El tipo de servicio con ID ${tipoId} no existe.`,
+        });
+      }
     }
 
-    const servicio = new Servicio({ nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl })
-    await servicio.save()
+    const servicio = new Servicio({
+      nombreServicio,
+      descripcion,
+      precio,
+      tiempo,
+      tipoServicio,
+      estado,
+      imagenUrl,
+    });
+
+    await servicio.save();
+
     res.status(201).json({
       msg: "Servicio creado correctamente",
       servicio,
-    })
+    });
+
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
       msg: "Error al crear el servicio",
-    })
+    });
   }
+  
+  
+  // const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body
+
+  // if (
+  //   !nombreServicio ||
+  //   !descripcion ||
+  //   precio === undefined ||
+  //   tiempo === undefined ||
+  //   !tipoServicio ||
+  //   estado === undefined ||
+  //   !req.file
+  // ) {
+  //   return res.status(400).json({
+  //     msg: "Nombre, descripción, precio, tiempo, tipo de servicio, estado e imagen son obligatorios.",
+  //   })
+  // }
+
+  // const imagenUrl = req.file.filename // Solo guardamos el nombre del archivo
+
+  // try {
+  //   const existeTipoServicio = await TipoServicio.findById(tipoServicio)
+  //   if (!existeTipoServicio) {
+  //     return res.status(400).json({
+  //       msg: "El tipo de servicio especificado no existe en la base de datos.",
+  //     })
+  //   }
+
+  //   const servicio = new Servicio({ nombreServicio, descripcion, precio, tiempo, tipoServicio, estado, imagenUrl })
+  //   await servicio.save()
+  //   res.status(201).json({
+  //     msg: "Servicio creado correctamente",
+  //     servicio,
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  //   res.status(500).json({
+  //     msg: "Error al crear el servicio",
+  //   })
+  // }
 }
 
 // Actualizar un servicio
 const serviciosPut = async (req, res = response) => {
-  const { id } = req.params
-  const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body
-  const imagenUrl = req.file ? req.file.filename : undefined // Actualizamos si hay nueva imagen
+
+  const { id } = req.params;
+
+  // Validar que id es válido
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ msg: "ID de servicio inválido." });
+  }
+
+  // Validar solo los campos recibidos (parciales)
+  // Para eso, podemos validar con `servicioSchema` pero con `.fork()` para hacer todo opcional
+  const partialSchema = servicioSchema.fork(
+    ['nombreServicio', 'descripcion', 'precio', 'tiempo', 'tipoServicio', 'estado', 'imagenUrl'],
+    (schema) => schema.optional()
+  );
+
+  // Construimos un objeto para validar, incluyendo imagenUrl solo si hay req.file
+  const dataToValidate = { ...req.body };
+  if (req.file) {
+  dataToValidate.body.imagenUrl = req.file.filename;
+}
+
+  const { error, value } = partialSchema.validate(dataToValidate, { abortEarly: false });
+
+  if (error) {
+    return res.status(400).json({
+      msg: "Error en validación de datos.",
+      errors: error.details.map(e => e.message)
+    });
+  }
 
   try {
-    const servicio = await Servicio.findById(id)
+    const servicio = await Servicio.findById(id);
 
     if (!servicio) {
       return res.status(404).json({
         msg: "Servicio no encontrado",
-      })
+      });
     }
 
-    // Actualizamos solo los campos que hayan sido proporcionados
-    servicio.nombreServicio = nombreServicio || servicio.nombreServicio
-    servicio.descripcion = descripcion || servicio.descripcion
-    servicio.precio = precio !== undefined ? precio : servicio.precio
-    servicio.tiempo = tiempo !== undefined ? tiempo : servicio.tiempo
-    servicio.tipoServicio = tipoServicio || servicio.tipoServicio
-    servicio.estado = estado !== undefined ? estado : servicio.estado
-    if (imagenUrl) servicio.imagenUrl = imagenUrl // Actualizamos la imagen si hay nueva
+    // Validar tipoServicio si viene en la actualización
+    if (value.tipoServicio) {
+      const tipos = Array.isArray(value.tipoServicio) ? value.tipoServicio : [value.tipoServicio];
+      for (const tipoId of tipos) {
+        const existeTipoServicio = await TipoServicio.findById(tipoId);
+        if (!existeTipoServicio) {
+          return res.status(400).json({
+            msg: `El tipo de servicio con ID ${tipoId} no existe.`,
+          });
+        }
+      }
+    }
 
-    await servicio.save()
+    // Actualizar solo los campos recibidos y validados
+    Object.assign(servicio, value);
+
+    await servicio.save();
+
     res.json({
       msg: "Servicio actualizado correctamente",
       servicio,
-    })
+    });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
       msg: "Error al actualizar el servicio",
-    })
+    });
   }
+
+
+  // const { id } = req.params
+  // const { nombreServicio, descripcion, precio, tiempo, tipoServicio, estado } = req.body
+  // const imagenUrl = req.file ? req.file.filename : undefined // Actualizamos si hay nueva imagen
+
+  // try {
+  //   const servicio = await Servicio.findById(id)
+
+  //   if (!servicio) {
+  //     return res.status(404).json({
+  //       msg: "Servicio no encontrado",
+  //     })
+  //   }
+
+  //   // Actualizamos solo los campos que hayan sido proporcionados
+  //   servicio.nombreServicio = nombreServicio || servicio.nombreServicio
+  //   servicio.descripcion = descripcion || servicio.descripcion
+  //   servicio.precio = precio !== undefined ? precio : servicio.precio
+  //   servicio.tiempo = tiempo !== undefined ? tiempo : servicio.tiempo
+  //   servicio.tipoServicio = tipoServicio || servicio.tipoServicio
+  //   servicio.estado = estado !== undefined ? estado : servicio.estado
+  //   if (imagenUrl) servicio.imagenUrl = imagenUrl // Actualizamos la imagen si hay nueva
+
+  //   await servicio.save()
+  //   res.json({
+  //     msg: "Servicio actualizado correctamente",
+  //     servicio,
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  //   res.status(500).json({
+  //     msg: "Error al actualizar el servicio",
+  //   })
+  // }
 }
 
 // Eliminar un servicio

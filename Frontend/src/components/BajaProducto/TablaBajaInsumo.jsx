@@ -5,7 +5,7 @@ import { saveAs } from "file-saver"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFileExcel, faSync, faSearch } from "@fortawesome/free-solid-svg-icons"
-import "./tablaRol.css" // Asegúrate de tener acceso a este archivo CSS
+import "./TablaBajaInsumo.css" // Asegúrate de tener acceso a este archivo CSS
 
 const TablaBajaInsumo = () => {
   const [bajas, setBajas] = useState([])
@@ -166,7 +166,7 @@ const TablaBajaInsumo = () => {
 
   if (cargando) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando bajas de insumos...</p>

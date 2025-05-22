@@ -24,7 +24,7 @@
   } */
   
   .venta-tabla-moderna th {
-    padding: 0.75rem 0.5rem; /* Reducido el padding horizontal */
+    padding: 0.75rem 0.5rem;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
@@ -276,13 +276,13 @@
   
   
   /* Modal */
-  .modal-overlay {
+  .modal-overlay-1 {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -290,10 +290,10 @@
     padding: 1rem;
   }
   
-  .modal-content {
+  .modal-content-1 {
     background-color: white;
     border-radius: 0.5rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     max-width: 90%;
     width: auto;
     max-height: 90vh;
@@ -303,7 +303,7 @@
     padding: 1.5rem;
   }
   
-  .modal-header {
+  .modal-header-1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -402,25 +402,39 @@
   
   .original-price {
     text-decoration: line-through;
-    color: #777;
+    /* color: #777; */
     font-size: 0.9em;
   }
   
   .discounted-price {
-    color: #e83e8c;
+    /* color: #e83e8c; */
     font-weight: bold;
   }
   
-  .discount-badge {
+  .discount-badge-1 {
     display: inline-block;
-    background-color: #e83e8c;
-    color: white;
+    /* background-color: #e83e8c; */
+    /* color: white; */
     padding: 0.2rem 0.5rem;
-    border-radius: 0.25rem;
+    border-radius: 30rem;
     font-size: 0.75rem;
     font-weight: bold;
   }
   
+  /* .discount-badge-1 {
+    position: inline-block;
+    top: 10px;
+    right: 10px;
+    background-color: #4dc573;
+    color: rgb(67, 63, 63);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  } */
+
   .promotional-badge {
     display: inline-block;
     background-color: #28a745;
@@ -431,3 +445,49 @@
     font-weight: bold;
   }
   
+  
+  .tabla-servicios-2 {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  .tabla-servicios-2 thead {
+    background-color: #f9fafb;
+  }
+  
+  .tabla-servicios-2 th {
+    padding: 0.75rem 1rem;
+    /* text-align: left; */
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .tabla-servicios-2 td {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .tabla-servicios-2 tbody tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .tabla-servicios-2 tfoot {
+    background-color: #f3f4f6;
+    font-weight: 600;
+  }
+  
+  .tabla-servicios-2 tfoot td {
+    border-top: 2px solid #e5e7eb;
+  }

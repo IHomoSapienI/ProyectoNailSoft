@@ -64,7 +64,7 @@
 }
 
 .card-1 {
-  background-color: white;
+  /* background-color: white; */
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 1.5rem;
@@ -107,7 +107,7 @@
   /* color: #1f2937; */
 }
 
-.tabla-servicios {
+.tabla-servicios-1 {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -122,34 +122,34 @@
   background-color: #f9fafb;
 } */
 
-.tabla-servicios th {
+.tabla-servicios-1 th {
   padding: 0.75rem 1rem;
-  text-align: left;
+  /* text-align: left; */
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   /* color: #6b7280; */
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #da61cc;
 }
 
-.tabla-servicios td {
+.tabla-servicios-1 td {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   /* color: #374151; */
-  border-bottom: 1px solid #e5e7eb;
+  /* border-bottom: 1px solid #e5e7eb; */
 }
 
 /* .tabla-servicios tbody tr:hover {
   background-color: #f9fafb;
 } */
 
-.tabla-servicios tfoot {
-  background-color: #f3f4f6;
+.tabla-servicios-1 tfoot {
+  /* background-color: #f3f4f6; */
   font-weight: 600;
 }
 
-.tabla-servicios tfoot td {
+.tabla-servicios-1 tfoot td {
   border-top: 2px solid #e5e7eb;
 }
 
@@ -161,7 +161,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  /* color: #374151; */
   margin-bottom: 0.5rem;
 }
 
@@ -173,7 +173,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   background-color: #f9fafb;
-  color: #1f2937;
+  /* color: #1f2937; */
   font-size: 0.875rem;
   transition: all 0.2s ease;
 }
@@ -189,7 +189,7 @@
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: #9ca3af;
+  /* color: #9ca3af; */
 }
 
 .form-input:disabled,
@@ -434,8 +434,8 @@
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 0.25rem;
-  background-color: #f3f4f6;
-  color: #4b5563;
+  /* background-color: #f3f4f6; */
+  /* color: #4b5563; */
   border: 1px solid #e5e7eb;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -445,3 +445,67 @@
   background-color: #e5e7eb;
   color: #1f2937;
 }
+
+
+.discounted-price-1 {
+  /* color: #e11d48; */
+  font-weight: bold;
+}
+
+.original-price-1 {
+  text-decoration: line-through;
+  /* color: #888; */
+  font-size: 0.95em;
+  /* margin-right: 5px; */
+}
+
+.price-with-discount-1 {
+  display: grid;
+  align-items: center;
+  gap: 15px;
+}
+
+
+/* Botón con efecto de línea animada */
+.btn-delete-gv {
+  position: relative;
+  
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Efecto de línea animada que funciona con cualquier color de fondo */
+.btn-delete-gv::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  z-index: -1;
+  transition: none;
+  transform: skewX(-30deg);
+}
+
+.btn-delete-gv:hover::before {
+  left: 100%;
+  transition: all 0.5s ease;
+}
+
+
+  .btn-delete-gv {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    /* display: flex; */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-delete-gv {
+    background-color: #f35f81;
+    color: white;
+  }

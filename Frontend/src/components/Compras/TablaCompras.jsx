@@ -330,7 +330,7 @@ const TablaCompras = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-[64vh]">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
           <p className="mt-4 text-gray-600">Cargando compras...</p>
@@ -435,14 +435,14 @@ const TablaCompras = () => {
                   <td>{compra.insumos ? compra.insumos.length : 0} insumos</td>
                   <td>
                     <div className="flex space-x-2 center">
-                      <button className="btn-edit" onClick={() => abrirFormulario(compra)} title="Editar compra">
+                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => abrirFormulario(compra)} title="Editar compra">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button className="btn-info" onClick={() => abrirDetalles(compra)} title="Ver detalles">
                         <FontAwesomeIcon icon={faEye} />
                       </button>
                       <button
-                        className="btn-delete"
+                        className="btn-delete-1  dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminarCompra(compra._id)}
                         title="Eliminar compra"
                       >

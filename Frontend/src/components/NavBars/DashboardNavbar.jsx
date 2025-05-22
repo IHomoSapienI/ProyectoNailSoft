@@ -1,15 +1,48 @@
-// src/components/NavBars/DashboardNavbar.js
 "use client"
 
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bell, ChevronDown, Heart, LogOut, Search, Settings, User } from 'lucide-react'
+import { ChevronDown, Heart, LogOut, Settings, User } from "lucide-react"
 
 import { cn } from "../../libs/util"
 import { useSidebar } from "../Sidebar/Sidebar"
 import ThemeToggle from "../ThemeToggle" // Importar el componente ThemeToggle
-import './dashboardNavBar.css'
+import "./dashboardNavBar.css"
+
+// Opciones de avatares predefinidos
+const avatarOptions = [
+  {
+    id: "avatar1",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=LongHairStraight&accessoriesType=Blank&hairColor=BrownDark&facialHairType=Blank&clotheType=BlazerShirt&eyeType=Default&eyebrowType=Default&mouthType=Default&skinColor=Light",
+    gender: "female",
+  },
+  {
+    id: "avatar2",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=ShortHairShortRound&accessoriesType=Blank&hairColor=Black&facialHairType=Blank&clotheType=GraphicShirt&clotheColor=Pink&graphicType=Bat&eyeType=Happy&eyebrowType=Default&mouthType=Smile&skinColor=Light",
+    gender: "female",
+  },
+  {
+    id: "avatar3",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=ShortHairDreads01&accessoriesType=Blank&hairColor=Black&facialHairType=BeardLight&facialHairColor=Black&clotheType=Hoodie&clotheColor=Blue03&eyeType=Default&eyebrowType=Default&mouthType=Default&skinColor=Brown",
+    gender: "male",
+  },
+  {
+    id: "avatar4",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=ShortHairShortWaved&accessoriesType=Prescription02&hairColor=BlondeGolden&facialHairType=MoustacheFancy&facialHairColor=BrownDark&clotheType=BlazerSweater&eyeType=Default&eyebrowType=RaisedExcited&mouthType=Default&skinColor=Pale",
+    gender: "male",
+  },
+  {
+    id: "avatar5",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=LongHairCurly&accessoriesType=Blank&hairColor=Red&facialHairType=Blank&clotheType=ShirtVNeck&clotheColor=PastelRed&eyeType=Surprised&eyebrowType=RaisedExcited&mouthType=Smile&skinColor=Tanned",
+    gender: "female",
+  },
+  {
+    id: "avatar6",
+    url: "https://avataaars.io/?avatarStyle=Circle&topType=ShortHairTheCaesar&accessoriesType=Sunglasses&hairColor=Black&facialHairType=BeardMedium&facialHairColor=Black&clotheType=ShirtScoopNeck&clotheColor=Gray01&eyeType=Default&eyebrowType=Default&mouthType=Default&skinColor=Brown",
+    gender: "male",
+  },
+]
 
 const DashboardNavbar = () => {
   const navigate = useNavigate()
@@ -19,6 +52,7 @@ const DashboardNavbar = () => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [notifications, setNotifications] = useState(3)
   const [userName, setUserName] = useState("")
+  const [userAvatar, setUserAvatar] = useState("avatar1")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,14 +65,28 @@ const DashboardNavbar = () => {
     const storedName = localStorage.getItem("userName") || ""
     setUserName(storedName)
 
+    // Obtener el avatar del usuario del localStorage
+    const userId = localStorage.getItem("userId")
+    const savedAvatar = localStorage.getItem(`userAvatar_${userId}`)
+    if (savedAvatar) {
+      setUserAvatar(savedAvatar)
+    }
+
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userRole")
+    localStorage.removeItem("userId")
+    localStorage.removeItem("userName")
+    localStorage.removeItem("userEmail")
+    localStorage.removeItem("clienteId")
     navigate("/login")
   }
+
+  // Obtener la URL del avatar actual
+  const currentAvatarUrl = avatarOptions.find((a) => a.id === userAvatar)?.url || avatarOptions[0].url
 
   // Obtener el título de la página basado en la ruta actual
   const getPageTitle = () => {
@@ -63,13 +111,17 @@ const DashboardNavbar = () => {
         isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "m-[auto] w-[calc(100%-0vh)]",
       )}
     >
-      
       <div className=" flex w-full items-center justify-between px-16">
         <div className="flex items-center gap-4">
-          <motion.div animate={{ rotate: [0, -50, 0] }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 6.5 }}>
+          <motion.div
+            animate={{ rotate: [0, -50, 0] }}
+            transition={{ repeat: Number.POSITIVE_INFINITY, duration: 6.5 }}
+          >
             <Heart className="h-8 w-8 text-pink-600" />
           </motion.div>
-          <h1 className="hidden text-lg font-medium text-gray-800 dark:text-gray-200 md:block">Desarrollamos tus Sueños</h1>
+          <h1 className="hidden text-lg font-medium text-gray-800 dark:text-gray-200 md:block">
+            Desarrollamos tus Sueños
+          </h1>
           <motion.div animate={{ rotate: [0, 50, 0] }} transition={{ repeat: Number.POSITIVE_INFINITY, duration: 6.5 }}>
             <Heart className="h-8 w-8 text-black-600 dark:text-white" />
           </motion.div>
@@ -85,8 +137,6 @@ const DashboardNavbar = () => {
             />
           </div> */}
 
-          
-
           {/* <div className="relative">
             <button className="flex h-9 w-9 items-center justify-center rounded-full border border-pink-200/20 transition-colors hover:bg-pink-50/50 dark:border-pink-800/20 dark:hover:bg-pink-900/20">
               <Bell className="h-4 w-4 text-gray-600 dark:text-gray-300" />
@@ -98,12 +148,16 @@ const DashboardNavbar = () => {
             </button>
           </div> */}
 
-              {/* Añadir el botón de cambio de tema */}
+          {/* Añadir el botón de cambio de tema */}
           <ThemeToggle />
           <div className="relative">
             <button className="flex items-center gap-2" onClick={() => setShowUserMenu(!showUserMenu)}>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 text-xs font-semibold text-pink-600 dark:bg-pink-900 dark:text-pink-300">
-                <span>{userName.substring(0, 2).toUpperCase() || "US"}</span>
+              <div className="avatar-container h-8 w-8 overflow-hidden rounded-full border-2 border-pink-200 dark:border-pink-800">
+                <img
+                  src={currentAvatarUrl || "/placeholder.svg"}
+                  alt="Avatar de usuario"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <ChevronDown className="h-4 w-4 text-gray-500 opacity-50 dark:text-gray-400" />
             </button>
@@ -117,6 +171,24 @@ const DashboardNavbar = () => {
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.2 }}
                 >
+                  <div className="mb-2 flex items-center gap-3 border-b border-pink-100 p-2 dark:border-pink-900">
+                    <div className="avatar-container h-10 w-10 overflow-hidden rounded-full border-2 border-pink-200 dark:border-pink-800">
+                      <img
+                        src={currentAvatarUrl || "/placeholder.svg"}
+                        alt="Avatar de usuario"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        {userName || "Usuario"}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {localStorage.getItem("userRole") || "Admin"}
+                      </span>
+                    </div>
+                  </div>
+
                   <button
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 dark:text-gray-200 dark:hover:bg-pink-900/20"
                     onClick={() => {
