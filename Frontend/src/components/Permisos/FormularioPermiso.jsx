@@ -144,6 +144,7 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           className="form-select"
         >
           <option value="">Selecciona una categoría</option>
+          <option value="bajaProductos">Baja de Productos</option>
           <option value="citas">Citas</option>
           <option value="clientes">Clientes</option>
           <option value="compras">Compras</option>

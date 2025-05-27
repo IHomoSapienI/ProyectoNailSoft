@@ -1,18 +1,56 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import Swal from "sweetalert2"
 import "./VerifyToken.css"
 
 export default function VerifyToken() {
+  const location = useLocation()
   const [token, setToken] = useState("")
+  const [email, setEmail] = useState(location.state?.email || "")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const containerRef = useRef(null)
+
+  // Verificar email al cargar
+  useEffect(() => {
+    if (!email) {
+      Swal.fire({
+        icon: "error",
+        title: "Datos incompletos",
+        text: "Falta información necesaria para verificar tu código.",
+        confirmButtonText: "Entendido"
+      }).then(() => {
+        navigate("/forgot-password");
+      });
+    }
+  }, [email, navigate]);
+
+  // Función para validar el token
+  const validateToken = (token) => {
+    if (!token) {
+      return "El código es obligatorio"; // CEVN6
+    }
+    if (token.length !== 6) {
+      return "El código debe tener exactamente 6 dígitos"; // CEVN1, CEVN2
+    }
+    if (!/^\d+$/.test(token)) {
+      if (/\s/.test(token)) {
+        return "No se permiten espacios en el código"; // CEVN7
+      }
+      if (/[a-zA-Z]/.test(token)) {
+        return "El código solo debe contener números"; // CEVN3
+      }
+      if (/[^0-9\s]/.test(token)) {
+        return "No se permiten caracteres especiales"; // CEVN4
+      }
+    }
+    return "";
+  }
 
   // Función para aplicar estilos forzados
   const applyForcedStyles = () => {
@@ -56,34 +94,86 @@ export default function VerifyToken() {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+  
+    // Validaciones frontend
+    if (!email) {
+      setError("Falta el correo electrónico");
+      setLoading(false);
+      return;
+    }
+  
+    const tokenError = validateToken(token);
+    if (tokenError) {
+      setError(tokenError);
+      setLoading(false);
+      return;
+    }
+  
     try {
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/verify-reset-token", { token })
-
-      // Guardar el token de autorización para el restablecimiento
-      localStorage.setItem("resetAuthToken", response.data.resetAuthToken)
-      localStorage.setItem("resetEmail", response.data.email)
-
-      Swal.fire({
-        icon: "success",
-        title: "Código verificado",
-        text: "Tu código ha sido verificado correctamente. Ahora puedes establecer una nueva contraseña.",
-        confirmButtonText: "Continuar",
-      }).then(() => {
-        navigate("/reset-password")
+      const response = await axios.post(
+        "https://gitbf.onrender.com/api/auth/verify-reset-token", 
+        { token, email },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          timeout: 15000
+        }
+      )
+  
+      if (!response.data.resetToken) {
+        throw new Error("No se recibió token de restablecimiento");
+      }
+  
+      navigate("/reset-password", { 
+        state: { 
+          resetToken: response.data.resetToken,
+          email: email
+        } 
       })
+  
     } catch (error) {
-      console.error("Error al verificar token:", error)
-      setError(error.response?.data?.message || "Código inválido o expirado. Por favor, solicita un nuevo código.")
+      let errorMessage = "Error al verificar el código";
+      
+      if (error.response) {
+        // CEVN5 - Código no coincide con el enviado al correo
+        if (error.response.status === 400 || error.response.status === 401) {
+          errorMessage = "El código es incorrecto o ha expirado";
+        } else {
+          errorMessage = error.response.data?.message || errorMessage;
+        }
+      } else if (error.request) {
+        errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión a internet.";
+      } else {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false)
     }
   }
 
+  const handleTokenChange = (e) => {
+    const inputValue = e.target.value;
+    // Solo permitir números y limitar a 6 caracteres
+    const sanitizedValue = inputValue.replace(/[^0-9]/g, '').substring(0, 6);
+    setToken(sanitizedValue);
+    
+    // Validación en tiempo real
+    if (sanitizedValue.length === 6) {
+      const error = validateToken(sanitizedValue);
+      setError(error);
+    } else {
+      setError("");
+    }
+  }
+  
   return (
     <div className="verify-container" ref={containerRef}>
       <div className="verify-background">
-        <div className="background-pattern"></div>
+        <div className="background-pattern-verify"></div>
       </div>
 
       <motion.div
@@ -93,18 +183,8 @@ export default function VerifyToken() {
         className="verify-card"
       >
         <div className="verify-content">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="logo-container"
-          >
-            <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
-            <h1 className="logo-text">NailsSoft</h1>
-          </motion.div>
-
-          <div className="form-container">
-            <h2 className="welcome-text">Verificar código</h2>
+          <div className="form-container-verify">
+            <h2 className="welcome-text-verify">Verificar código</h2>
 
             {error && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
@@ -112,21 +192,24 @@ export default function VerifyToken() {
               </motion.div>
             )}
 
-            <p className="instruction-text">
-              Ingresa el código de verificación que hemos enviado a tu correo electrónico.
+            <p className="instruction-text-verify">
+              Ingresa el código de 6 dígitos que hemos enviado a tu correo electrónico.
             </p>
 
             <form onSubmit={handleSubmit} className="verify-form">
-              <div className="input-group">
+              <div className="input-group-verify">
                 <input
                   type="text"
                   value={token}
-                  onChange={(e) => setToken(e.target.value)}
+                  onChange={handleTokenChange}
                   required
-                  className="form-input"
+                  maxLength={6}
+                  pattern="\d{6}"
+                  className="form-input-verify"
                   placeholder=" "
+                  inputMode="numeric"
                 />
-                <label className="input-label">Código de verificación</label>
+                <label className="input-label-verify">Código de verificación *</label>
               </div>
 
               <motion.button
@@ -146,24 +229,44 @@ export default function VerifyToken() {
               </motion.button>
             </form>
 
-            <div className="additional-options">
-              <motion.Link to="/forgot-password" whileHover={{ scale: 1.05 }} className="back-link">
+            <div className="additional-options-verify">
+              <motion.button 
+                onClick={() => navigate("/forgot-password")} 
+                whileHover={{ scale: 1.05 }} 
+                className="option-link-verify"
+              >
                 Solicitar nuevo código
-              </motion.Link>
-              <motion.Link to="/login" whileHover={{ scale: 1.05 }} className="back-link">
+              </motion.button>
+              <motion.button 
+                onClick={() => navigate("/login")} 
+                whileHover={{ scale: 1.05 }} 
+                className="option-link-verify"
+              >
                 Volver al inicio de sesión
-              </motion.Link>
+              </motion.button>
             </div>
           </div>
         </div>
 
         <div className="verify-decoration">
-          <div className="decoration-content">
+          <div className="decoration-content-verify">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="logo-container-verify"
+            >
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
+                alt="SPA Y BELLEZA"
+                className="logo-image-verify"
+              />
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="decoration-title"
+              className="decoration-title-verify"
             >
               Verificación
             </motion.h2>
@@ -181,4 +284,3 @@ export default function VerifyToken() {
     </div>
   )
 }
-

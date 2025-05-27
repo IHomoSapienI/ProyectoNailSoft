@@ -44,6 +44,7 @@ export default function TablaPermisos() {
 
   const categorias = [
     { value: "", label: "Todas las categorías" },
+    {value:"bajaProductos", label: "Bajas de Productos"},
     { value: "categoriaProductos", label: "Categorías de Productos" },
     { value: "citas", label: "Citas" },
     { value: "clientes", label: "Clientes" },

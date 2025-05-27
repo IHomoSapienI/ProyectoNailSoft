@@ -1,33 +1,51 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import Swal from "sweetalert2"
 import "./ForgotPassword.css"
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("")
-  const [error, setError] = useState("")
+  const [formData, setFormData] = useState({
+    email: "",
+  })
+
+  const [errors, setErrors] = useState({
+    email: "",
+    general: ""
+  })
+
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
   const containerRef = useRef(null)
 
-  // Función para aplicar estilos forzados
+  const showErrorAlert = (message) => {
+    Swal.fire({
+      title: 'Error',
+      text: message,
+      icon: 'error',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#d33',
+      backdrop: `
+        rgba(0,0,0,0.7)
+        url("/images/nyan-cat.gif")
+        left top
+        no-repeat
+      `
+    })
+  }
+
   const applyForcedStyles = () => {
-    // Forzar estilos en el body y html
     document.body.classList.add("forgot-page-active")
     document.documentElement.classList.add("forgot-page-active")
 
-    // Forzar estilos en el contenedor de la aplicación
     const appContainer = document.getElementById("root") || document.getElementById("app")
     if (appContainer) {
       appContainer.classList.add("forgot-app-container")
     }
 
-    // Forzar estilos en el contenedor
     if (containerRef.current) {
       containerRef.current.style.height = "100vh"
       containerRef.current.style.width = "100%"
@@ -38,18 +56,11 @@ export default function ForgotPassword() {
     }
   }
 
-  // Aplicar estilos inmediatamente al montar y en intervalos regulares
   useEffect(() => {
-    // Aplicar estilos inmediatamente
     applyForcedStyles()
-
-    // Aplicar estilos después de un breve retraso
     const initialTimeout = setTimeout(applyForcedStyles, 100)
-
-    // Aplicar estilos periódicamente
     const intervalId = setInterval(applyForcedStyles, 500)
 
-    // Limpiar al desmontar
     return () => {
       clearTimeout(initialTimeout)
       clearInterval(intervalId)
@@ -63,42 +74,118 @@ export default function ForgotPassword() {
     }
   }, [])
 
+ const validateField = (name, value) => {
+  let error = ""
+  
+  switch(name) {
+    case "email":
+      if (!value.trim()) {
+        error = "El email es obligatorio" // CEVN10
+      } else if (value.length > 80) {
+        error = "Máximo 80 caracteres permitidos" // CEVN11
+      } else if (/\s/.test(value)) {
+        error = "No se permiten espacios en el email" // CEVN9
+      } else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
+        // Validaciones específicas para diferentes casos inválidos
+        if (!value.includes('@')) {
+          error = "Falta el símbolo @" // CEVN2
+        } else if ((value.match(/@/g) || []).length > 1) {
+          error = "Solo se permite un símbolo @" // CEVN3
+        } else if (/[<>*]/.test(value)) {
+          error = "Caracteres especiales inválidos" // CEVN4, CEVN6
+        } else if (!value.includes('.')) {
+          error = "Dominio incompleto (falta punto)" // CEVN5, CEVN7
+        } else if (!value.split('@')[1].includes('.')) {
+          error = "Dominio inválido" // CEVN5
+        } else if (value.endsWith('@')) {
+          error = "Falta el dominio después de @" // CEVN7
+        } else {
+          error = "Formato de email inválido" // CEVN1, CEVN8
+        }
+      }
+      break
+      
+    default:
+      break
+  }
+  
+  return error
+}
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    const processedValue = name === "email" ? value.toLowerCase() : value
+    
+    const error = validateField(name, processedValue)
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error,
+      general: ""
+    }))
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: processedValue,
+    }))
+  }
+
+  const validateForm = () => {
+    let isValid = true
+    const newErrors = {...errors}
+    
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key])
+      newErrors[key] = error
+      if (error) isValid = false
+    })
+    
+    setErrors(newErrors)
+    return isValid
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError("")
+    setErrors(prev => ({...prev, general: ""}))
+    
+    if (!validateForm()) {
+      setLoading(false)
+      showErrorAlert("Por favor corrige los errores en el formulario")
+      return
+    }
 
     try {
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/request-password-reset", { email })
-
-      setSuccess(true)
+      const response = await axios.post(
+        "https://gitbf.onrender.com/api/auth/request-password-reset", 
+        { email: formData.email.trim() }
+      )
 
       Swal.fire({
         icon: "success",
-        title: "Correo enviado",
-        text: "Si el correo existe en nuestra base de datos, recibirás un código de verificación para restablecer tu contraseña.",
+        title: "Código enviado",
+        text: "Hemos enviado un código de verificación a tu correo electrónico. Por favor revisa tu bandeja de entrada.",
         confirmButtonText: "Entendido",
+      }).then(() => {
+        navigate("/verify-token", { state: { email: formData.email } })
       })
     } catch (error) {
       console.error("Error al solicitar restablecimiento:", error)
+      
+      let errorMessage = "Error al solicitar restablecimiento. Por favor intente nuevamente."
 
-      // More detailed error logging
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error data:", error.response.data)
-        console.error("Error status:", error.response.status)
-        console.error("Error headers:", error.response.headers)
-        setError(error.response.data?.message || `Error ${error.response.status}: ${error.response.statusText}`)
+        if (error.response.status === 400) {
+          errorMessage = error.response.data?.message || "Datos inválidos"
+        } else if (error.response.status === 404) {
+          errorMessage = "El correo electrónico no está registrado"
+        }
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request)
-        setError("No se recibió respuesta del servidor. Verifica tu conexión a internet.")
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error message:", error.message)
-        setError(`Error al enviar la solicitud: ${error.message}`)
+        errorMessage = "No se pudo conectar al servidor. Verifique su conexión."
       }
+
+      setErrors(prev => ({...prev, general: errorMessage}))
+      showErrorAlert(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -107,7 +194,7 @@ export default function ForgotPassword() {
   return (
     <div className="forgot-container" ref={containerRef}>
       <div className="forgot-background">
-        <div className="background-pattern"></div>
+        <div className="background-pattern-forgot"></div>
       </div>
 
       <motion.div
@@ -117,96 +204,79 @@ export default function ForgotPassword() {
         className="forgot-card"
       >
         <div className="forgot-content">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="logo-container"
-          >
-            <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
-            <h1 className="logo-text">NailsSoft</h1>
-          </motion.div>
+          <div className="form-container-forgot">
+            <h2 className="welcome-text-forgot">Recupera tu contraseña</h2>
 
-          <div className="form-container">
-            <h2 className="welcome-text">Recupera tu contraseña</h2>
-
-            {!success ? (
-              <>
-                {error && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
-                    {error}
-                  </motion.div>
-                )}
-
-                <p className="instruction-text">
-                  Ingresa tu correo electrónico y te enviaremos un código de verificación para restablecer tu
-                  contraseña.
-                </p>
-
-                <form onSubmit={handleSubmit} className="forgot-form">
-                  <div className="input-group">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="form-input"
-                      placeholder=" "
-                    />
-                    <label className="input-label">Correo electrónico</label>
-                  </div>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="forgot-button"
-                    type="submit"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <div className="loader">
-                        <div className="loader-circle"></div>
-                      </div>
-                    ) : (
-                      "Enviar código de verificación"
-                    )}
-                  </motion.button>
-                </form>
-              </>
-            ) : (
-              <div className="success-container">
-                <div className="success-icon">✓</div>
-                <h3 className="success-title">Código enviado</h3>
-                <p className="success-text">
-                  Hemos enviado un código de verificación a tu correo electrónico. Por favor, revisa tu bandeja de
-                  entrada.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="forgot-button"
-                  onClick={() => navigate("/verify-token")}
-                >
-                  Verificar código
-                </motion.button>
-              </div>
+            {errors.general && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
+                {errors.general}
+              </motion.div>
             )}
 
-            <div className="additional-options">
-              <motion.Link to="/login" whileHover={{ scale: 1.05 }} className="back-to-login">
+            <p className="instruction-text-forgot">
+              Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+
+            <form onSubmit={handleSubmit} className="forgot-form">
+              <div className="input-group-forgot">
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className={`form-input-register ${errors.email ? 'input-error' : ''}`}
+                  placeholder=" "
+                  maxLength={80}
+                />
+                <label htmlFor="email" className="input-label-register">Correo electrónico *</label>
+                {errors.email && <span className="field-error">{errors.email}</span>}
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="forgot-button"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="loader">
+                    <div className="loader-circle"></div>
+                  </div>
+                ) : (
+                  "Enviar enlace de recuperación"
+                )}
+              </motion.button>
+            </form>
+
+            <div className="additional-options-forgot">
+              <Link to="/login" className="option-link-forgot">
                 Volver al inicio de sesión
-              </motion.Link>
+              </Link>
             </div>
           </div>
         </div>
 
         <div className="forgot-decoration">
-          <div className="decoration-content">
+          <div className="decoration-content-forgot">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="logo-container-forgot"
+            >
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
+                alt="SPA Y BELLEZA"
+                className="logo-image-forgot"
+              />
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="decoration-title"
+              className="decoration-title-forgot"
             >
               Recupera tu acceso
             </motion.h2>
@@ -214,7 +284,7 @@ export default function ForgotPassword() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="decoration-text"
+              className="decoration-text-forgot"
             >
               Estamos aquí para ayudarte a recuperar tu cuenta
             </motion.p>
@@ -224,4 +294,3 @@ export default function ForgotPassword() {
     </div>
   )
 }
-

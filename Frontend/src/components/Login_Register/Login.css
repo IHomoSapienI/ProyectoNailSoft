@@ -304,6 +304,21 @@ body.login-page-active {
   font-weight: 500;
 }
 
+.logo-container-login {
+  font-size: 1.4rem;
+  font-weight: 100;
+  color: #000000;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+/* Imagen del logo */
+.logo-image-login {
+  width: auto;
+  height: 150px;
+  object-fit: contain;
+}
+
 @media (max-width: 768px) {
   .login-card {
     flex-direction: column;

@@ -249,47 +249,99 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
                       
                       const SizedBox(height: 40),
                       
-                      GestureDetector(
-                        onTap: () {
-                          _scaffoldKey.currentState?.openDrawer();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE0115F),
-                            borderRadius: BorderRadius.circular(30),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFE0115F).withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Botón para abrir menú
+                          GestureDetector(
+                            onTap: () {
+                              _scaffoldKey.currentState?.openDrawer();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(
-                                Icons.menu,
-                                color: Colors.white,
-                                size: 20,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE0115F),
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFE0115F).withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'ABRIR MENÚ',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 1,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.menu,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'ABRIR MENÚ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Botón para ir al dashboard
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/dashboard', arguments: widget.token);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD4AF37),
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFD4AF37).withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.dashboard,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'DASHBOARD',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -303,159 +355,188 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
   }
 
   Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Container(
-        color: Colors.black,
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.black,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Color(0xFFD4AF37),
-                    width: 1,
-                  ),
+  return Drawer(
+    child: Container(
+      color: Colors.black,
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              border: Border(
+                bottom: BorderSide(
+                  color: Color(0xFFD4AF37),
+                  width: 1,
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFD4AF37),
+                      width: 1,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        'images/logo1.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'MENÚ PRINCIPAL',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.dashboard,
+                  title: 'Dashboard',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/dashboard', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.design_services,
+                  title: 'Tipos de Servicio',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/tipoServicios', arguments: widget.token);
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.home_repair_service,
+                  title: 'Servicios',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/servicios', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.people,
+                  title: 'Usuarios',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/usuarios', arguments: widget.token);
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.shopping_cart,
+                  title: 'Ventas',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/ventas', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.person_pin,
+                  title: 'Empleados',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/empleados', arguments: widget.token);
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.calendar_today,
+                  title: 'Citas',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/citas', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: const Color(0xFFD4AF37).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: const Color(0xFFD4AF37),
+                        color: const Color(0xFFE0115F).withOpacity(0.7),
                         width: 1,
                       ),
                     ),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.asset(
-                          'images/logo1.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                    child: const Icon(
+                      Icons.logout,
+                      color: Color(0xFFE0115F),
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'MENÚ PRINCIPAL',
+                  title: const Text(
+                    'Cerrar Sesión',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.design_services,
-                    title: 'Tipos de Servicio',
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/tipoServicios', arguments: widget.token);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.home_repair_service,
-                    title: 'Servicios',
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/servicios', arguments: widget.token);
-                    },
-                    isHighlighted: true,
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.people,
-                    title: 'Usuarios',
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/usuarios', arguments: widget.token);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.shopping_cart,
-                    title: 'Ventas',
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer
-                      Navigator.pushNamed(context, '/ventas', arguments: widget.token);
-                    },
-                    isHighlighted: true,
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: const Color(0xFFD4AF37).withOpacity(0.3),
-                    width: 1,
-                  ),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
                 ),
-              ),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFFE0115F).withOpacity(0.7),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.logout,
-                        color: Color(0xFFE0115F),
-                        size: 20,
-                      ),
-                    ),
-                    title: const Text(
-                      'Cerrar Sesión',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/');
-                    },
+                const SizedBox(height: 8),
+                Text(
+                  '© 2024 Sebastián Álvarez Restrepo',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '© 2024 Sebastián Álvarez Restrepo',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildDrawerItem(
     BuildContext context, {

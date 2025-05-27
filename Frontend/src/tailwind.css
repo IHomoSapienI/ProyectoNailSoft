@@ -93,7 +93,7 @@
     color: white;
   }
   .card-gradient-5 {
-    background: #3c3c3c;
+    background: linear-gradient(135deg, #151315 80%, #22273898 100%, #3c3c3c 100%);
     color: white;
   }
   

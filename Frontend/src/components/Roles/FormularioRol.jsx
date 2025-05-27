@@ -17,6 +17,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
   const [enviando, setEnviando] = useState(false)
 
   const categorias = [
+    "bajaProductos",
     "categoriaProductos",
     "citas",
     "clientes",

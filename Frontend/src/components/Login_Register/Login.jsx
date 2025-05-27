@@ -156,7 +156,7 @@ export default function Login() {
           </div>
 
           <div className="form-container-login">
-            <h2 className="welcome-text">¡Bienvenido de nuevo!</h2>
+            <h2 className="welcome-text-login">¡Bienvenido de nuevo!</h2>
             {error && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
                 {error}
@@ -233,7 +233,7 @@ export default function Login() {
               <img
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
                 alt="SPA Y BELLEZA"
-                className="logo-image"
+                className="logo-image-login"
               />
             </motion.div>
             <motion.h2

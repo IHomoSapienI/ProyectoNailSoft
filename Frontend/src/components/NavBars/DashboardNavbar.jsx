@@ -180,17 +180,17 @@ const DashboardNavbar = () => {
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      <span className="text-sm font-medium text-gray-800">
                         {userName || "Usuario"}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xl text-pink-500">
                         {localStorage.getItem("userRole") || "Admin"}
                       </span>
                     </div>
                   </div>
 
                   <button
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 dark:text-gray-200 dark:hover:bg-pink-900/20"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 hover:bg-pink-900/20"
                     onClick={() => {
                       navigate("/profile")
                       setShowUserMenu(false)
@@ -201,7 +201,7 @@ const DashboardNavbar = () => {
                   </button>
 
                   <button
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 dark:text-gray-200 dark:hover:bg-pink-900/20"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 hover:bg-pink-900/20"
                     onClick={() => {
                       navigate("/usuarios")
                       setShowUserMenu(false)

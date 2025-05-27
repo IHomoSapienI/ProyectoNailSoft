@@ -262,9 +262,9 @@ const Sidebar = () => {
           ease: [0.25, 0.1, 0.25, 1], // Curva de bezier más suave
           opacity: { duration: 0.2 },
         }}
-        className={`sidebar-container dark:bg-primary ${isCollapsed ? "collapsed" : ""}`}
+        className={`sidebar-container  ${isCollapsed ? "collapsed" : ""}`}
       >
-        <div className="sidebar-content dark:bg-primary">
+        <div className="sidebar-content ">
           <div className="sidebar-header">
 
             <Link to={userRole === "admin" ? "/dashboard" : "/agenda-empleado"} className="logo-container">

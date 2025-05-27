@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.example.mobile" // Ajusta el namespace para tu aplicación
     compileSdk = 34 // Usa el SDK de Android correcto que estás utilizando
-    ndkVersion = "21.3.6528147" // Esta versión debe ser compatible con tu SDK
+    ndkVersion = "25.1.8937393"  // Esta versión debe ser compatible con tu SDK
 
     defaultConfig {
         applicationId = "com.example.mobile"  // ID de la aplicación, que debe ser único

@@ -1,36 +1,102 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import axios from "axios"
 import Swal from "sweetalert2"
 import "./ResetPassword.css"
 
 export default function ResetPassword() {
+  const location = useLocation()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState({
+    password: "",
+    confirmPassword: ""
+  })
   const [loading, setLoading] = useState(false)
+  const [resetToken, setResetToken] = useState(location.state?.resetToken || "")
+  const [email, setEmail] = useState(location.state?.email || "")
   const navigate = useNavigate()
   const containerRef = useRef(null)
 
-  // Verificar si tenemos el token de autorización
+  // Verificar token al cargar
   useEffect(() => {
-    const resetAuthToken = localStorage.getItem("resetAuthToken")
-    if (!resetAuthToken) {
+    if (!resetToken) {
       Swal.fire({
         icon: "error",
-        title: "Acceso denegado",
-        text: "No tienes autorización para acceder a esta página. Por favor, solicita un restablecimiento de contraseña.",
-        confirmButtonText: "Entendido",
+        title: "Acceso no autorizado",
+        text: "Debes verificar tu código primero para restablecer la contraseña.",
+        confirmButtonText: "Entendido"
       }).then(() => {
         navigate("/forgot-password")
       })
     }
-  }, [navigate])
+  }, [resetToken, navigate])
 
-  // Función para aplicar estilos forzados
+  // Función para validar la contraseña
+  const validatePassword = (password) => {
+    if (!password) {
+      return "La contraseña es obligatoria"; // CEVN9
+    }
+    if (password.length < 8) {
+      return "Mínimo 8 caracteres"; // CEVN5
+    }
+    if (password.length > 64) {
+      return "Máximo 64 caracteres"; // CEVN6
+    }
+    if (/\s/.test(password)) {
+      return "No se permiten espacios"; // CEVN8
+    }
+    if (/^[a-zA-Z]+$/.test(password)) {
+      return "Debe incluir números o caracteres especiales"; // CEVN1, CEVN4
+    }
+    if (/^\d+$/.test(password)) {
+      return "No puede contener solo números"; // CEVN2
+    }
+    if (/^[^a-zA-Z0-9]+$/.test(password)) {
+      return "No puede contener solo caracteres especiales"; // CEVN3
+    }
+    if (password.length > 15 && password.length <= 64) {
+      // CEVN7 - Solo muestra advertencia pero no bloquea
+      console.warn("Contraseña muy larga (16-64 caracteres)");
+    }
+    return "";
+  }
+
+  // Función para validar la confirmación de contraseña
+  const validateConfirmPassword = (confirmPassword, password) => {
+    if (!confirmPassword) {
+      return "Confirma tu contraseña"; // CEVN2
+    }
+    if (confirmPassword !== password) {
+      return "Las contraseñas no coinciden"; // CEVN1
+    }
+    return "";
+  }
+
+  // Manejar cambios en los campos
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setErrors(prev => ({
+      ...prev,
+      password: validatePassword(value),
+      confirmPassword: validateConfirmPassword(confirmPassword, value)
+    }));
+  }
+
+  const handleConfirmPasswordChange = (e) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    setErrors(prev => ({
+      ...prev,
+      confirmPassword: validateConfirmPassword(value, password)
+    }));
+  }
+
+  // Estilos forzados
   const applyForcedStyles = () => {
     document.body.classList.add("reset-page-active")
     document.documentElement.classList.add("reset-page-active")
@@ -68,60 +134,102 @@ export default function ResetPassword() {
     }
   }, [])
 
+  const validateForm = () => {
+    const passwordError = validatePassword(password);
+    const confirmError = validateConfirmPassword(confirmPassword, password);
+    
+    setErrors({
+      password: passwordError,
+      confirmPassword: confirmError
+    });
+
+    return !passwordError && !confirmError;
+  }
+
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
-    // Validar que las contraseñas coincidan
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
-      setLoading(false)
-      return
-    }
-
-    // Validar complejidad de la contraseña
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres")
-      setLoading(false)
-      return
+    e.preventDefault();
+    setLoading(true);
+    
+    if (!validateForm()) {
+      setLoading(false);
+      return;
     }
 
     try {
-      const resetAuthToken = localStorage.getItem("resetAuthToken")
-
-      const response = await axios.post("https://gitbf.onrender.com/api/auth/reset-password", {
-        resetAuthToken,
-        password,
-        confirmPassword,
-      })
-
-      // Limpiar el token de localStorage
-      localStorage.removeItem("resetAuthToken")
-      localStorage.removeItem("resetEmail")
+      const response = await axios.post(
+        "https://gitbf.onrender.com/api/auth/reset-password",
+        {
+          token: resetToken,
+          password,
+          confirmPassword,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          timeout: 30000
+        }
+      );
 
       Swal.fire({
         icon: "success",
         title: "¡Contraseña restablecida!",
-        text: "Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.",
+        text: "Tu contraseña ha sido actualizada correctamente.",
         confirmButtonText: "Iniciar sesión",
       }).then(() => {
-        navigate("/login")
-      })
+        navigate("/login");
+      });
+
     } catch (error) {
-      console.error("Error al restablecer contraseña:", error)
-      setError(
-        error.response?.data?.message || "Ocurrió un error al restablecer la contraseña. Por favor, intenta de nuevo.",
-      )
+      let errorMessage = "Ocurrió un error al restablecer la contraseña";
+      
+      if (error.response) {
+        if (error.response.data?.error?.includes("Cast to ObjectId failed")) {
+          errorMessage = "Error de validación en el servidor. Por favor, contacta al administrador.";
+        } else {
+          errorMessage = error.response.data?.message || errorMessage;
+        }
+        
+        if (error.response.status === 401) {
+          if (error.response.data?.expired) {
+            Swal.fire({
+              icon: "error",
+              title: "Sesión expirada",
+              text: "El tiempo para restablecer la contraseña ha expirado. Por favor, solicita un nuevo código.",
+              confirmButtonText: "Entendido"
+            }).then(() => {
+              navigate("/forgot-password");
+            });
+            setLoading(false);
+            return;
+          }
+          
+          if (error.response.data?.invalidToken) {
+            errorMessage = "Token inválido. Por favor, solicita un nuevo código de verificación.";
+          }
+        }
+      } else if (error.request) {
+        errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión a internet.";
+      } else {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+        confirmButtonText: "Entendido"
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="reset-container" ref={containerRef}>
       <div className="reset-background">
-        <div className="background-pattern"></div>
+        <div className="background-pattern-reset"></div>
       </div>
 
       <motion.div
@@ -131,52 +239,43 @@ export default function ResetPassword() {
         className="reset-card"
       >
         <div className="reset-content">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="logo-container"
-          >
-            <img src="https://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
-            <h1 className="logo-text">NailsSoft</h1>
-          </motion.div>
+          <div className="form-container-reset">
+            <h2 className="welcome-text-reset">Establece tu nueva contraseña</h2>
 
-          <div className="form-container">
-            <h2 className="welcome-text">Establece tu nueva contraseña</h2>
-
-            {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
-                {error}
-              </motion.div>
-            )}
-
-            <p className="instruction-text">
-              Crea una nueva contraseña segura para tu cuenta. Debe tener al menos 8 caracteres.
+            <p className="instruction-text-reset">
+              Crea una nueva contraseña segura para tu cuenta.
             </p>
 
+
             <form onSubmit={handleSubmit} className="reset-form">
-              <div className="input-group">
+              <div className="input-group-reset">
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   required
-                  className="form-input"
+                  minLength={8}
+                  maxLength={64}
+                  className={`form-input-reset ${errors.password ? 'input-error' : ''}`}
                   placeholder=" "
                 />
-                <label className="input-label">Nueva contraseña</label>
+                <label className="input-label-reset">Nueva contraseña *</label>
+                {errors.password && <span className="field-error">{errors.password}</span>}
               </div>
 
-              <div className="input-group">
+              <div className="input-group-reset">
                 <input
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
                   required
-                  className="form-input"
+                  minLength={8}
+                  maxLength={64}
+                  className={`form-input-reset ${errors.confirmPassword ? 'input-error' : ''}`}
                   placeholder=" "
                 />
-                <label className="input-label">Confirmar contraseña</label>
+                <label className="input-label-reset">Confirmar contraseña *</label>
+                {errors.confirmPassword && <span className="field-error">{errors.confirmPassword}</span>}
               </div>
 
               <motion.button
@@ -184,7 +283,7 @@ export default function ResetPassword() {
                 whileTap={{ scale: 0.98 }}
                 className="reset-button"
                 type="submit"
-                disabled={loading}
+                disabled={loading || errors.password || errors.confirmPassword}
               >
                 {loading ? (
                   <div className="loader">
@@ -196,21 +295,37 @@ export default function ResetPassword() {
               </motion.button>
             </form>
 
-            <div className="additional-options">
-              <motion.Link to="/login" whileHover={{ scale: 1.05 }} className="back-link">
+            <div className="additional-options-reset">
+              <motion.button 
+                onClick={() => navigate("/login")} 
+                whileHover={{ scale: 1.05 }} 
+                className="option-link-reset"
+              >
                 Volver al inicio de sesión
-              </motion.Link>
+              </motion.button>
             </div>
           </div>
         </div>
 
         <div className="reset-decoration">
-          <div className="decoration-content">
+          <div className="decoration-content-reset">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="logo-container-reset"
+            >
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
+                alt="SPA Y BELLEZA"
+                className="logo-image-reset"
+              />
+            </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="decoration-title"
+              className="decoration-title-reset"
             >
               Seguridad renovada
             </motion.h2>
@@ -218,7 +333,7 @@ export default function ResetPassword() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="decoration-text"
+              className="decoration-text-reset"
             >
               Protege tu cuenta con una nueva contraseña
             </motion.p>
@@ -228,4 +343,3 @@ export default function ResetPassword() {
     </div>
   )
 }
-

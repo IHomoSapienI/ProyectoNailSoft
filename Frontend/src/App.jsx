@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
 
-import "bootstrap/dist/css/bootstrap.min.css"
+// import "bootstrap/dist/css/bootstrap.min.css"
 import "./output.css"
 import "./tailwind.css"
 import "./App.css"

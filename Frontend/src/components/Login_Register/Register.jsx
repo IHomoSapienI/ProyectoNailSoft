@@ -168,7 +168,7 @@ export default function Register() {
         } else if (/\s/.test(value)) {
           error = "No se permiten espacios" // CEVN9
         } else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
-          error = "Formato de email inválido (solo minúsculas)" // CEVN1-8
+          error = "Formato de email inválido" // CEVN1-8
         } else if ((value.match(/@/g) || []).length > 1) {
           error = "Solo se permite un símbolo @" // CEVN3
         } else if (!value.includes('.')) {
