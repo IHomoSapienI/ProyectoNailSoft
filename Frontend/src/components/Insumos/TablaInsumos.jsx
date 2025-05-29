@@ -19,7 +19,8 @@ import {
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import "./tablaInsumos.css";
+// import "./tablaInsumos.css";
+import "../../styles/tablas.css";
 
 // Configura el contenedor del modal
 Modal.setAppElement("#root");
@@ -509,7 +510,7 @@ const TablaInsumos = () => {
 
   return (
     // Eliminado transition-all duration-500 para evitar transiciones globales
-    <div className="tabla-container dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
         Gestión de Insumos
       </h2>
@@ -551,20 +552,20 @@ const TablaInsumos = () => {
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={handleBusquedaChange}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar insumos..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
-        <table className="insumos-tabla-moderna w-full">
+        <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               {/* Cambiado dark:hover:bg-gray-500/50 por dark:bg-gray-500/50 para evitar efectos hover */}
@@ -594,7 +595,7 @@ const TablaInsumos = () => {
                   <td>${insumo.precio}</td>
                   <td>
                     <span
-                      className={`usuario-estado-badge ${
+                      className={`universal-estado-badge ${
                         insumo.estado 
                         ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -614,7 +615,7 @@ const TablaInsumos = () => {
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="btn-info"
+                        className="btn-info-1"
                         onClick={() => abrirModalBaja(insumo)}
                         title="Dar de baja"
                       >
@@ -628,7 +629,7 @@ const TablaInsumos = () => {
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1
                                               ${
                                                 insumo.estado
                                                   ? "bg-emerald-400/70  dark:bg-emerald-700 "

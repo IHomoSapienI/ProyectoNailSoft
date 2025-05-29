@@ -1,46 +1,79 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
+import React, { lazy, Suspense } from "react"
 
 // import "bootstrap/dist/css/bootstrap.min.css"
-import "./output.css"
+// import "./output.css"
 import "./tailwind.css"
-import "./App.css"
+// import "./App.css"
 import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo"
 import MainLayout from "./components/Sidebar/MainLayout"
+// const ClientDashboard = lazy(() => import("./components/Clientes/client-dashboard"))
 import ClientDashboard from "./components/Clientes/client-dashboard"
 import Sidebar from "./components/Sidebar/Sidebar"
 import Navbar from "./components/NavBars/Navbar"
 import NavbarAuth from "./components/NavBars/NavbarAuth"
 import Footer from "./components/Footer/Footer"
-import Index from "./components/LandingI/Index"
-import TablaRoles from "./components/Roles/TablaRoles"
-import TablaServicios from "./components/Servicios/TablaServicios"
-import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
-import UserProfile from "./components/PerfilUsuario/UserProfile"
-import TablaVentas from "./components/Venta/TablaVentas"
-import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
-import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
-import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
-import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado"
-import ArticlesGrid from "./components/Galeria/ArticlesGrid"
-import SeleccionarServicios from "./components/Galeria/SeleccionarServicios"
-import TablaInsumos from "./components/Insumos/TablaInsumos"
-import TablaEmpleados from "./components/Empleados/TablaEmpleados"
-import TablaClientes from "./components/Clientes/TablaClientes"
-import TablaCitas from "./components/Citas_Agenda/TablaCitas"
-import TablaProveedores from "./components/Proveedores/TablaProveedores"
-import TablaCategorias from "./components/CategoriaProducto/TablaCategorias"
-import TablaProductos from "./components/Productos/TablaProductos"
-import TablaVentaProductos from "./components/VentaProductos/TablaVentaProductos"
-import TablaCompras from "./components/Compras/TablaCompras"
+const Index = lazy(() => import("./components/LandingI/Index"))
+// import Index from "./components/LandingI/Index"
+const TablaRoles = lazy(() => import("./components/Roles/TablaRoles"))
+// import TablaRoles from "./components/Roles/TablaRoles"
+const TablaServicios = lazy(() => import("./components/Servicios/TablaServicios"))
+// import TablaServicios from "./components/Servicios/TablaServicios"
+const TablaUsuarios = lazy(() => import("./components/Usuarios/TablaUsuarios"))
+// import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
+const UserProfile = lazy(() => import("./components/PerfilUsuario/UserProfile"))
+// import UserProfile from "./components/PerfilUsuario/UserProfile"
+const TablaVentas = lazy(() => import("./components/Venta/TablaVentas"))
+// import TablaVentas from "./components/Venta/TablaVentas"
+
+// import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
+const GestionVentaServicio = lazy(() => import("./components/VentaServicios/GestionVentaServicio"))
+// import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
+const CitasEnProgreso = lazy(() => import("./components/Citas_Agenda/CitasEnProgreso"))
+// import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
+const AgendaEmpleado = lazy(() => import("./components/Citas_Agenda/AgendaEmpleado"))
+// import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado"
+const ArticlesGrid = lazy(() => import("./components/Galeria/ArticlesGrid"))
+// import ArticlesGrid from "./components/Galeria/ArticlesGrid"
+const SeleccionarServicios = lazy(() => import("./components/Galeria/SeleccionarServicios"))
+// import SeleccionarServicios from "./components/Galeria/SeleccionarServicios"
+const TablaInsumos = lazy(() => import("./components/Insumos/TablaInsumos"))
+// import TablaInsumos from "./components/Insumos/TablaInsumos"
+const TablaEmpleados = lazy(() => import("./components/Empleados/TablaEmpleados"))
+// import TablaEmpleados from "./components/Empleados/TablaEmpleados"
+const TablaClientes = lazy(() => import("./components/Clientes/TablaClientes"))
+// import TablaClientes from "./components/Clientes/TablaClientes"
+
+const TablaCitas = lazy(() => import("./components/Citas_Agenda/TablaCitas"))
+// import TablaCitas from "./components/Citas_Agenda/TablaCitas"
+const TablaProveedores = lazy(() => import("./components/Proveedores/TablaProveedores"))
+// import TablaProveedores from "./components/Proveedores/TablaProveedores"
+const TablaCategorias = lazy(() => import("./components/CategoriaProducto/TablaCategorias"))
+// import TablaCategorias from "./components/CategoriaProducto/TablaCategorias"
+const TablaProductos = lazy(() => import("./components/Productos/TablaProductos"))
+// import TablaProductos from "./components/Productos/TablaProductos"
+
+
+
+
+// import TablaVentaProductos from "./components/VentaProductos/TablaVentaProductos"
+const TablaCompras = lazy(() => import("./components/Compras/TablaCompras"))
+// import TablaCompras from "./components/Compras/TablaCompras"
+
 import Dashboard from "./components/Dashboard/Dashboard"
+
+
 import Login from "./components/Login_Register/Login"
 import Register from "./components/Login_Register/Register"
-import Politicas from "./components/Politicas/Politicas"
+const Politicas = lazy(() => import("./components/Politicas/Politicas"))
+// import Politicas from "./components/Politicas/Politicas"
 import ForgotPassword from "./components/Login_Register/ForgotPassword/ForgotPassword"
 import VerifyToken from "./components/Login_Register/VerifyToken/VerifyToken"
 import ResetPassword from "./components/Login_Register/ResetPassword/ResetPassword"
-import TablaTipoServicios from "./components/Servicios/TablaTipoServicios"
-import TablaTipoServicioss from "./components/TipoServicios/TablaTipoServicioss"
+const TablaTipoServicios = lazy(() => import("./components/Servicios/TablaTipoServicios"))
+// import TablaTipoServicios from "./components/Servicios/TablaTipoServicios"
+const TablaTipoServicioss = lazy(() => import("./components/TipoServicios/TablaTipoServicioss"))
+// import TablaTipoServicioss from "./components/TipoServicios/TablaTipoServicioss"
 
 import TablaPermisos from "./components/Permisos/TablaPermisos"
 import axios from "axios"
@@ -149,7 +182,11 @@ const AuthLayout = ({ children }) => (
 function App() {
   return (
     <Router>
+
+      <Suspense fallback={<div>Loading...</div>}>
       <Routes>
+    
+
         <Route
           path="/login"
           element={
@@ -268,7 +305,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/ventas"
           element={
             <PrivateRoute allowedRoles={["admin"]}>
@@ -277,7 +314,7 @@ function App() {
               </Layout>
             </PrivateRoute>
           }
-        />
+        /> */}
         <Route
           path="/ventas-unificadas"
           element={
@@ -408,7 +445,7 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/ventasProductos"
           element={
             <PrivateRoute allowedRoles={["admin"]}>
@@ -417,7 +454,7 @@ function App() {
               </Layout>
             </PrivateRoute>
           }
-        />
+        /> */}
 
         {/* Nuevas rutas para la gestión de ventas y agenda de empleados */}
         <Route
@@ -470,6 +507,10 @@ function App() {
           }
         />
       </Routes>
+      </Suspense>    
+
+
+
     </Router>
   )
 }

@@ -17,7 +17,8 @@ import {
 import Swal from "sweetalert2";
 import axios from "axios";
 import { useSidebar } from "../Sidebar/Sidebar"; // Importamos el hook del sidebar
-import "./tablaUsuarios.css"; // Importamos los estilos específicos para usuarios
+// import "./tablaUsuarios.css";
+import "../../styles/tablas.css"
 
 // Configura el contenedor del modal
 Modal.setAppElement("#root");
@@ -321,20 +322,20 @@ const TablaUsuarios = () => {
           Nuevo Usuario
         </button>
 
-        <div className="usuario-search-container dark:card-gradient-4">
-          <FontAwesomeIcon icon={faSearch} className="usuario-search-icon" />
+        <div className="universal-search-container dark:card-gradient-4">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="usuario-search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar usuarios..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto ">
-        <table className="usuario-tabla-moderna w-full">
+        <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th
@@ -399,7 +400,7 @@ const TablaUsuarios = () => {
                   </td>
                   <td>
                     <span
-                      className={`usuario-estado-badge ${
+                      className={`universal-estado-badge ${
                         usuario.estado
                           ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -411,14 +412,14 @@ const TablaUsuarios = () => {
                   <td>
                     <div className="flex space-x-2">
                       <button
-                        className="usuario btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
                         onClick={() => manejarEditar(usuario)}
                         title="Editar usuario"
                       >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
-                        className="usuario btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90"
                         onClick={() => manejarEliminar(usuario._id)}
                         title="Eliminar usuario"
                       >
@@ -432,7 +433,7 @@ const TablaUsuarios = () => {
                         <FontAwesomeIcon icon={faPowerOff} />
                       </button> */}
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1
     ${
       usuario.estado
         ? "bg-emerald-400/70  dark:bg-emerald-700 "
@@ -469,23 +470,23 @@ const TablaUsuarios = () => {
 
       {/* Paginación */}
       {filtrarUsuarios().length > 0 && (
-        <div className="usuario-pagination-container mt-6">
+        <div className="pagination-container mt-6">
           <button
             onClick={paginaAnterior}
             disabled={paginaActual === 1}
-            className={`usuario-pagination-btn ${
+            className={`pagination-btn ${
               paginaActual === 1 ? "disabled" : ""
             }`}
           >
             &lt;
           </button>
 
-          <div className="usuario-pagination-pages">
+          <div className="pagination-pages">
             {Array.from({ length: paginasTotales }, (_, index) => (
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`usuario-pagination-number ${
+                className={`pagination-number ${
                   paginaActual === index + 1 ? "active" : ""
                 }`}
               >
@@ -497,7 +498,7 @@ const TablaUsuarios = () => {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`usuario-pagination-btn ${
+            className={`pagination-btn ${
               paginaActual === paginasTotales ? "disabled" : ""
             }`}
           >
@@ -510,8 +511,8 @@ const TablaUsuarios = () => {
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={manejarCerrarModal}
-        className="usuario-modal-content"
-        overlayClassName="usuario-modal-overlay"
+        className="modal-content"
+        overlayClassName="modal-overlay"
       >
         <div className="relative">
           <button

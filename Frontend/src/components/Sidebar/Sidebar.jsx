@@ -4,7 +4,7 @@ import React from "react"
 
 import { useState, useEffect, useRef, createContext, useContext } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
+// import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
 import { BiAlbum, BiSolidDiscount } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -64,7 +64,7 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
         
         <div className="menu-group-header-collapsed">
         
-          <h5>{title}</h5>
+          <h2>{title}</h2>
         </div>
         <div className="menu-group-content-collapsed">
           {React.Children.map(children, (child) => React.cloneElement(child, { collapsed }))}
@@ -77,7 +77,7 @@ const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
     <div className="menu-group">
       
       <button className="menu-group-header dark:text-foreground" onClick={() => setIsExpanded(!isExpanded)}>
-        <h5>{title}</h5>
+        <h2>{title}</h2>
         <FaChevronDown className={`menu-group-icon ${isExpanded ? "expanded" : ""}`} />
       </button>
       <AnimatePresence initial={false}>

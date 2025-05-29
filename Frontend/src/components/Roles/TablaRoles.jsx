@@ -19,7 +19,8 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
-import "./tablaRol.css";
+// import "./tablaRol.css";
+import "../../styles/tablas.css"
 
 Modal.setAppElement("#root");
 
@@ -384,26 +385,28 @@ export default function TablaRoles() {
   }
 
   return (
-    <div className="tabla-container  dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
+    <div className="content">
+      <h2 className="text-3xl font-semibold mb-8 text-foreground px-4 pt-4">
         Gestión de Roles
       </h2>
-
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4 ">
+      
+      <div className="flex  flex-col md:flex-row justify-between  items-center mb-6 gap-4 px-4 ">
         <div className="flex space-x-2">
-          <button className="btn-add" onClick={manejarAgregarNuevo}>
+          <button 
+          className="btn-add" 
+          onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
             Nuevo Rol
           </button>
 
-          <button
+          {/* <button
             className="btn-secondary"
             onClick={manejarAgregarPermiso}
             title="Agregar nuevo permiso"
           >
             <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
             Nuevo Permiso
-          </button>
+          </button> */}
 
           <button
             className="btn-export"
@@ -412,29 +415,38 @@ export default function TablaRoles() {
             title="Exportar a Excel"
           >
             {exportando ? (
-              <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+              <div className="flex items-center">
+                <div className="animate-spin h-4 w-4 border-t-2 border-b-2 border-white rounded-full mr-2"></div>
+                <span>Exportando...</span>
+              </div>
             ) : (
               <FontAwesomeIcon icon={faFileExcel} className="mr-2" />
             )}
             Exportar
           </button>
+          
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+
+
+          <div className="universal-search-container w-full md:w-2/3">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar roles..."
           />
         </div>
       </div>
+        
 
-      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full mx-auto">
+        
+
+      <div className="overflow-x-auto rounded-lg shadow  mx-auto">
         <table
-          className="rol-tabla-moderna w-full dark:bg-foreground"
+          className="universal-tabla-moderna w-full"
           style={{ width: "100%", tableLayout: "fixed" }}
         >
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
@@ -454,7 +466,7 @@ export default function TablaRoles() {
                   <td className="font-medium">{rol.nombreRol}</td>
                   <td>
                     <span
-                      className={`rol-estado-badge ${
+                      className={`universal-estado-badge ${
                         rol.estadoRol
                           ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -482,7 +494,7 @@ export default function TablaRoles() {
                       </button>
 
                       <button
-                        className="btn-info"
+                        className="btn-info-1"
                         onClick={() => manejarVerDetalles(rol)}
                         title="Ver detalles"
                       >
@@ -498,7 +510,7 @@ export default function TablaRoles() {
                       </button> */}
 
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1 transition-all duration-200 ease-in-out
                           ${
                             rol.estadoRol
                               ? "bg-emerald-400/70  dark:bg-emerald-700 "

@@ -5,7 +5,8 @@ import { saveAs } from "file-saver"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFileExcel, faSync, faSearch } from "@fortawesome/free-solid-svg-icons"
-import "./TablaBajaInsumo.css" // Asegúrate de tener acceso a este archivo CSS
+// import "./TablaBajaInsumo.css"
+import "../../styles/tablas.css"
 
 const TablaBajaInsumo = () => {
   const [bajas, setBajas] = useState([])
@@ -37,7 +38,13 @@ const TablaBajaInsumo = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      setBajas(response.data || [])
+      // Extraer el array 'bajas' de la respuesta
+      const bajasData = response.data && response.data.bajas ? response.data.bajas : []
+      
+      console.log("Datos recibidos:", response.data)
+      console.log("Array de bajas extraído:", bajasData)
+
+      setBajas(bajasData)
     } catch (error) {
       console.error("Error completo:", error)
       setError(error)
@@ -194,7 +201,7 @@ const TablaBajaInsumo = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Bajas de Insumos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
@@ -214,20 +221,20 @@ const TablaBajaInsumo = () => {
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar bajas..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
-        <table className="insumo-tabla-adecuada w-full">
+        <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th className="dark:hover:bg-gray-500/50" style={{ width: "25%" }}>Insumo</th>

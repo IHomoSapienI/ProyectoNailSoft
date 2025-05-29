@@ -3,296 +3,402 @@
 import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
 import axios from "axios"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faSave, faTimes } from "@fortawesome/free-solid-svg-icons"
 
 const FormularioProveedor = ({ proveedor, onProveedorActualizado, onClose }) => {
-  const [nombreProveedor, setNombreProveedor] = useState("")
-  const [contacto, setContacto] = useState("")
-  const [numeroContacto, setNumeroContacto] = useState("")
-  const [provee, setProvee] = useState("")
-  const [estado, setEstado] = useState(true)
-  const [modoEdicion, setModoEdicion] = useState(false)
-  const apiUrl = "https://gitbf.onrender.com/api/proveedores"
-
-  // Estados para errores de validación
-  const [errores, setErrores] = useState({
+  const [formData, setFormData] = useState({
     nombreProveedor: "",
     contacto: "",
     numeroContacto: "",
-    estado: "",
+    provee: "",
+    estado: true,
   })
 
-  useEffect(() => {
-    if (proveedor) {
-      setNombreProveedor(proveedor.nombreProveedor)
-      setContacto(proveedor.contacto)
-      setNumeroContacto(proveedor.numeroContacto)
-      setProvee(proveedor.provee)
-      setEstado(proveedor.estado)
-      setModoEdicion(true)
-    } else {
-      setModoEdicion(false)
-    }
-  }, [proveedor])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    nombreProveedor: "",
+    contacto: "",
+    numeroContacto: "",
+    provee: "",
+  })
+  const [modoEdicion, setModoEdicion] = useState(false)
 
-  // Función para validar el nombre del proveedor
+  const apiUrl = "https://gitbf.onrender.com/api/proveedores"
+
+  // Funciones de validación del lado del cliente
   const validarNombreProveedor = (nombre) => {
     if (!nombre || nombre.trim() === "") {
-      return "El nombre del proveedor no puede estar vacío"
+      return "El nombre del proveedor es requerido"
     }
 
-    if (nombre.length < 3 || nombre.length > 20) {
-      return "El nombre del proveedor debe tener entre 3 y 20 caracteres"
+    const nombreTrimmed = nombre.trim()
+
+    if (nombreTrimmed.length < 3 || nombreTrimmed.length > 20) {
+      return "El nombre debe tener entre 3 y 20 caracteres"
     }
 
-    // Verificar si contiene caracteres no alfanuméricos
-    if (!/^[a-zA-Z0-9\s]+$/.test(nombre)) {
-      return "El nombre del proveedor solo puede contener letras, números y espacios"
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]+$/.test(nombreTrimmed)) {
+      return "Solo se permiten letras, números y espacios"
     }
 
     return ""
   }
 
-  // Función para validar el contacto
   const validarContacto = (contacto) => {
     if (!contacto || contacto.trim() === "") {
-      return "El contacto no puede estar vacío"
+      return "El contacto es requerido"
     }
 
-    if (contacto.length < 3 || contacto.length > 20) {
+    const contactoTrimmed = contacto.trim()
+
+    if (contactoTrimmed.length < 3 || contactoTrimmed.length > 20) {
       return "El contacto debe tener entre 3 y 20 caracteres"
     }
 
-    // Verificar si contiene caracteres no alfabéticos (solo letras)
-    if (!/^[a-zA-Z\s]+$/.test(contacto)) {
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(contactoTrimmed)) {
       return "El contacto solo puede contener letras y espacios"
     }
 
     return ""
   }
 
-  // Función para validar el número de contacto
   const validarNumeroContacto = (numero) => {
     if (!numero || numero.trim() === "") {
-      return "El número de contacto no puede estar vacío"
+      return "El número de contacto es requerido"
     }
 
-    // Verificar si solo contiene números
     if (!/^\d+$/.test(numero)) {
-      return "El número de contacto solo puede contener dígitos"
-    }
-
-    // Verificar longitud
-    if (numero.length > 12) {
-      return "El número de contacto debe tener menos de 12 dígitos"
+      return "El número solo puede contener dígitos"
     }
 
     if (numero.length <= 7) {
-      return "El número de contacto debe tener más de 7 dígitos"
+      return "El número debe tener más de 7 dígitos"
+    }
+
+    if (numero.length > 12) {
+      return "El número debe tener menos de 12 dígitos"
     }
 
     return ""
   }
 
-  // Validar campos al cambiar
-  const handleNombreChange = (e) => {
-    const valor = e.target.value
-    setNombreProveedor(valor)
-    setErrores({
-      ...errores,
-      nombreProveedor: validarNombreProveedor(valor),
-    })
+  const validarProvee = (provee) => {
+    if (!provee || provee.trim() === "") {
+      return "Debe especificar qué provee"
+    }
+
+    const proveeTrimmed = provee.trim()
+
+    if (proveeTrimmed.length < 3 || proveeTrimmed.length > 50) {
+      return "Debe tener entre 3 y 50 caracteres"
+    }
+
+    return ""
   }
 
-  const handleContactoChange = (e) => {
-    const valor = e.target.value
-    setContacto(valor)
-    setErrores({
-      ...errores,
-      contacto: validarContacto(valor),
+  useEffect(() => {
+    if (proveedor) {
+      setFormData({
+        nombreProveedor: proveedor.nombreProveedor || "",
+        contacto: proveedor.contacto || "",
+        numeroContacto: proveedor.numeroContacto || "",
+        provee: proveedor.provee || "",
+        estado: proveedor.estado !== undefined ? proveedor.estado : true,
+      })
+      setModoEdicion(true)
+    } else {
+      setFormData({
+        nombreProveedor: "",
+        contacto: "",
+        numeroContacto: "",
+        provee: "",
+        estado: true,
+      })
+      setModoEdicion(false)
+    }
+    setFieldErrors({
+      nombreProveedor: "",
+      contacto: "",
+      numeroContacto: "",
+      provee: "",
     })
+  }, [proveedor])
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    let newValue = value
+
+    if (type === "checkbox") {
+      newValue = checked
+    }
+
+    // Validación en tiempo real
+    let errorMessage = ""
+    if (name === "nombreProveedor") {
+      errorMessage = validarNombreProveedor(newValue)
+    } else if (name === "contacto") {
+      errorMessage = validarContacto(newValue)
+    } else if (name === "numeroContacto") {
+      errorMessage = validarNumeroContacto(newValue)
+    } else if (name === "provee") {
+      errorMessage = validarProvee(newValue)
+    }
+
+    setFieldErrors({
+      ...fieldErrors,
+      [name]: errorMessage,
+    })
+
+    if (name === "estado") {
+      setFormData({
+        ...formData,
+        [name]: value === "Activo",
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: newValue,
+      })
+    }
   }
 
-  const handleNumeroContactoChange = (e) => {
-    const valor = e.target.value
-    setNumeroContacto(valor)
-    setErrores({
-      ...errores,
-      numeroContacto: validarNumeroContacto(valor),
-    })
+  const validateForm = () => {
+    const errors = {
+      nombreProveedor: validarNombreProveedor(formData.nombreProveedor),
+      contacto: validarContacto(formData.contacto),
+      numeroContacto: validarNumeroContacto(formData.numeroContacto),
+      provee: validarProvee(formData.provee),
+    }
+
+    setFieldErrors(errors)
+
+    return !Object.values(errors).some((error) => error !== "")
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Validar todos los campos antes de enviar
-    const errorNombre = validarNombreProveedor(nombreProveedor)
-    const errorContacto = validarContacto(contacto)
-    const errorNumero = validarNumeroContacto(numeroContacto)
-
-    // Actualizar errores
-    setErrores({
-      nombreProveedor: errorNombre,
-      contacto: errorContacto,
-      numeroContacto: errorNumero,
-      estado: "",
-    })
-
-    // Si hay errores, no enviar el formulario
-    if (errorNombre || errorContacto || errorNumero) {
+    if (!validateForm()) {
+      Swal.fire({
+        icon: "error",
+        title: "Error de validación",
+        text: "Por favor corrige los errores en el formulario",
+        confirmButtonColor: "#db2777",
+      })
       return
     }
 
+    setLoading(true)
+    setError(null)
+
     const proveedorData = {
-      nombreProveedor,
-      contacto,
-      numeroContacto,
-      provee,
-      estado,
+      nombreProveedor: formData.nombreProveedor.trim(),
+      contacto: formData.contacto.trim(),
+      numeroContacto: formData.numeroContacto.trim(),
+      provee: formData.provee.trim(),
+      estado: formData.estado,
     }
 
     try {
-      let response
-      if (modoEdicion) {
-        response = await axios.put(`${apiUrl}/${proveedor._id}`, proveedorData)
-      } else {
-        response = await axios.post(apiUrl, proveedorData)
+      const token = localStorage.getItem("token")
+      if (!token) {
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
+          confirmButtonColor: "#db2777",
+        })
+        return
       }
 
-      Swal.fire({
-        icon: "success",
-        title: modoEdicion ? "Proveedor actualizado exitosamente" : "Proveedor creado exitosamente",
-        confirmButtonText: "Ok",
-      })
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+
+      let response
+      if (modoEdicion) {
+        response = await axios.put(`${apiUrl}/${proveedor._id}`, proveedorData, config)
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: "Proveedor actualizado correctamente",
+          confirmButtonColor: "#db2777",
+        })
+      } else {
+        response = await axios.post(apiUrl, proveedorData, config)
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: "Proveedor creado correctamente",
+          confirmButtonColor: "#db2777",
+        })
+      }
 
       if (onProveedorActualizado) {
         onProveedorActualizado(response.data)
       }
 
-      // Cerrar el formulario después de guardar
       if (onClose) {
         onClose()
       }
     } catch (error) {
-      console.error("Error al guardar el proveedor:", error)
+      console.error("Error:", error)
+      const errorMessage =
+        error.response?.data?.mensaje || error.response?.data?.message || "Hubo un problema al guardar el proveedor"
+      setError(errorMessage)
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.response?.data?.mensaje || "Error al guardar el proveedor",
+        text: errorMessage,
+        confirmButtonColor: "#db2777",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <h2 className="text-2xl font-semibold mb-6 text-center">
-        {modoEdicion ? "Editar Proveedor" : "Agregar Proveedor"}
+    <div className="p-6 w-full mx-auto" style={{ maxWidth: "90%", minWidth: "600px" }}>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+        {modoEdicion ? "Editar Proveedor" : "Nuevo Proveedor"}
       </h2>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="nombreProveedor" className="block text-sm font-medium text-gray-700">
-            Nombre del Proveedor <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="nombreProveedor" className="form-label">
+            Nombre del Proveedor <span className="text-pink-500">*</span>
           </label>
           <input
             type="text"
             id="nombreProveedor"
-            value={nombreProveedor}
-            onChange={handleNombreChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
-              errores.nombreProveedor ? "border-red-500" : ""
-            }`}
-            placeholder="Ingrese el nombre del proveedor"
+            name="nombreProveedor"
+            value={formData.nombreProveedor}
+            onChange={handleInputChange}
+            maxLength={20}
+            className={`form-input w-full ${fieldErrors.nombreProveedor ? "border-red-500" : ""}`}
+            placeholder="Ingrese el nombre del proveedor (3-20 caracteres)"
           />
-          {errores.nombreProveedor && <p className="mt-1 text-sm text-red-600">{errores.nombreProveedor}</p>}
-          <p className="mt-1 text-xs text-gray-500">
-            El nombre debe tener entre 3 y 20 caracteres y solo puede contener letras, números y espacios.
-          </p>
+          {fieldErrors.nombreProveedor && <p className="text-red-500 text-sm mt-1">{fieldErrors.nombreProveedor}</p>}
+          <p className="text-xs text-gray-500 mt-1">{formData.nombreProveedor.length}/20 caracteres</p>
         </div>
 
-        <div>
-          <label htmlFor="contacto" className="block text-sm font-medium text-gray-700">
-            Contacto <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="contacto"
-            value={contacto}
-            onChange={handleContactoChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
-              errores.contacto ? "border-red-500" : ""
-            }`}
-            placeholder="Ingrese el contacto"
-          />
-          {errores.contacto && <p className="mt-1 text-sm text-red-600">{errores.contacto}</p>}
-          <p className="mt-1 text-xs text-gray-500">
-            El contacto debe tener entre 3 y 20 caracteres y solo puede contener letras y espacios.
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label htmlFor="contacto" className="form-label">
+              Contacto <span className="text-pink-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="contacto"
+              name="contacto"
+              value={formData.contacto}
+              onChange={handleInputChange}
+              maxLength={20}
+              className={`form-input w-full ${fieldErrors.contacto ? "border-red-500" : ""}`}
+              placeholder="Nombre del contacto (3-20 caracteres)"
+            />
+            {fieldErrors.contacto && <p className="text-red-500 text-sm mt-1">{fieldErrors.contacto}</p>}
+            <p className="text-xs text-gray-500 mt-1">{formData.contacto.length}/20 caracteres</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="numeroContacto" className="form-label">
+              Número de Contacto <span className="text-pink-500">*</span>
+            </label>
+            <input
+              type="tel"
+              id="numeroContacto"
+              name="numeroContacto"
+              value={formData.numeroContacto}
+              onChange={handleInputChange}
+              maxLength={12}
+              className={`form-input w-full ${fieldErrors.numeroContacto ? "border-red-500" : ""}`}
+              placeholder="Número telefónico (8-12 dígitos)"
+            />
+            {fieldErrors.numeroContacto && <p className="text-red-500 text-sm mt-1">{fieldErrors.numeroContacto}</p>}
+            <p className="text-xs text-gray-500 mt-1">{formData.numeroContacto.length}/12 dígitos</p>
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="numeroContacto" className="block text-sm font-medium text-gray-700">
-            Número de Contacto <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="numeroContacto"
-            value={numeroContacto}
-            onChange={handleNumeroContactoChange}
-            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
-              errores.numeroContacto ? "border-red-500" : ""
-            }`}
-            placeholder="Ingrese el número de contacto"
-          />
-          {errores.numeroContacto && <p className="mt-1 text-sm text-red-600">{errores.numeroContacto}</p>}
-          <p className="mt-1 text-xs text-gray-500">
-            El número debe tener entre 8 y 12 dígitos y solo puede contener números.
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="provee" className="block text-sm font-medium text-gray-700">
-            Provee <span className="text-red-500">*</span>
+        <div className="form-group">
+          <label htmlFor="provee" className="form-label">
+            ¿Qué Provee? <span className="text-pink-500">*</span>
           </label>
           <input
             type="text"
             id="provee"
-            value={provee}
-            onChange={(e) => setProvee(e.target.value)}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Ingrese lo que provee"
+            name="provee"
+            value={formData.provee}
+            onChange={handleInputChange}
+            maxLength={50}
+            className={`form-input w-full ${fieldErrors.provee ? "border-red-500" : ""}`}
+            placeholder="Descripción de productos o servicios (3-50 caracteres)"
           />
+          {fieldErrors.provee && <p className="text-red-500 text-sm mt-1">{fieldErrors.provee}</p>}
+          <p className="text-xs text-gray-500 mt-1">{formData.provee.length}/50 caracteres</p>
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="estado"
-            checked={estado}
-            onChange={(e) => setEstado(e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-          <label htmlFor="estado" className="ml-2 block text-sm text-gray-900">
-            Activo
+        <div className="form-group">
+          <label htmlFor="estado" className="form-label">
+            Estado <span className="text-pink-500">*</span>
           </label>
+          <select
+            id="estado"
+            name="estado"
+            value={formData.estado ? "Activo" : "Inactivo"}
+            onChange={handleInputChange}
+            className="form-input w-full"
+            required
+          >
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
         </div>
 
-        <div className="flex justify-between">
-          <button
-            type="submit"
-            disabled={errores.nombreProveedor || errores.contacto || errores.numeroContacto}
-            className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-              errores.nombreProveedor || errores.contacto || errores.numeroContacto
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            {modoEdicion ? "Actualizar Proveedor" : "Agregar Proveedor"}
+        {/* Información del Proveedor */}
+        <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-pink-800 mb-2">📋 Información del Proveedor</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-pink-700">
+            <div>
+              <span className="font-medium">Contacto Principal:</span>
+              <span className="ml-2">{formData.contacto || "Sin especificar"}</span>
+            </div>
+            <div>
+              <span className="font-medium">Estado:</span>
+              <span className={`ml-2 font-bold ${formData.estado ? "text-green-600" : "text-red-600"}`}>
+                {formData.estado ? "Activo" : "Inactivo"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="btn-container mt-6 flex justify-end space-x-4">
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faSave} className="mr-2" />
+                Guardar
+              </>
+            )}
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
+          <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>
+            <FontAwesomeIcon icon={faTimes} className="mr-2" />
             Cancelar
           </button>
         </div>

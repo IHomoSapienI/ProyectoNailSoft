@@ -16,7 +16,9 @@ import {
 import Swal from "sweetalert2"
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
-import "../Compras/tablaCompras.css" // Importamos el mismo CSS que usa TablaInsumos
+// import "../Compras/tablaCompras.css"
+import "../../styles/tablas.css" 
+
 
 // Configura el contenedor del modal
 Modal.setAppElement("#root")
@@ -58,7 +60,8 @@ const TablaCompras = () => {
         },
       })
 
-      setCompras(respuesta.data || [])
+      // Asegurarse de que compras sea siempre un array
+      setCompras(Array.isArray(respuesta.data) ? respuesta.data : [])
     } catch (error) {
       console.error("Error al obtener las compras:", error)
       setError("No se pudieron cargar las compras. Por favor, intenta de nuevo.")
@@ -68,6 +71,8 @@ const TablaCompras = () => {
         icon: "error",
         confirmButtonColor: "#db2777",
       })
+      // Inicializar con array vacío en caso de error
+      setCompras([])
     } finally {
       setIsLoading(false)
     }
@@ -294,9 +299,8 @@ const TablaCompras = () => {
               </tr>
             </thead>
             <tbody>
-              ${compras
-                .map(
-                  (compra) => `
+              ${compras.map(
+                (compra) => `
                 <tr>
                   <td>${compra.proveedor?.nombreProveedor || "N/A"}</td>
                   <td>${compra.recibo || "N/A"}</td>
@@ -306,8 +310,7 @@ const TablaCompras = () => {
                   <td>${compra.insumos ? compra.insumos.length : 0}</td>
                 </tr>
               `,
-                )
-                .join("")}
+              ).join("")}
             </tbody>
           </table>
           <div class="footer">
@@ -358,7 +361,7 @@ const TablaCompras = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Compras</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
@@ -398,20 +401,20 @@ const TablaCompras = () => {
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={handleBusquedaChange}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar compras..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-4 mx-auto">
-        <table className="compras-tabla-moderna w-full ">
+        <table className="universal-tabla-moderna w-full ">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th className="dark:hover:bg-gray-500/50" style={{ width: "15%" }}>Proveedor</th>
@@ -438,7 +441,7 @@ const TablaCompras = () => {
                       <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => abrirFormulario(compra)} title="Editar compra">
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
-                      <button className="btn-info" onClick={() => abrirDetalles(compra)} title="Ver detalles">
+                      <button className="btn-info-1" onClick={() => abrirDetalles(compra)} title="Ver detalles">
                         <FontAwesomeIcon icon={faEye} />
                       </button>
                       <button
@@ -513,11 +516,12 @@ const TablaCompras = () => {
           <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">
             {compraSeleccionada ? "Actualizar Compra" : "Nueva Compra"}
           </h2>
-          <FormularioCompra
-            compra={compraSeleccionada}
-            onClose={cerrarFormulario}
-            onSuccess={manejarCompraActualizada}
-          />
+            <FormularioCompra
+              compra={compraSeleccionada}
+              onClose={cerrarFormulario}
+              onSuccess={manejarCompraActualizada}
+            />
+          
         </div>
       </Modal>
 
@@ -579,7 +583,7 @@ const TablaCompras = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {compraSeleccionada?.insumos?.length > 0 ? (
+                    {Array.isArray(compraSeleccionada?.insumos) && compraSeleccionada.insumos.length > 0 ? (
                       compraSeleccionada.insumos.map((insumo, index) => (
                         <tr key={index}>
                           <td className="font-medium">{insumo?.insumo?.nombreInsumo || "N/A"}</td>

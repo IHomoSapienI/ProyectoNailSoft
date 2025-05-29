@@ -1,35 +1,44 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import axios from "axios"
-import Modal from "react-modal"
-import FormularioCliente from "./FormularioCliente"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEdit, faTrash, faSearch, faPowerOff, faPlus } from "@fortawesome/free-solid-svg-icons"
-import Swal from "sweetalert2"
-import { useSidebar } from "../Sidebar/Sidebar"
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Modal from "react-modal";
+import FormularioCliente from "./FormularioCliente";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEdit,
+  faTrash,
+  faSearch,
+  faPowerOff,
+  faPlus,
+  faToggleOn,
+  faToggleOff
+} from "@fortawesome/free-solid-svg-icons";
+import Swal from "sweetalert2";
+import { useSidebar } from "../Sidebar/Sidebar";
+import "../../styles/tablas.css";
 
-Modal.setAppElement("#root")
+Modal.setAppElement("#root");
 
 const TablaClientes = () => {
-  const { isCollapsed } = useSidebar()
-  const [clientes, setClientes] = useState([])
-  const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
-  const [modalIsOpen, setModalIsOpen] = useState(false)
-  const [paginaActual, setPaginaActual] = useState(1)
-  const [busqueda, setBusqueda] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const clientesPorPagina = 5
+  const { isCollapsed } = useSidebar();
+  const [clientes, setClientes] = useState([]);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [busqueda, setBusqueda] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const clientesPorPagina = 5;
 
   useEffect(() => {
-    obtenerClientes()
-  }, [])
+    obtenerClientes();
+  }, []);
 
   const obtenerClientes = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       if (!token) {
         Swal.fire({
@@ -37,44 +46,47 @@ const TablaClientes = () => {
           text: "No tienes permiso para estar aquí. No se encontró un token válido.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        })
-        setError("Token no encontrado.")
-        return
+        });
+        setError("Token no encontrado.");
+        return;
       }
 
-      const respuesta = await axios.get("https://gitbf.onrender.com/api/clientes", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      setClientes(respuesta.data || [])
-      setError(null)
+      const respuesta = await axios.get(
+        "https://gitbf.onrender.com/api/clientes",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setClientes(respuesta.data || []);
+      setError(null);
     } catch (error) {
-      console.error("Error al obtener los clientes:", error)
-      setError("Error al cargar los clientes. Por favor, intente de nuevo.")
+      console.error("Error al obtener los clientes:", error);
+      setError("Error al cargar los clientes. Por favor, intente de nuevo.");
       Swal.fire({
         title: "Error",
         text: "No tienes permiso para estar aquí. Tu token no es válido.",
         icon: "error",
         confirmButtonColor: "#db2777",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const manejarCerrarModal = () => {
-    setModalIsOpen(false)
-  }
+    setModalIsOpen(false);
+  };
 
   const manejarEditar = (cliente) => {
-    setClienteSeleccionado(cliente)
-    setModalIsOpen(true)
-  }
+    setClienteSeleccionado(cliente);
+    setModalIsOpen(true);
+  };
 
   const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual
-    const accion = nuevoEstado ? "activar" : "desactivar"
+    const nuevoEstado = !estadoActual;
+    const accion = nuevoEstado ? "activar" : "desactivar";
 
     const result = await Swal.fire({
       title: `¿Estás seguro?`,
@@ -85,11 +97,11 @@ const TablaClientes = () => {
       cancelButtonColor: "#6c757d",
       confirmButtonText: `Sí, ${accion}!`,
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         const response = await axios.patch(
           `https://gitbf.onrender.com/api/clientes/${id}/toggle-estado`,
           {
@@ -100,29 +112,35 @@ const TablaClientes = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          },
-        )
+          }
+        );
 
         // Actualizar el estado local
-        setClientes(clientes.map((c) => (c._id === id ? { ...c, estadocliente: nuevoEstado } : c)))
+        setClientes(
+          clientes.map((c) =>
+            c._id === id ? { ...c, estadocliente: nuevoEstado } : c
+          )
+        );
 
         Swal.fire({
           icon: "success",
           title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
-          text: `El cliente ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          text: `El cliente ha sido ${
+            nuevoEstado ? "activado" : "desactivado"
+          }.`,
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error(`Error al ${accion} el cliente:`, error)
+        console.error(`Error al ${accion} el cliente:`, error);
         Swal.fire({
           icon: "error",
           title: "Error",
           text: `No se pudo ${accion} el cliente`,
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   const manejarEliminar = async (id) => {
     const result = await Swal.fire({
@@ -134,62 +152,69 @@ const TablaClientes = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminarlo!",
       cancelButtonText: "Cancelar",
-    })
+    });
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         await axios.delete(`https://gitbf.onrender.com/api/clientes/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
-        setClientes(clientes.filter((c) => c._id !== id))
+        });
+        setClientes(clientes.filter((c) => c._id !== id));
         Swal.fire({
           title: "Eliminado!",
           text: "El cliente ha sido eliminado.",
           icon: "success",
           confirmButtonColor: "#db2777",
-        })
+        });
       } catch (error) {
-        console.error("Error al eliminar el cliente:", error)
+        console.error("Error al eliminar el cliente:", error);
         Swal.fire({
           title: "Error",
           text: "No se pudo eliminar el cliente.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        })
+        });
       }
     }
-  }
+  };
 
   const filtrarClientes = () => {
     return clientes.filter(
       (cliente) =>
         cliente.nombrecliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.apellidocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
+        cliente.apellidocliente
+          ?.toLowerCase()
+          .includes(busqueda.toLowerCase()) ||
         cliente.correocliente?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase()),
-    )
-  }
+        cliente.celularcliente?.toLowerCase().includes(busqueda.toLowerCase())
+    );
+  };
 
-  const clientesFiltrados = filtrarClientes()
-  const indiceUltimoCliente = paginaActual * clientesPorPagina
-  const indicePrimerCliente = indiceUltimoCliente - clientesPorPagina
-  const clientesActuales = clientesFiltrados.slice(indicePrimerCliente, indiceUltimoCliente)
-  const paginasTotales = Math.ceil(clientesFiltrados.length / clientesPorPagina)
+  const clientesFiltrados = filtrarClientes();
+  const indiceUltimoCliente = paginaActual * clientesPorPagina;
+  const indicePrimerCliente = indiceUltimoCliente - clientesPorPagina;
+  const clientesActuales = clientesFiltrados.slice(
+    indicePrimerCliente,
+    indiceUltimoCliente
+  );
+  const paginasTotales = Math.ceil(
+    clientesFiltrados.length / clientesPorPagina
+  );
 
   const cambiarPagina = (numeroPagina) => {
-    setPaginaActual(numeroPagina)
-  }
+    setPaginaActual(numeroPagina);
+  };
 
   const paginaAnterior = () => {
-    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
-  }
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1);
+  };
 
   const paginaSiguiente = () => {
-    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
-  }
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
+  };
 
   if (isLoading) {
     return (
@@ -199,13 +224,16 @@ const TablaClientes = () => {
           <p className="mt-4 text-gray-600">Cargando clientes...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -217,47 +245,61 @@ const TablaClientes = () => {
           Reintentar
         </button>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">Gestión de Clientes</h2>
+    <div className="content">
+      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">
+        Gestión de Clientes
+      </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <button
-          className="btn-add bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          className="btn-add"
           onClick={() => {
-            setClienteSeleccionado(null)
-            setModalIsOpen(true)
+            setClienteSeleccionado(null);
+            setModalIsOpen(true);
           }}
         >
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           Nuevo Cliente
         </button>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar clientes..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
-        <table className="w-full border-collapse separate border-spacing-0 bg-white rounded-lg overflow-hidden dark:bg-zinc-900/80">
+        <table className="universal-tabla-moderna w-full ">
           <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Nombre</th>
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Apellido</th>
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Correo</th>
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Celular</th>
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">Estado</th>
-              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50 text-foreground">Acciones</th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">
+                Nombre
+              </th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">
+                Apellido
+              </th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">
+                Correo
+              </th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">
+                Celular
+              </th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50">
+                Estado
+              </th>
+              <th className="py-3 px-4 text-left font-semibold dark:hover:bg-gray-500/50 text-foreground">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="dark:bg-zinc-900/80">
@@ -267,13 +309,19 @@ const TablaClientes = () => {
                   key={cliente._id}
                   className="dark:hover:bg-gray-500/50 text-foreground border-b border-gray-200 dark:border-gray-700"
                 >
-                  <td className="py-3 px-4 font-medium">{cliente.nombrecliente}</td>
+                  <td className="py-3 px-4 font-medium">
+                    {cliente.nombrecliente}
+                  </td>
                   <td className="py-3 px-4">{cliente.apellidocliente}</td>
                   <td className="py-3 px-4">{cliente.correocliente}</td>
                   <td className="py-3 px-4">{cliente.celularcliente}</td>
                   <td className="py-3 px-4">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${cliente.estadocliente ? "bg-emerald-500/50 dark:bg-emerald-500 text-foreground" : "bg-red-500/80"}`}
+                      className={`universal-estado-badge ${
+                        cliente.estadocliente
+                          ? "bg-emerald-500/50 dark:bg-emerald-500 text-foreground"
+                          : "bg-red-500/80"
+                      }`}
                     >
                       {cliente.estadocliente ? "Activo" : "Inactivo"}
                     </span>
@@ -281,7 +329,7 @@ const TablaClientes = () => {
                   <td className="py-3 px-4">
                     <div className="flex space-x-2 center">
                       <button
-                        className="w-8 h-8 rounded flex items-center justify-center bg-indigo-500/50 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90 text-white transition-all duration-200 relative overflow-hidden"
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90 text-white transition-all duration-200 relative overflow-hidden"
                         onClick={() => manejarEditar(cliente)}
                         title="Editar"
                       >
@@ -289,19 +337,41 @@ const TablaClientes = () => {
                       </button>
 
                       <button
-                        className="w-8 h-8 rounded flex items-center justify-center bg-rose-500 dark:bg-rose-950/100 dark:hover:bg-rose-800/90 text-white transition-all duration-200 relative overflow-hidden"
+                        className="btn-delete-1 dark:bg-rose-950/100 dark:hover:bg-rose-800/90 text-white transition-all duration-200 relative overflow-hidden"
                         onClick={() => manejarEliminar(cliente._id)}
                         title="Eliminar"
                       >
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
-                      <button
-                        className={`w-8 h-8 rounded flex items-center justify-center ${cliente.estadocliente ? "bg-amber-500 dark:bg-amber-900/100 dark:hover:bg-amber-400/90" : "bg-gray-500"} text-white transition-all duration-200 relative overflow-hidden`}
+                      {/* <button
+                        className={`btn-toggle-1 ${cliente.estadocliente ? "bg-amber-500 dark:bg-amber-900/100 dark:hover:bg-amber-400/90" : "bg-gray-500"} text-white transition-all duration-200 relative overflow-hidden`}
                         onClick={() => manejarToggleEstado(cliente._id, cliente.estadocliente)}
                         title={cliente.estadocliente ? "Desactivar" : "Activar"}
                       >
                         <FontAwesomeIcon icon={faPowerOff} />
+                      </button> */}
+
+                      <button
+                        className={`btn-toggle-1 transition-all duration-200 ease-in-out
+                                                  ${
+                                                    cliente.estadocliente
+                                                      ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                                                      : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                                                  }`}
+                        onClick={() =>
+                          manejarToggleEstado(cliente._id, cliente.estadocliente)
+                        }
+                        title={
+                          cliente.estadocliente
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={cliente.estadocliente ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>
@@ -324,14 +394,12 @@ const TablaClientes = () => {
           <button
             onClick={paginaAnterior}
             disabled={paginaActual === 1}
-            className={`w-9 h-9 border border-gray-300 bg-white rounded flex items-center justify-center cursor-pointer transition-all ${
-              paginaActual === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-            }`}
+            className={`pagination-btn ${paginaActual === 1 ? "disabled" : ""}`}
           >
             &lt;
           </button>
 
-          <div className="flex mx-2">
+          <div className="pagination-pages">
             {Array.from({ length: paginasTotales }, (_, index) => (
               <button
                 key={index}
@@ -351,7 +419,9 @@ const TablaClientes = () => {
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
             className={`w-9 h-9 border border-gray-300 bg-white rounded flex items-center justify-center cursor-pointer transition-all ${
-              paginaActual === paginasTotales ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+              paginaActual === paginasTotales
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-100"
             }`}
           >
             &gt;
@@ -376,14 +446,14 @@ const TablaClientes = () => {
           <FormularioCliente
             cliente={clienteSeleccionado}
             onClose={() => {
-              manejarCerrarModal()
-              obtenerClientes()
+              manejarCerrarModal();
+              obtenerClientes();
             }}
           />
         </div>
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default TablaClientes
+export default TablaClientes;

@@ -22,7 +22,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import axios from "axios";
-import "./tablaPermisos.css";
+// import "./tablaPermisos.css";
+import "../../styles/tablas.css";
 
 Modal.setAppElement("#root");
 
@@ -32,7 +33,7 @@ export default function TablaPermisos() {
   const [modalDetallesIsOpen, setModalDetallesIsOpen] = useState(false);
   const [permisoSeleccionado, setPermisoSeleccionado] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
-  const permisosPorPagina = 10;
+  const permisosPorPagina = 5;
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
@@ -371,6 +372,46 @@ export default function TablaPermisos() {
     if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
   };
 
+
+  const renderNumerosPaginacion = () => {
+  const visiblePages = 5;
+  const pages = [];
+
+  if (paginasTotales <= visiblePages) {
+    for (let i = 1; i <= paginasTotales; i++) {
+      pages.push(i);
+    }
+  } else {
+    if (paginaActual <= 3) {
+      pages.push(1, 2, 3, 4, '...', paginasTotales);
+    } else if (paginaActual >= paginasTotales - 2) {
+      pages.push(1, '...', paginasTotales - 3, paginasTotales - 2, paginasTotales - 1, paginasTotales);
+    } else {
+      pages.push(1, '...', paginaActual - 1, paginaActual, paginaActual + 1, '...', paginasTotales);
+    }
+  }
+
+  return pages.map((num, index) =>
+    num === '...' ? (
+      <span key={index} className="px-2 text-gray-400">…</span>
+    ) : (
+      <button
+        key={num}
+        onClick={() => cambiarPagina(num)}
+        className={`pagination-number ${
+          paginaActual === num ? "active" : ""
+        }`}
+      >
+        {num}
+      </button>
+    )
+  );
+};
+
+
+
+
+
   // Traducir nivel a español
   const traducirNivel = (nivel) => {
     switch (nivel) {
@@ -421,7 +462,7 @@ export default function TablaPermisos() {
   }
 
   return (
-    <div className="tabla-container dark:bg-primary">
+    <div className="content dark:bg-primary">
       <h2 className="text-3xl font-semibold mb-8 text-foreground px-4 pt-4">
         Gestión de Permisos
       </h2>
@@ -478,22 +519,24 @@ export default function TablaPermisos() {
               ))}
             </select>
           </div>
-          <div className="search-container w-full md:w-2/3">
-            <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <div className="universal-search-container w-full md:w-2/3">
+            <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
             <input
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="search-input dark:card-gradient-4"
+              className="universal-search-input dark:card-gradient-4"
               placeholder="Buscar permiso"
             />
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
-        <table className="permiso-tabla-moderna w-full">
-          <thead className="bg-pink-200 dark:card-gradient-4">
+      <div className="overflow-x-auto rounded-lg shadow mx-4 w-full mx-auto">
+        <table className="universal-tabla-moderna w-full dark:bg-foreground"
+        style={{ width: "100%", tableLayout: "fixed" }}
+        >
+          <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th
                 onClick={() => handleSort("nombrePermiso")}
@@ -528,7 +571,7 @@ export default function TablaPermisos() {
               <th className="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody className="dark:bg-zinc-900/80 ">
+          <tbody className="dark:bg-zinc-900/80 text-foreground">
             {permisosActuales.length > 0 ? (
               permisosActuales.map((permiso) => (
                 <tr
@@ -541,7 +584,7 @@ export default function TablaPermisos() {
                   <td>{traducirNivel(permiso.nivel)}</td>
                   <td className="text-center">
                     <span
-                      className={`permiso-estado-badge ${
+                      className={`universal-estado-badge ${
                         permiso.activo
                           ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -567,7 +610,7 @@ export default function TablaPermisos() {
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                       <button
-                        className="btn-info"
+                        className="btn-info-1"
                         onClick={() => manejarVerDetalles(permiso)}
                         title="Ver detalles"
                       >
@@ -590,7 +633,7 @@ export default function TablaPermisos() {
                       </button> */}
 
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1
                           ${
                             permiso.activo
                               ? "bg-emerald-400/70  dark:bg-emerald-700 "
@@ -636,18 +679,9 @@ export default function TablaPermisos() {
           </button>
 
           <div className="pagination-pages">
-            {Array.from({ length: paginasTotales }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => cambiarPagina(index + 1)}
-                className={`pagination-number ${
-                  paginaActual === index + 1 ? "active" : ""
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
+  {renderNumerosPaginacion()}
+</div>
+
 
           <button
             onClick={paginaSiguiente}
@@ -729,7 +763,7 @@ export default function TablaPermisos() {
               <div className="form-group">
                 <p className="text-sm font-medium text-gray-500">Estado:</p>
                 <span
-                  className={`estado-badge ${
+                  className={`universal-estado-badge ${
                     permisoSeleccionado.activo ? "activo " : "inactivo"
                   }`}
                 >

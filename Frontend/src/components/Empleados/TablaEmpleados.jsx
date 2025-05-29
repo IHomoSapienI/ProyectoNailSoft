@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEdit, faTrash, faSearch, faSort, faSortUp, faSortDown, faPlus } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
+import "../../styles/tablas.css"
 
 Modal.setAppElement("#root")
 
@@ -160,12 +161,12 @@ const TablaEmpleados = () => {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Empleados</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <button
-          className="btn-add bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded flex items-center"
+          className="btn-add"
           onClick={() => {
             setEmpleadoSeleccionado(null)
             setFormModalIsOpen(true)
@@ -175,20 +176,20 @@ const TablaEmpleados = () => {
           Nuevo Empleado
         </button>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar empleados..."
           />
         </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
-        <table className="tiposerv-tabla-moderna w-full" style={{ width: "100%", tableLayout: "fixed" }}>
+        <table className="universal-tabla-moderna w-full" >
           <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
               <th onClick={() => handleSort("nombreempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
@@ -217,7 +218,7 @@ const TablaEmpleados = () => {
                   <td>{empleado.telefonoempleado}</td>
                   <td>
                     <span
-                      className={`estado-badge1 ${empleado.estadoempleado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}
+                      className={`universal-estado-badge ${empleado.estadoempleado ? "activo bg-emerald-500/50 dark:bg-emerald-500" : "inactivo bg-red-500/80"}`}
                     >
                       {empleado.estadoempleado ? "Activo" : "Inactivo"}
                     </span>

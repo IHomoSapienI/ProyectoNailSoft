@@ -20,8 +20,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import { useSidebar } from "../Sidebar/Sidebar";
-import "./tablaServ.css";
+// import "./tablaServ.css";
 import { obtenerServiciosConDescuento } from "./obtenerServicios";
+import "../../styles/tablas.css";
 
 Modal.setAppElement("#root");
 
@@ -452,7 +453,7 @@ const TablaServicios = () => {
     return <div className="alert alert-error">{state.error}</div>;
 console.log(serviciosActuales)
   return (
-    <div className="tabla-container transition-all duration-100 dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
         Gestión de Servicios
       </h2>
@@ -469,15 +470,15 @@ console.log(serviciosActuales)
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={state.busqueda}
             onChange={(e) =>
               dispatch({ type: ACTIONS.SET_SEARCH, payload: e.target.value })
             }
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar servicios..."
           />
         </div>
@@ -485,7 +486,7 @@ console.log(serviciosActuales)
 
       <div className="overflow-x-auto bg-white rounded-lg shadow mx-auto">
         {/* Modificar la tabla para mostrar información de descuento */}
-        <table className="serv-tabla-moderna w-full">
+        <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
               <th
@@ -569,7 +570,7 @@ console.log(serviciosActuales)
                     </td>
                     <td>
                       <span
-                        className={`serv-estado-badge ${
+                        className={`universal-estado-badge ${
                           servicio.estado
                             ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                             : "inactivo bg-red-500/80"
@@ -594,16 +595,9 @@ console.log(serviciosActuales)
                         >
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
-                        {/* <button
-                          className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${servicio.estado ? "active" : "inactive"}`}
-                          onClick={() => manejarToggleEstado(servicio._id, servicio.estado)}
-                          title={servicio.estado ? "Desactivar servicio" : "Activar servicio"}
-                        >
-                          <FontAwesomeIcon icon={faPowerOff} />
-                        </button> */}
-
+                      
                         <button
-                          className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                          className={`btn-toggle-1
     ${
       servicio.estado
         ? "bg-emerald-400/70  dark:bg-emerald-700 "

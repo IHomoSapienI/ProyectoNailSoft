@@ -14,9 +14,9 @@ import {
   faPercent,
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
-import "./tablaTipoServ.css";
+// import "./tablaTipoServ.css";
 import FormularioTipoServicio from "./FormularioTipoServicios";
-
+import "../../styles/tablas.css";
 Modal.setAppElement("#root");
 
 export default function TablaTipoServicios() {
@@ -225,7 +225,7 @@ export default function TablaTipoServicios() {
       <div className="flex justify-center items-center h-[64vh] dark:bg-primary">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-          <p className="mt-4 text-gray-600">Cargando tipos de servicios...</p>
+          <p className="mt-4 text-gray-600">Cargando tipos de descuentos...</p>
         </div>
       </div>
     );
@@ -253,34 +253,34 @@ export default function TablaTipoServicios() {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full  dark:bg-primary">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">
-        Gestión de Tipos de Descuentos
+    <div className="content">
+      <h2 className="text-3xl font-semibold mb-8  px-4 pt-4 text-foreground">
+        Gestión de Descuentos
       </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
           <button className="btn-add" onClick={manejarAgregarNuevo}>
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Nuevo Tipo de Descuento
+            Agregar Descuento
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container w-full md:w-2/3">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
-            placeholder="Buscar tipos de servicios..."
+            className="universal-search-input dark:card-gradient-4"
+            placeholder="Buscar tipos de Descuentos..."
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
+      <div className="overflow-x-auto rounded-lg shadow mx-auto">
         <table
-          className="tiposerv-tabla-moderna w-full"
+          className="universal-tabla-moderna w-full"
           style={{ width: "100%", tableLayout: "fixed" }}
         >
           <thead className="bg-pink-200 dark:card-gradient-4 ">
@@ -313,7 +313,7 @@ export default function TablaTipoServicios() {
                   </td>
                   <td>
                     <span
-                      className={`tipo-badge bg-indigo-500/50 dark:bg-indigo-500 dark:text-foreground ${
+                      className={`universal-estado-badge bg-indigo-500/50 dark:bg-indigo-500 dark:text-foreground ${
                         tipoServicio.esPromocional
                           ? "promocional bg-amber-500/50 dark:bg-amber-500"
                           : "normal"
@@ -324,7 +324,7 @@ export default function TablaTipoServicios() {
                   </td>
                   <td>
                     <span
-                      className={`estado-badge1  text-foreground ${
+                      className={`universal-estado-badge text-foreground ${
                         tipoServicio.activo
                           ? "activo bg-emerald-300/70 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -352,7 +352,7 @@ export default function TablaTipoServicios() {
                       </button>
 
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1
                           ${
                             tipoServicio.activo
                               ? "bg-emerald-400/70  dark:bg-emerald-700 "

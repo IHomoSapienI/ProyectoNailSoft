@@ -13,8 +13,10 @@ import {
   faToggleOff
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
-import "./tablaTipoServ.css";
+// import "./tablaTipoServ.css";
 import FormularioTipoServicios from "./FormularioTipoServ";
+import "../../styles/tablas.css";
+
 
 Modal.setAppElement("#root");
 
@@ -252,7 +254,7 @@ export default function TablaTipoServicioss() {
   }
 
   return (
-    <div className="tabla-container transition-all duration-500 w-full max-w-full dark:bg-primary">
+    <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-gray-800 px-4 pt-4 dark:text-foreground">
         Gestión de Tipos de Servicios
       </h2>
@@ -265,13 +267,13 @@ export default function TablaTipoServicioss() {
           </button>
         </div>
 
-        <div className="search-container">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+        <div className="universal-search-container">
+          <FontAwesomeIcon icon={faSearch} className="universal-search-icon" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="search-input dark:card-gradient-4"
+            className="universal-search-input dark:card-gradient-4"
             placeholder="Buscar tipos de servicios..."
           />
         </div>
@@ -279,14 +281,14 @@ export default function TablaTipoServicioss() {
 
       <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
         <table
-          className="tiposerv-tabla-moderna w-full"
-          style={{ width: "100%", tableLayout: "fixed" }}
+          className="universal-tabla-moderna w-full"
+          // style={{ width: "100%", tableLayout: "fixed" }}
         >
-          <thead className="bg-pink-200 dark:card-gradient-4 ">
+          <thead className="bg-pink-200 text-black dark:card-gradient-4 ">
             <tr className="text-foreground">
-              <th className="dark:hover:bg-gray-500/50">Nombre</th>
-              <th className="dark:hover:bg-gray-500/50">Estado</th>
-              <th className="dark:hover:bg-gray-500/50 text-foreground">
+              <th className="dark:hover:bg-gray-500/50" style={{width: "33%"}}>Nombre</th>
+              <th className="dark:hover:bg-gray-500/50" style={{width: "33%"}}>Estado</th>
+              <th className="dark:hover:bg-gray-500/50 text-foreground" style={{width: "33%"}}>
                 Acciones
               </th>
             </tr>
@@ -303,7 +305,7 @@ export default function TablaTipoServicioss() {
                   </td>
                   <td>
                     <span
-                      className={`estado-badge1 text-foreground ${
+                      className={`universal-estado-badge text-foreground ${
                         tipoServicio.activo
                           ? "activo bg-emerald-500/50 dark:bg-emerald-500"
                           : "inactivo bg-red-500/80"
@@ -330,16 +332,8 @@ export default function TablaTipoServicioss() {
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
 
-                      {/* <button
-                        className={`btn-toggle-1 dark:bg-amber-900/100 dark:hover:bg-amber-400/90 ${tipoServicio.activo ? "active" : "inactive"}`}
-                        onClick={() => manejarToggleEstado(tipoServicio._id, tipoServicio.activo)}
-                        title={tipoServicio.activo ? "Desactivar" : "Activar"}
-                      >
-                        <FontAwesomeIcon icon={faPowerOff} />
-                      </button> */}
-
                       <button
-                        className={`usuario btn-toggle-1 transition-all duration-200 ease-in-out
+                        className={`btn-toggle-1
                                                   ${
                                                     tipoServicio.activo
                                                       ? "bg-emerald-400/70  dark:bg-emerald-700 "

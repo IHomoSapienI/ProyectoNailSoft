@@ -1,40 +1,49 @@
 "use client"
 
 import { useState } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faExclamationTriangle, faTimes } from "@fortawesome/free-solid-svg-icons"
 
 const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
-  const [cantidad, setCantidad] = useState(1)
-  const [observaciones, setObservaciones] = useState("")
-  const [fechaBaja, setFechaBaja] = useState(new Date().toISOString().split("T")[0])
+  const [formData, setFormData] = useState({
+    cantidad: 1,
+    observaciones: "",
+    fechaBaja: new Date().toISOString().split("T")[0],
+  })
 
-  // Estados para errores de validación
-  const [errores, setErrores] = useState({
+  const [loading, setLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({
     cantidad: "",
     fechaBaja: "",
     observaciones: "",
   })
 
-  // Función para validar la cantidad
+  // Funciones de validación del lado del cliente
   const validarCantidad = (valor) => {
-    if (isNaN(valor) || valor === "") {
-      return "La cantidad debe ser un número"
+    if (isNaN(valor) || valor === "" || valor === null) {
+      return "La cantidad debe ser un número válido"
     }
 
-    if (valor <= 0) {
+    const num = Number(valor)
+
+    if (num <= 0) {
       return "La cantidad debe ser mayor a cero"
     }
 
-    if (valor > insumo.stock) {
-      return "La cantidad no puede ser mayor al stock disponible"
+    if (!Number.isInteger(num)) {
+      return "La cantidad debe ser un número entero"
+    }
+
+    if (num > (insumo?.stock || 0)) {
+      return `La cantidad no puede ser mayor al stock disponible (${insumo?.stock || 0})`
     }
 
     return ""
   }
 
-  // Función para validar la fecha
   const validarFecha = (fecha) => {
     if (!fecha) {
-      return "La fecha no puede estar vacía"
+      return "La fecha de baja es requerida"
     }
 
     const fechaActual = new Date()
@@ -47,182 +56,257 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
       return "La fecha no puede ser futura"
     }
 
+    // Validar que no sea muy antigua (más de 1 año)
+    const unAñoAtras = new Date()
+    unAñoAtras.setFullYear(unAñoAtras.getFullYear() - 1)
+    unAñoAtras.setHours(0, 0, 0, 0)
+
+    if (fechaSeleccionada < unAñoAtras) {
+      return "La fecha no puede ser anterior a un año"
+    }
+
     return ""
   }
 
-  // Función para validar las observaciones
   const validarObservaciones = (texto) => {
     if (!texto || texto.trim() === "") {
-      return "Las observaciones no pueden estar vacías"
+      return "Las observaciones son requeridas"
     }
 
-    if (texto.length > 300) {
+    const textoTrimmed = texto.trim()
+
+    if (textoTrimmed.length < 10) {
+      return "Las observaciones deben tener al menos 10 caracteres"
+    }
+
+    if (textoTrimmed.length > 300) {
       return "Las observaciones no pueden exceder los 300 caracteres"
     }
 
-    if (!/^[a-zA-Z0-9\s.,]+$/.test(texto)) {
-      return "Las observaciones solo pueden contener caracteres alfanuméricos, espacios, puntos y comas"
+    // Permitir más caracteres para observaciones
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,;:()\-¿?¡!]+$/.test(textoTrimmed)) {
+      return "Las observaciones contienen caracteres no válidos"
     }
 
     return ""
   }
 
-  // Manejadores de cambio con validación
-  const handleCantidadChange = (e) => {
-    const valor = e.target.value
-    setCantidad(Number(valor))
-    setErrores({
-      ...errores,
-      cantidad: validarCantidad(valor),
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    const newValue = value
+
+    // Validación en tiempo real
+    let errorMessage = ""
+    if (name === "cantidad") {
+      errorMessage = validarCantidad(newValue)
+    } else if (name === "fechaBaja") {
+      errorMessage = validarFecha(newValue)
+    } else if (name === "observaciones") {
+      errorMessage = validarObservaciones(newValue)
+    }
+
+    setFieldErrors({
+      ...fieldErrors,
+      [name]: errorMessage,
+    })
+
+    setFormData({
+      ...formData,
+      [name]: newValue,
     })
   }
 
-  const handleFechaChange = (e) => {
-    const valor = e.target.value
-    setFechaBaja(valor)
-    setErrores({
-      ...errores,
-      fechaBaja: validarFecha(valor),
-    })
-  }
+  const validateForm = () => {
+    const errors = {
+      cantidad: validarCantidad(formData.cantidad),
+      fechaBaja: validarFecha(formData.fechaBaja),
+      observaciones: validarObservaciones(formData.observaciones),
+    }
 
-  const handleObservacionesChange = (e) => {
-    const valor = e.target.value
-    setObservaciones(valor)
-    setErrores({
-      ...errores,
-      observaciones: validarObservaciones(valor),
-    })
+    setFieldErrors(errors)
+
+    return !Object.values(errors).some((error) => error !== "")
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    // Validar todos los campos antes de enviar
-    const errorCantidad = validarCantidad(cantidad)
-    const errorFecha = validarFecha(fechaBaja)
-    const errorObservaciones = validarObservaciones(observaciones)
-
-    // Actualizar errores
-    setErrores({
-      cantidad: errorCantidad,
-      fechaBaja: errorFecha,
-      observaciones: errorObservaciones,
-    })
-
-    // Si hay errores, no enviar el formulario
-    if (errorCantidad || errorFecha || errorObservaciones) {
+    if (!validateForm()) {
       return
     }
 
+    setLoading(true)
+
     // Crear objeto con los datos de la baja
     const datosBaja = {
-      productoId: insumo._id,
-      fechaBaja,
-      cantidad,
-      observaciones,
+      insumoId: insumo._id,
+      fechaBaja: formData.fechaBaja,
+      cantidad: Number(formData.cantidad),
+      observaciones: formData.observaciones.trim(),
     }
 
     // Enviar datos al componente padre
     onSubmit(datosBaja)
+    setLoading(false)
   }
 
+  // Calcular stock restante después de la baja
+  const stockRestante = (insumo?.stock || 0) - Number(formData.cantidad || 0)
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Insumo</label>
-        <input
-          type="text"
-          value={insumo?.nombreInsumo || ""}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-gray-100"
-          readOnly
-        />
-      </div>
+    <div className="p-6 w-full mx-auto" style={{ maxWidth: "90%", minWidth: "600px" }}>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
+        <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
+        Dar de Baja Insumo
+      </h2>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Stock Actual</label>
-        <input
-          type="text"
-          value={insumo?.stock || 0}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-gray-100"
-          readOnly
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Información del Insumo (Solo lectura) */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-semibold text-gray-800 mb-3">📦 Información del Insumo</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Nombre del Insumo</label>
+              <input
+                type="text"
+                value={insumo?.nombreInsumo || ""}
+                className="form-input w-full bg-gray-100"
+                readOnly
+              />
+            </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Fecha de Baja</label>
-        <input
-          type="date"
-          value={fechaBaja}
-          onChange={handleFechaChange}
-          className={`mt-1 block w-full rounded-md ${
-            errores.fechaBaja ? "border-red-300" : "border-gray-300"
-          } shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}
-          required
-        />
-        {errores.fechaBaja && <p className="mt-1 text-sm text-red-600">{errores.fechaBaja}</p>}
-        <p className="mt-1 text-xs text-gray-500">La fecha debe ser actual o pasada, no puede ser futura.</p>
-      </div>
+            <div className="form-group">
+              <label className="form-label">Stock Actual</label>
+              <input
+                type="text"
+                value={`${insumo?.stock || 0} unidades`}
+                className="form-input w-full bg-gray-100"
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Cantidad a dar de baja</label>
-        <input
-          type="number"
-          value={cantidad}
-          onChange={handleCantidadChange}
-          min="1"
-          max={insumo?.stock || 1}
-          className={`mt-1 block w-full rounded-md ${
-            errores.cantidad ? "border-red-300" : "border-gray-300"
-          } shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}
-          required
-        />
-        {errores.cantidad && <p className="mt-1 text-sm text-red-600">{errores.cantidad}</p>}
-        <p className="mt-1 text-xs text-gray-500">
-          La cantidad debe ser mayor a 0 y no puede exceder el stock actual ({insumo?.stock || 0}).
-        </p>
-      </div>
+        {/* Campos del formulario */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label htmlFor="fechaBaja" className="form-label">
+              Fecha de Baja <span className="text-pink-500">*</span>
+            </label>
+            <input
+              type="date"
+              id="fechaBaja"
+              name="fechaBaja"
+              value={formData.fechaBaja}
+              onChange={handleInputChange}
+              max={new Date().toISOString().split("T")[0]}
+              className={`form-input w-full ${fieldErrors.fechaBaja ? "border-red-500" : ""}`}
+              required
+            />
+            {fieldErrors.fechaBaja && <p className="text-red-500 text-sm mt-1">{fieldErrors.fechaBaja}</p>}
+            <p className="text-xs text-gray-500 mt-1">La fecha debe ser actual o pasada</p>
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Observaciones
-          <span className="ml-1 text-xs text-gray-500">({observaciones.length}/300)</span>
-        </label>
-        <textarea
-          value={observaciones}
-          onChange={handleObservacionesChange}
-          className={`mt-1 block w-full rounded-md ${
-            errores.observaciones ? "border-red-300" : "border-gray-300"
-          } shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}
-          rows="3"
-          placeholder="Motivo de la baja (vencimiento, daño, etc.)"
-          required
-        />
-        {errores.observaciones && <p className="mt-1 text-sm text-red-600">{errores.observaciones}</p>}
-        <p className="mt-1 text-xs text-gray-500">
-          Solo se permiten caracteres alfanuméricos, espacios, puntos y comas. Máximo 300 caracteres.
-        </p>
-      </div>
+          <div className="form-group">
+            <label htmlFor="cantidad" className="form-label">
+              Cantidad a dar de baja <span className="text-pink-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                id="cantidad"
+                name="cantidad"
+                value={formData.cantidad}
+                onChange={handleInputChange}
+                min="1"
+                max={insumo?.stock || 1}
+                step="1"
+                className={`form-input w-full ${fieldErrors.cantidad ? "border-red-500" : ""}`}
+                placeholder="Cantidad"
+                required
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <span className="text-gray-400 text-sm">unidades</span>
+              </div>
+            </div>
+            {fieldErrors.cantidad && <p className="text-red-500 text-sm mt-1">{fieldErrors.cantidad}</p>}
+            <p className="text-xs text-gray-500 mt-1">Máximo disponible: {insumo?.stock || 0} unidades</p>
+          </div>
+        </div>
 
-      <div className="flex justify-between pt-4">
-        <button
-          type="submit"
-          disabled={errores.cantidad || errores.fechaBaja || errores.observaciones}
-          className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-            errores.cantidad || errores.fechaBaja || errores.observaciones ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          Dar de Baja
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
+        <div className="form-group">
+          <label htmlFor="observaciones" className="form-label">
+            Observaciones <span className="text-pink-500">*</span>
+            <span className="ml-2 text-xs text-gray-500">({formData.observaciones.length}/300)</span>
+          </label>
+          <textarea
+            id="observaciones"
+            name="observaciones"
+            value={formData.observaciones}
+            onChange={handleInputChange}
+            maxLength={300}
+            className={`form-input w-full resize-none ${fieldErrors.observaciones ? "border-red-500" : ""}`}
+            rows={4}
+            placeholder="Motivo de la baja (vencimiento, daño, deterioro, etc.)"
+            required
+          />
+          {fieldErrors.observaciones && <p className="text-red-500 text-sm mt-1">{fieldErrors.observaciones}</p>}
+          <p className="text-xs text-gray-500 mt-1">
+            Describa detalladamente el motivo de la baja (mínimo 10 caracteres)
+          </p>
+        </div>
+
+        {/* Resumen de la operación */}
+        <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-pink-800 mb-2">📊 Resumen de la Baja</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-pink-700">
+            <div>
+              <span className="font-medium">Stock Actual:</span>
+              <span className="ml-2 font-bold">{insumo?.stock || 0} unidades</span>
+            </div>
+            <div>
+              <span className="font-medium">Cantidad a dar de baja:</span>
+              <span className="ml-2 font-bold text-red-600">{formData.cantidad || 0} unidades</span>
+            </div>
+            <div>
+              <span className="font-medium">Stock Restante:</span>
+              <span className={`ml-2 font-bold ${stockRestante <= 0 ? "text-red-600" : "text-green-600"}`}>
+                {stockRestante} unidades
+              </span>
+            </div>
+          </div>
+          {stockRestante <= 0 && (
+            <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-xs">
+              ⚠️ <strong>Advertencia:</strong> Esta baja dejará el insumo sin stock disponible.
+            </div>
+          )}
+        </div>
+
+        <div className="btn-container mt-6 flex justify-end space-x-4">
+          <button
+            type="submit"
+            className="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            disabled={loading || Object.values(fieldErrors).some((error) => error !== "")}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                <span>Procesando...</span>
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
+                Dar de Baja
+              </>
+            )}
+          </button>
+          <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>
+            <FontAwesomeIcon icon={faTimes} className="mr-2" />
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
