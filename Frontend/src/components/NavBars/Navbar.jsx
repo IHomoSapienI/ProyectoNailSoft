@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   FaUsers,
@@ -15,27 +15,26 @@ import {
   FaAsymmetrik,
   FaFileAlt,
 } from "react-icons/fa"
-
+import { useAuth } from "../../context/AuthContext" // Importamos el contexto de autenticación
 // Actualizamos la importación para usar una ruta relativa
 import { Navbar, NavbarLogo, NavbarDropdownMenu, AvatarMenu } from "../ui/navbar"
 
 export default function MainNavbar() {
   const navigate = useNavigate()
+  const { user, logout } = useAuth(); // Obtenemos el usuario desde el contexto de autenticación
   const [userRole, setUserRole] = useState(null)
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole")
+    
+    const role = user?.role;// Aseguramos que userRole sea una cadena vacía si no hay usuario
     setUserRole(role ? role.toLowerCase() : null)
-  }, [])
+  }, [user])
 
+  
+  // const {logout}= useAuth(); // Obtenemos la función de logout desde el contexto de autenticación
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("userRole")
-    localStorage.removeItem("userId")
-    localStorage.removeItem("userName")
-    localStorage.removeItem("userEmail")
-    localStorage.removeItem("clienteId")
-    navigate("/login")
+    logout(); // Llamamos a la función de logout del contexto
+    navigate("/login") // Redirigimos al usuario a la página de login
   }
 
   const renderMenuItems = () => {

@@ -5,7 +5,17 @@ import axios from "axios"
 import Modal from "react-modal"
 import FormularioEmpleado from "./FormularioEmpleado"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEdit, faTrash, faSearch, faSort, faSortUp, faSortDown, faPlus } from "@fortawesome/free-solid-svg-icons"
+import {
+  faEdit,
+  faTrash,
+  faSearch,
+  faSort,
+  faSortUp,
+  faSortDown,
+  faPlus,
+  faToggleOn,
+  faToggleOff,
+} from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import { useSidebar } from "../Sidebar/Sidebar"
 import "../../styles/tablas.css"
@@ -70,6 +80,63 @@ const TablaEmpleados = () => {
   const manejarEmpleadoActualizado = () => {
     obtenerEmpleados()
     cerrarFormulario()
+  }
+
+  const manejarToggleEstado = async (id, estadoActual) => {
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
+
+    const result = await Swal.fire({
+      title: `¿Estás seguro?`,
+      text: `¿Deseas ${accion} este empleado?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: `Sí, ${accion}!`,
+      cancelButtonText: "Cancelar",
+    })
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("token")
+        await axios.patch(
+          `https://gitbf.onrender.com/api/empleados/${id}/toggle-estado`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        )
+
+        // Actualizar el estado local
+        setEmpleados(empleados.map((e) => (e._id === id ? { ...e, estadoempleado: nuevoEstado } : e)))
+
+        Swal.fire({
+          icon: "success",
+          title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+          text: `El empleado ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+          confirmButtonColor: "#db2777",
+        })
+      } catch (error) {
+        console.error(`Error al ${accion} el empleado:`, error)
+
+        let errorMessage = `No se pudo ${accion} el empleado`
+        if (error.response?.status === 404) {
+          errorMessage = "Ruta no encontrada. Contacta al administrador."
+        } else if (error.response?.status === 401) {
+          errorMessage = "No autorizado. Tu sesión puede haber expirado."
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: errorMessage,
+          confirmButtonColor: "#db2777",
+        })
+      }
+    }
   }
 
   const manejarEliminarEmpleado = async (id) => {
@@ -189,7 +256,7 @@ const TablaEmpleados = () => {
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow mx-auto w-full">
-        <table className="universal-tabla-moderna w-full" >
+        <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 dark:card-gradient-4">
             <tr className="text-foreground">
               <th onClick={() => handleSort("nombreempleado")} className="cursor-pointer dark:hover:bg-gray-500/50">
@@ -238,6 +305,21 @@ const TablaEmpleados = () => {
                         title="Eliminar"
                       >
                         <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        className={`btn-toggle-1 transition-all duration-200 ease-in-out
+                  ${
+                    empleado.estadoempleado
+                      ? "bg-emerald-400/70  dark:bg-emerald-700 "
+                      : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                  }`}
+                        onClick={() => manejarToggleEstado(empleado._id, empleado.estadoempleado)}
+                        title={empleado.estadoempleado ? "Desactivar empleado" : "Activar empleado"}
+                      >
+                        <FontAwesomeIcon
+                          icon={empleado.estadoempleado ? faToggleOn : faToggleOff}
+                          className="text-white text-xl"
+                        />
                       </button>
                     </div>
                   </td>

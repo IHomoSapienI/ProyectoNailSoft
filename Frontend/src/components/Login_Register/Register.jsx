@@ -6,8 +6,10 @@ import { motion } from "framer-motion"
 import axios from "axios"
 import Swal from "sweetalert2"
 import "./Register.css"
+import { useAuth } from "../../context/AuthContext"
 
 export default function Register() {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -300,11 +302,19 @@ export default function Register() {
       )
 
       const { token, role, user } = response.data
-      localStorage.setItem("token", token)
-      localStorage.setItem("userRole", role.toLowerCase())
-      if (user?.id) {
-        localStorage.setItem("userId", user.id)
-      }
+      login({
+        token,
+        role,
+        _id:  user._id, // Asegúrate de usar el campo correcto del backend
+        nombre:  user.name, // Asegúrate de usar el campo correcto del backend
+        correo:  user.email, // Asegúrate de usar el campo correcto del backend
+      })
+      
+      // localStorage.setItem("token", token)
+      // localStorage.setItem("userRole", role.toLowerCase())
+      // if (user?.id) {
+      //   localStorage.setItem("userId", user.id)
+      // }
 
       showSuccessAlert()
 
@@ -369,7 +379,7 @@ export default function Register() {
           </div>
 
           <div className="form-container-register">
-            <h2 className="welcome-text">Crear una cuenta</h2>
+            <h2 className="welcome-text-register">Crear una cuenta</h2>
 
             {errors.general && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">

@@ -160,16 +160,16 @@ h6 {
   left: 20px;
 }
 
-.page-nav-button.next {
+/* .page-nav-button.next {
   left: calc(50% - 70px);
-}
+} */
 
-.page-nav-button:hover:not(.disabled) {
+/* .page-nav-button:hover:not(.disabled) {
   background: var(--primary);
   color: var(--white);
   transform: translateY(-50%) scale(1.15);
   box-shadow: 0 6px 20px var(--primary-shadow);
-}
+} */
 
 .page-nav-button.disabled {
   background: #f0f0f0;
@@ -179,8 +179,8 @@ h6 {
 }
 
 .nav-icon {
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
   transition: transform 0.3s ease;
 }
 
@@ -1016,15 +1016,115 @@ h6 {
 }
 
 /* Responsive */
-@media (max-width: 992px) {
+@media (max-width: 1400px) {
   .notebook {
-    height: 85vh;
+    height: 90%;
     width: 95%;
     max-width: 1200px;
+    /* display: inline-block; */
+    
+    
+  }
+  .selected-item{
+    display: block;
+    justify-content: space-between;
+    margin-bottom: 2vh;
+   position: relative;
+
   }
 
+  .selected-item-content{
+    display: block;
+    align-items: left;
+    /* justify-content: space-between; */
+
+  }
+  .selection-list{
+    display: block;
+    flex-direction: row;
+    gap: 1rem;
+    position:absolute;
+    width:60%;
+  }
+
+  .notebook-spiral{
+    width: 30px;
+    height: 100%;
+    left: 65vh;
+    margin: auto;
+    top: 0;
+    transform: translateX(0);
+    position: fixed;
+    margin-bottom: 10px;
+  }
+
+  /* .notebook-spiral{
+    width: 40px;
+    height: 40px;
+    left: 0;
+    top: 0;
+    transform: translateX(0);
+    position: relative;
+    margin-bottom: 10px;
+  } */
   .notebook-page {
-    padding: 2rem;
+    /* padding: 1.5rem; */
+    min-height: auto;
+    width: 100%;
+    margin: 0;
+    /* overflow-y: visible; */
+    height: auto;
+    /* overflow-y: auto; */
+    /* flex: 1; */
+      padding: 2.5rem;
+      /* position: relative; */
+      /* transition: transform 0.5s ease; */
+      /* height: 100%; */
+      /* display: flex; */
+      /* flex-direction: column; */
+      /* background-color: var(--white); */
+      /* background-image: radial-gradient(var(--primary-light) 1px, transparent 1px), */
+        /* radial-gradient(var(--primary-light) 1px, var(--white) 1px); */
+      /* background-size: 60px 60px; */
+      /* background-position: 0 0, 30px 30px; */
+      /* background-attachment: local; */
+      /* overflow: hidden; */
+      /* width: 50%; */
+    }
+
+    .page-nav-button.next {
+    left: calc(65% - 65px);
+  }
+
+    
+
+
+
+  /* .left-page{
+    overflow-y: hidden;
+  } */
+
+  .right-page {
+    /* background-color:blue; */
+    /* display: block; */
+    /* overflow: auto; */
+  }
+  .services-list{
+    /* overflow-y: auto; */
+  }
+
+  .custom-scrollbar{
+    /* background-color: red; */
+   
+  }
+
+  /* .services-item{
+    overflow-x: scroll;
+  } */
+
+  .total-section{
+    display: flex;
+    height: 15vh;
   }
 
   /* Ajustar botones de navegación para tablets */
@@ -1036,7 +1136,96 @@ h6 {
     left: calc(50% - 65px);
   }
 }
+@media (max-width: 1250px) {
+  .notebook {
+    height: auto;
+    min-height: 95vh;
+    width: 98%;
+    flex-direction: column;
+    overflow-y: auto;
+  }
 
+  .notebook-content {
+    flex-direction: column;
+    margin-left: 0;
+    padding-top: 40px;
+    overflow-y: visible;
+    height: auto;
+  }
+
+  .notebook-page {
+    padding: 1.5rem;
+    min-height: auto;
+    width: 100%;
+    margin: 0;
+    overflow-y: visible;
+    height: auto;
+  }
+
+  /* Hacer que la página izquierda y derecha se muestren una debajo de la otra */
+  .left-page,
+  .right-page {
+    width: 100%;
+    margin: 0;
+    overflow-y: visible;
+  }
+
+  .right-page {
+    margin-top: 20px;
+  }
+
+  /* Make the spiral horizontal on mobile */
+  .notebook-spiral {
+    width: 100%;
+    height: 40px;
+    flex-direction: row;
+    left: 0;
+    top: 0;
+    transform: translateX(0);
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .spiral-ring {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Adjust navigation buttons for mobile */
+  .page-nav-button.prev {
+    left: 15px;
+    transform: translateY(-50%);
+  }
+
+  .page-nav-button.next {
+    left: auto;
+    right: 15px;
+    transform: translateY(-50%);
+  }
+
+  /* Ajustes para servicios en móvil */
+  .service-item {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "content";
+  }
+
+  .service-checkbox {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .service-header {
+    padding: 1rem 3rem 0.5rem 1rem;
+  }
+
+  .service-details {
+    padding: 0.5rem 1rem 1rem 1rem;
+  }
+}
 @media (max-width: 768px) {
   .notebook {
     height: auto;

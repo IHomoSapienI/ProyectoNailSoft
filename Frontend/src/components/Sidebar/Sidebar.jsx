@@ -7,6 +7,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 // import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
 import { BiAlbum, BiSolidDiscount } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion"
+import {useAuth} from "../../context/AuthContext" // Importamos el contexto de autenticación
 import {
   FaUsers,
   FaUserShield,
@@ -105,6 +106,7 @@ const Sidebar = () => {
   const location = useLocation()
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const sidebarRef = useRef(null)
+  const { user } = useAuth() // Obtenemos el usuario del contexto de autenticación
 
   // Recuperar el estado del sidebar del localStorage al cargar
   useEffect(() => {
@@ -148,9 +150,9 @@ const Sidebar = () => {
   }, [isMobile, isOpen])
 
   useEffect(() => {
-    const role = localStorage.getItem("userRole")
+    const role = user?.role; // Aseguramos que userRole sea una cadena vacía si no hay usuario
     setUserRole(role ? role.toLowerCase() : null)
-  }, [])
+  }, [user])
 
   // Actualizar la clase del body cuando cambia el estado del sidebar
   useEffect(() => {

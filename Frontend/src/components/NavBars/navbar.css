@@ -178,6 +178,8 @@
 
 @media (max-width: 768px) {
   .navbar {
+    display: block;
+    height: auto;
     padding: 0.75rem 1rem;
   }
 

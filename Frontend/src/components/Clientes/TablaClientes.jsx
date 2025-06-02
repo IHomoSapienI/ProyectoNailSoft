@@ -84,63 +84,66 @@ const TablaClientes = () => {
     setModalIsOpen(true);
   };
 
-  const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual;
-    const accion = nuevoEstado ? "activar" : "desactivar";
+ const manejarToggleEstado = async (id, estadoActual) => {
+  const nuevoEstado = !estadoActual;
+  const accion = nuevoEstado ? "activar" : "desactivar";
 
-    const result = await Swal.fire({
-      title: `¿Estás seguro?`,
-      text: `¿Deseas ${accion} este cliente?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: `Sí, ${accion}!`,
-      cancelButtonText: "Cancelar",
-    });
+  const result = await Swal.fire({
+    title: `¿Estás seguro?`,
+    text: `¿Deseas ${accion} este cliente?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: nuevoEstado ? "#3085d6" : "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: `Sí, ${accion}!`,
+    cancelButtonText: "Cancelar",
+  });
 
-    if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.patch(
-          `https://gitbf.onrender.com/api/clientes/${id}/toggle-estado`,
-          {
-            estadocliente: nuevoEstado,
+  if (result.isConfirmed) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.patch(
+        `https://gitbf.onrender.com/api/clientes/${id}/toggle-estado`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        }
+      );
 
-        // Actualizar el estado local
-        setClientes(
-          clientes.map((c) =>
-            c._id === id ? { ...c, estadocliente: nuevoEstado } : c
-          )
-        );
+      setClientes(
+        clientes.map((c) =>
+          c._id === id ? { ...c, estadocliente: nuevoEstado } : c
+        )
+      );
 
-        Swal.fire({
-          icon: "success",
-          title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
-          text: `El cliente ha sido ${
-            nuevoEstado ? "activado" : "desactivado"
-          }.`,
-          confirmButtonColor: "#db2777",
-        });
-      } catch (error) {
-        console.error(`Error al ${accion} el cliente:`, error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: `No se pudo ${accion} el cliente`,
-          confirmButtonColor: "#db2777",
-        });
+      Swal.fire({
+        icon: "success",
+        title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
+        text: `El cliente ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
+        confirmButtonColor: "#db2777",
+      });
+    } catch (error) {
+      console.error(`Error al ${accion} el cliente:`, error);
+      
+      let errorMessage = `No se pudo ${accion} el cliente`;
+      if (error.response?.status === 404) {
+        errorMessage = "Ruta no encontrada. Contacta al administrador.";
+      } else if (error.response?.status === 401) {
+        errorMessage = "No autorizado. Tu sesión puede haber expirado.";
       }
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+        confirmButtonColor: "#db2777",
+      });
     }
-  };
+  }
+};
 
   const manejarEliminar = async (id) => {
     const result = await Swal.fire({

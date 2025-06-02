@@ -491,3 +491,203 @@ body.verify-page-active {
     opacity: 0;
   }
 }
+
+/* Añadir al final del archivo VerifyToken.css */
+
+/* Estilos para el contenedor de inputs de código */
+.verification-code-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+/* Estilos para cada input de código */
+.verification-code-input {
+  width: 50px;
+  height: 60px;
+  margin-top: -45px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  color: #334155;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  caret-color: #ff69b4;
+}
+
+.verification-code-input:focus {
+  border-color: #f63be3;
+  box-shadow: 0 0 0 3px #ff69b44d;
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.verification-code-input:hover {
+  border-color: #cbd5e1;
+}
+
+/* Estilo para resaltar el email */
+.email-highlight {
+  display: block;
+  font-weight: 600;
+  color: #ff69b4;
+  background-color: #f0f9ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 10px auto;
+  max-width: fit-content;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* SweetAlert2 Personalizado */
+.swal-container {
+  font-family: "Poppins", sans-serif;
+}
+
+.swal-popup {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 450px;
+  width: 90%;
+}
+
+.swal-title {
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.swal-content {
+  padding: 1rem 0;
+  font-size: 1rem;
+}
+
+.swal-confirm-button {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  border-radius: 0.5rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease !important;
+}
+
+.swal-confirm-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Estilos para mensajes de error */
+.text-error {
+  color: #e11d48;
+}
+
+.swal-error-message {
+  font-size: 1.05rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Estilos para mensajes de éxito */
+.text-success {
+  color: #10b981;
+}
+
+.swal-success-content {
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.swal-success-message {
+  font-size: 1.05rem;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+.swal-instruction {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+/* Estilos para alerta de carga */
+.swal-loading-message {
+  font-size: 1rem;
+  color: #64748b;
+  margin-top: 1rem;
+}
+
+/* Añadir animate.css básico para animaciones */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale3d(0.8, 0.8, 0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+  to {
+    opacity: 0;
+    transform: scale3d(0.8, 0.8, 0.8);
+  }
+}
+
+.animate__animated {
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+.animate__faster {
+  animation-duration: 0.3s;
+}
+
+.animate__fadeInDown {
+  animation-name: fadeInDown;
+}
+
+.animate__fadeOutUp {
+  animation-name: fadeOutUp;
+}
+
+.animate__zoomIn {
+  animation-name: zoomIn;
+}
+
+.animate__zoomOut {
+  animation-name: zoomOut;
+}

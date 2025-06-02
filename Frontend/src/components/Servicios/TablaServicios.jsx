@@ -183,46 +183,57 @@ const TablaServicios = () => {
   };
 
   const manejarEliminar = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Estás seguro?",
-      text: "¡No podrás revertir esto!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminarlo!",
-      cancelButtonText: "Cancelar",
-    });
+  const result = await Swal.fire({
+    title: "¿Estás seguro?",
+    text: "¡No podrás revertir esto!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminarlo!",
+    cancelButtonText: "Cancelar",
+  });
 
-    if (result.isConfirmed) {
-      try {
-        const token = localStorage.getItem("token");
-        await fetch(`https://gitbf.onrender.com/api/servicios/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        dispatch({ type: ACTIONS.DELETE_SERVICIO, payload: id });
-        Swal.fire({
-          title: "Eliminado!",
-          text: "El servicio ha sido eliminado.",
-          icon: "success",
-          confirmButtonColor: "#db2777",
-        });
-        obtenerServicios(); // Actualizar la lista después de eliminar
-      } catch (error) {
-        console.error("Error al eliminar el servicio:", error);
-        Swal.fire({
-          title: "Error",
-          text: "No se pudo eliminar el servicio.",
-          icon: "error",
-          confirmButtonColor: "#db2777",
-        });
+  if (result.isConfirmed) {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // 🔴 Acá estaba el error: no estabas guardando la respuesta
+      const response = await fetch(`https://gitbf.onrender.com/api/servicios/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // ✅ Revisás si la respuesta fue exitosa
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.msg || "Error al eliminar el servicio");
       }
+
+      dispatch({ type: ACTIONS.DELETE_SERVICIO, payload: id });
+
+      Swal.fire({
+        title: "Eliminado!",
+        text: "El servicio ha sido eliminado.",
+        icon: "success",
+        confirmButtonColor: "#db2777",
+      });
+
+      obtenerServicios(); // Actualizar la lista después de eliminar
+    } catch (error) {
+      console.error("Error al eliminar el servicio:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "No se pudo eliminar el servicio.",
+        icon: "error",
+        confirmButtonColor: "#db2777",
+      });
     }
-  };
+  }
+};
 
   const manejarToggleEstado = async (id, estadoActual) => {
     const nuevoEstado = !estadoActual;

@@ -74,7 +74,7 @@ const ArticlesGrid = () => {
           whileTap={{ scale: 0.95 }}
         >
           <FaCalendarPlus className="button-icon" />
-          <span className="span">Agenda tu Cita Ahora</span>
+          <span className="span">¡Reserva Ya!</span>
         </motion.button>
       </motion.div>
 
@@ -120,13 +120,29 @@ const ArticlesGrid = () => {
                     <div className="price-tag">
                       {servicio.tieneDescuento ? (
                         <>
-                          <span className="original-price">${servicio.precioOriginal.toFixed(2)}</span>
-                          <span className="discounted-price">${servicio.precioConDescuento.toFixed(2)}</span>
+                          <span className="original-price">${Number(servicio.precioOriginal).toLocaleString("es-ES", {
+                              minimumFractionDigits: 0,
+                              
+                            })}
+                          </span>
+
+
+                          <span className="discounted-price ">
+                            ${Number(servicio.precioConDescuento).toLocaleString("es-ES", {
+                              minimumFractionDigits: 0,
+                            })}
+                          </span>
                         </>
-                      ) : (
-                        <span>${Number.parseFloat(servicio.precio).toFixed(2)}</span>
-                      )}
+                          ) : (
+                            <span>${Number(servicio.precio).toLocaleString("es-ES", {
+                              minimumFractionDigits: 0,})}
+                          </span>
+                          )}
                     </div>
+                            
+
+                          
+                          
                   </div>
 
                   <p className="card-description">{servicio.descripcion || "Descripción no disponible"}</p>
@@ -146,8 +162,8 @@ const ArticlesGrid = () => {
                       </div>
                     </div>
                     <div className="rating">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar key={i} className="star-icon" />
+                      {[...Array(2)].map((_, i) => (
+                        <FaHeart key={i} className="star-icon text-rose-500" />
                       ))}
                     </div>
                   </div>
@@ -210,11 +226,11 @@ const ArticlesGrid = () => {
                         className="service-rating"
                       >
                         <div className="stars">
-                          {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className="star-icon" />
+                          {[...Array(1)].map((_, i) => (
+                            <FaHeart key={i} className="star-icon" />
                           ))}
                         </div>
-                        <span>4.9</span>
+                        <span>Cuida tu estilo</span>
                       </motion.div>
                     </div>
                   </div>
@@ -249,13 +265,32 @@ const ArticlesGrid = () => {
                   >
                     <span className="price-label">Precio del Servicio</span>
                     {selectedService.tieneDescuento ? (
-                      <div className="modal-price-with-discount">
-                        <span className="modal-original-price">${selectedService.precioOriginal.toFixed(2)}</span>
-                        <span className="modal-discounted-price">${selectedService.precioConDescuento.toFixed(2)}</span>
+                      <div className="">
+                        <span className="modal-original-price">${Number(selectedService.precioOriginal).toLocaleString("es-ES", {
+                          minimumFractionDigits: 0,
+                        })}
+                      </span>
+
+                        
+
+
+                        <span className="modal-discounted-price">
+                          {/* ${selectedService.precioConDescuento.toFixed(2)} */}
+                          ${Number(selectedService.precioConDescuento).toLocaleString("es-ES", {
+                            minimumFractionDigits: 0,
+                          })}
+                          </span>
+                        
+                        
                         <span className="modal-discount-badge">{selectedService.porcentajeDescuento}% OFF</span>
+                      
+                      
                       </div>
                     ) : (
-                      <span className="price-amount">${Number.parseFloat(selectedService.precio).toFixed(2)}</span>
+                      <span className="price-amount">
+                        ${Number(selectedService.precio).toLocaleString("es-ES", {
+                          minimumFractionDigits: 0,})}
+                        </span>
                     )}
                   </motion.div>
 

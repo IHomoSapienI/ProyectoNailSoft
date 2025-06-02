@@ -2,6 +2,7 @@
 
 // Modificar el componente MainLayout para incluir el Footer
 import { useState, useEffect } from "react"
+import {useAuth} from "../../context/AuthContext"
 import { useSidebar } from "./Sidebar"
 import DashboardNavbar from "../NavBars/DashboardNavbar"
 import Footer from "../Footer/Footer" // Importar el componente Footer
@@ -15,7 +16,9 @@ const MainLayout = ({ children }) => {
     width: "calc(100% - 280px)",
     transition: "all 0.3s ease-in-out",
   })
-  const userRole = localStorage.getItem("userRole")
+  const { user } = useAuth(); // Obtener el usuario desde el contexto de autenticación
+  const userRole = user?.role;
+
   const isAdmin = userRole === "admin"
   const isEmployee = userRole === "empleado"
   const showDashboardNavbar = isAdmin || isEmployee

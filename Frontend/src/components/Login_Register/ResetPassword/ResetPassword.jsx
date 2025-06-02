@@ -1,3 +1,5 @@
+// Archivo: ResetPassword.jsx
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -9,222 +11,138 @@ import "./ResetPassword.css"
 
 export default function ResetPassword() {
   const location = useLocation()
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [errors, setErrors] = useState({
-    password: "",
-    confirmPassword: ""
-  })
-  const [loading, setLoading] = useState(false)
-  const [resetToken, setResetToken] = useState(location.state?.resetToken || "")
-  const [email, setEmail] = useState(location.state?.email || "")
   const navigate = useNavigate()
   const containerRef = useRef(null)
 
-  // Verificar token al cargar
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [errors, setErrors] = useState({ password: "", confirmPassword: "" })
+  const [loading, setLoading] = useState(false)
+  const [resetToken, setResetToken] = useState(location.state?.resetToken || localStorage.getItem("resetToken") || "")
+  const [email, setEmail] = useState(location.state?.email || localStorage.getItem("recoveryEmail") || "")
+
   useEffect(() => {
     if (!resetToken) {
-      Swal.fire({
-        icon: "error",
-        title: "Acceso no autorizado",
-        text: "Debes verificar tu código primero para restablecer la contraseña.",
-        confirmButtonText: "Entendido"
-      }).then(() => {
-        navigate("/forgot-password")
-      })
+      Swal.fire({ icon: "error", title: "Acceso no autorizado", text: "Primero verifica tu código.", confirmButtonText: "Entendido" })
+        .then(() => navigate("/forgot-password"))
     }
   }, [resetToken, navigate])
 
-  // Función para validar la contraseña
+  useEffect(() => {
+    document.body.classList.add("reset-page-active")
+    document.documentElement.classList.add("reset-page-active")
+    const appContainer = document.getElementById("root") || document.getElementById("app")
+    if (appContainer) appContainer.classList.add("reset-app-container")
+    if (containerRef.current) Object.assign(containerRef.current.style, {
+      height: "100vh", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "4rem"
+    })
+    return () => {
+      document.body.classList.remove("reset-page-active")
+      document.documentElement.classList.remove("reset-page-active")
+      if (appContainer) appContainer.classList.remove("reset-app-container")
+    }
+  }, [])
+
   const validatePassword = (password) => {
-    if (!password) {
-      return "La contraseña es obligatoria"; // CEVN9
-    }
-    if (password.length < 8) {
-      return "Mínimo 8 caracteres"; // CEVN5
-    }
-    if (password.length > 64) {
-      return "Máximo 64 caracteres"; // CEVN6
-    }
-    if (/\s/.test(password)) {
-      return "No se permiten espacios"; // CEVN8
-    }
-    if (/^[a-zA-Z]+$/.test(password)) {
-      return "Debe incluir números o caracteres especiales"; // CEVN1, CEVN4
-    }
-    if (/^\d+$/.test(password)) {
-      return "No puede contener solo números"; // CEVN2
-    }
-    if (/^[^a-zA-Z0-9]+$/.test(password)) {
-      return "No puede contener solo caracteres especiales"; // CEVN3
-    }
-    if (password.length > 15 && password.length <= 64) {
-      // CEVN7 - Solo muestra advertencia pero no bloquea
-      console.warn("Contraseña muy larga (16-64 caracteres)");
-    }
-    return "";
+    if (!password) return "La contraseña es obligatoria"
+    if (password.length < 8) return "Mínimo 8 caracteres"
+    if (password.length > 64) return "Máximo 64 caracteres"
+    if (/\s/.test(password)) return "No se permiten espacios"
+    if (/^[a-zA-Z]+$/.test(password)) return "Agrega números o símbolos"
+    if (/^\d+$/.test(password)) return "No puede ser solo números"
+    if (/^[^a-zA-Z0-9]+$/.test(password)) return "No solo símbolos"
+    return ""
   }
 
-  // Función para validar la confirmación de contraseña
   const validateConfirmPassword = (confirmPassword, password) => {
-    if (!confirmPassword) {
-      return "Confirma tu contraseña"; // CEVN2
-    }
-    if (confirmPassword !== password) {
-      return "Las contraseñas no coinciden"; // CEVN1
-    }
-    return "";
+    if (!confirmPassword) return "Confirma tu contraseña"
+    if (confirmPassword !== password) return "No coinciden"
+    return ""
   }
 
-  // Manejar cambios en los campos
   const handlePasswordChange = (e) => {
-    const value = e.target.value;
-    setPassword(value);
+    const value = e.target.value
+    setPassword(value)
     setErrors(prev => ({
       ...prev,
       password: validatePassword(value),
       confirmPassword: validateConfirmPassword(confirmPassword, value)
-    }));
+    }))
   }
 
   const handleConfirmPasswordChange = (e) => {
-    const value = e.target.value;
-    setConfirmPassword(value);
+    const value = e.target.value
+    setConfirmPassword(value)
     setErrors(prev => ({
       ...prev,
       confirmPassword: validateConfirmPassword(value, password)
-    }));
+    }))
   }
-
-  // Estilos forzados
-  const applyForcedStyles = () => {
-    document.body.classList.add("reset-page-active")
-    document.documentElement.classList.add("reset-page-active")
-
-    const appContainer = document.getElementById("root") || document.getElementById("app")
-    if (appContainer) {
-      appContainer.classList.add("reset-app-container")
-    }
-
-    if (containerRef.current) {
-      containerRef.current.style.height = "100vh"
-      containerRef.current.style.width = "100%"
-      containerRef.current.style.display = "flex"
-      containerRef.current.style.alignItems = "center"
-      containerRef.current.style.justifyContent = "center"
-      containerRef.current.style.paddingTop = "4rem"
-    }
-  }
-
-  useEffect(() => {
-    applyForcedStyles()
-    const initialTimeout = setTimeout(applyForcedStyles, 100)
-    const intervalId = setInterval(applyForcedStyles, 500)
-
-    return () => {
-      clearTimeout(initialTimeout)
-      clearInterval(intervalId)
-      document.body.classList.remove("reset-page-active")
-      document.documentElement.classList.remove("reset-page-active")
-
-      const appContainer = document.getElementById("root") || document.getElementById("app")
-      if (appContainer) {
-        appContainer.classList.remove("reset-app-container")
-      }
-    }
-  }, [])
 
   const validateForm = () => {
-    const passwordError = validatePassword(password);
-    const confirmError = validateConfirmPassword(confirmPassword, password);
-    
-    setErrors({
-      password: passwordError,
-      confirmPassword: confirmError
-    });
-
-    return !passwordError && !confirmError;
+    const passwordError = validatePassword(password)
+    const confirmError = validateConfirmPassword(confirmPassword, password)
+    setErrors({ password: passwordError, confirmPassword: confirmError })
+    return !passwordError && !confirmError
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    if (!validateForm()) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        "https://gitbf.onrender.com/api/auth/reset-password",
-        {
-          token: resetToken,
-          password,
-          confirmPassword,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          timeout: 30000
-        }
-      );
-
-      Swal.fire({
-        icon: "success",
-        title: "¡Contraseña restablecida!",
-        text: "Tu contraseña ha sido actualizada correctamente.",
-        confirmButtonText: "Iniciar sesión",
-      }).then(() => {
-        navigate("/login");
-      });
-
-    } catch (error) {
-      let errorMessage = "Ocurrió un error al restablecer la contraseña";
-      
-      if (error.response) {
-        if (error.response.data?.error?.includes("Cast to ObjectId failed")) {
-          errorMessage = "Error de validación en el servidor. Por favor, contacta al administrador.";
-        } else {
-          errorMessage = error.response.data?.message || errorMessage;
-        }
-        
-        if (error.response.status === 401) {
-          if (error.response.data?.expired) {
-            Swal.fire({
-              icon: "error",
-              title: "Sesión expirada",
-              text: "El tiempo para restablecer la contraseña ha expirado. Por favor, solicita un nuevo código.",
-              confirmButtonText: "Entendido"
-            }).then(() => {
-              navigate("/forgot-password");
-            });
-            setLoading(false);
-            return;
-          }
-          
-          if (error.response.data?.invalidToken) {
-            errorMessage = "Token inválido. Por favor, solicita un nuevo código de verificación.";
-          }
-        }
-      } else if (error.request) {
-        errorMessage = "No se recibió respuesta del servidor. Verifica tu conexión a internet.";
-      } else {
-        errorMessage = `Error: ${error.message}`;
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  setLoading(true)
+  if (!validateForm()) {
+    setLoading(false)
+    return
+  }
+  try {
+    const response = await axios.post("https://gitbf.onrender.com/api/auth/reset-password", { 
+      token: resetToken, 
+      password, 
+      confirmPassword 
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
       }
-      
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: errorMessage,
-        confirmButtonText: "Entendido"
-      });
-    } finally {
-      setLoading(false);
+    })
+    
+    Swal.fire({ 
+      icon: "success", 
+      title: "¡Contraseña restablecida!", 
+      text: "Tu contraseña fue actualizada.", 
+      confirmButtonText: "Iniciar sesión" 
+    }).then(() => {
+      localStorage.removeItem("recoveryEmail")
+      localStorage.removeItem("resetToken")
+      navigate("/login")
+    })
+  } catch (error) {
+    console.error("Error completo:", error)
+    let errorMessage = "Error al restablecer la contraseña"
+    
+    if (error.response) {
+      if (error.response.status === 401 && error.response.data?.expired) {
+        Swal.fire({ 
+          icon: "error", 
+          title: "Sesión expirada", 
+          text: "El tiempo para restablecer ha expirado. Solicita un nuevo código.", 
+          confirmButtonText: "Entendido" 
+        }).then(() => navigate("/forgot-password"))
+        return
+      }
+      if (error.response.data?.message) {
+        errorMessage = error.response.data.message
+      }
     }
-  };
+    
+    Swal.fire({ 
+      icon: "error", 
+      title: "Error", 
+      text: errorMessage, 
+      confirmButtonText: "Entendido" 
+    })
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <div className="reset-container" ref={containerRef}>

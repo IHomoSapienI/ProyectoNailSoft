@@ -8,184 +8,198 @@ import Swal from "sweetalert2"
 import "./ForgotPassword.css"
 
 export default function ForgotPassword() {
-  const [formData, setFormData] = useState({
-    email: "",
-  })
-
-  const [errors, setErrors] = useState({
-    email: "",
-    general: ""
-  })
-
+  // Estados del componente
+  const [formData, setFormData] = useState({ email: "" })
+  const [errors, setErrors] = useState({ email: "", general: "" })
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const containerRef = useRef(null)
 
+  // Función para mostrar alertas de error personalizadas
   const showErrorAlert = (message) => {
     Swal.fire({
-      title: 'Error',
-      text: message,
-      icon: 'error',
-      confirmButtonText: 'Entendido',
-      confirmButtonColor: '#d33',
-      backdrop: `
-        rgba(0,0,0,0.7)
-        url("/images/nyan-cat.gif")
-        left top
-        no-repeat
-      `
+      title: '<span class="text-error">Error</span>',
+      html: `<p class="swal-error-message">${message}</p>`,
+      icon: "error",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#e11d48",
+      customClass: {
+        container: "swal-container",
+        popup: "swal-popup",
+        title: "swal-title",
+        htmlContainer: "swal-content",
+        confirmButton: "swal-confirm-button",
+      },
+      showClass: {
+        popup: "animate__animated animate__fadeInDown animate__faster",
+      },
+      hideClass: {
+        popup: "animate__animated animate__fadeOutUp animate__faster",
+      },
+      backdrop: `rgba(0,0,0,0.6)`,
+      allowOutsideClick: false,
+      timerProgressBar: true,
+      timer: 5000,
     })
   }
 
+  // Función para aplicar estilos forzados al contenedor
   const applyForcedStyles = () => {
     document.body.classList.add("forgot-page-active")
     document.documentElement.classList.add("forgot-page-active")
-
     const appContainer = document.getElementById("root") || document.getElementById("app")
-    if (appContainer) {
-      appContainer.classList.add("forgot-app-container")
-    }
-
-    if (containerRef.current) {
-      containerRef.current.style.height = "100vh"
-      containerRef.current.style.width = "100%"
-      containerRef.current.style.display = "flex"
-      containerRef.current.style.alignItems = "center"
-      containerRef.current.style.justifyContent = "center"
-      containerRef.current.style.paddingTop = "4rem"
-    }
+    if (appContainer) appContainer.classList.add("forgot-app-container")
+    if (containerRef.current)
+      Object.assign(containerRef.current.style, {
+        height: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingTop: "4rem",
+      })
   }
 
+  // Efecto para manejar estilos y limpieza al desmontar
   useEffect(() => {
     applyForcedStyles()
     const initialTimeout = setTimeout(applyForcedStyles, 100)
     const intervalId = setInterval(applyForcedStyles, 500)
-
+    
     return () => {
       clearTimeout(initialTimeout)
       clearInterval(intervalId)
       document.body.classList.remove("forgot-page-active")
       document.documentElement.classList.remove("forgot-page-active")
-
       const appContainer = document.getElementById("root") || document.getElementById("app")
-      if (appContainer) {
-        appContainer.classList.remove("forgot-app-container")
-      }
+      if (appContainer) appContainer.classList.remove("forgot-app-container")
     }
   }, [])
 
- const validateField = (name, value) => {
-  let error = ""
-  
-  switch(name) {
-    case "email":
-      if (!value.trim()) {
-        error = "El email es obligatorio" // CEVN10
-      } else if (value.length > 80) {
-        error = "Máximo 80 caracteres permitidos" // CEVN11
-      } else if (/\s/.test(value)) {
-        error = "No se permiten espacios en el email" // CEVN9
-      } else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
-        // Validaciones específicas para diferentes casos inválidos
-        if (!value.includes('@')) {
-          error = "Falta el símbolo @" // CEVN2
-        } else if ((value.match(/@/g) || []).length > 1) {
-          error = "Solo se permite un símbolo @" // CEVN3
-        } else if (/[<>*]/.test(value)) {
-          error = "Caracteres especiales inválidos" // CEVN4, CEVN6
-        } else if (!value.includes('.')) {
-          error = "Dominio incompleto (falta punto)" // CEVN5, CEVN7
-        } else if (!value.split('@')[1].includes('.')) {
-          error = "Dominio inválido" // CEVN5
-        } else if (value.endsWith('@')) {
-          error = "Falta el dominio después de @" // CEVN7
-        } else {
-          error = "Formato de email inválido" // CEVN1, CEVN8
-        }
-      }
-      break
-      
-    default:
-      break
+  // Función de validación de campos
+  const validateField = (name, value) => {
+    let error = ""
+    if (name === "email") {
+      if (!value.trim()) error = "El email es obligatorio"
+      else if (value.length > 80) error = "Máximo 80 caracteres"
+      else if (/\s/.test(value)) error = "No se permiten espacios"
+      else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) error = "Formato inválido"
+    }
+    return error
   }
-  
-  return error
-}
 
+  // Manejador de cambios en los inputs
   const handleChange = (e) => {
     const { name, value } = e.target
-    const processedValue = name === "email" ? value.toLowerCase() : value
-    
+    const processedValue = value.toLowerCase()
     const error = validateField(name, processedValue)
-    
-    setErrors(prev => ({
-      ...prev,
-      [name]: error,
-      general: ""
-    }))
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: processedValue,
-    }))
+    setErrors((prev) => ({ ...prev, [name]: error, general: "" }))
+    setFormData((prev) => ({ ...prev, [name]: processedValue }))
   }
 
+  // Validación completa del formulario
   const validateForm = () => {
-    let isValid = true
-    const newErrors = {...errors}
-    
-    Object.keys(formData).forEach(key => {
-      const error = validateField(key, formData[key])
-      newErrors[key] = error
-      if (error) isValid = false
-    })
-    
+    const newErrors = { ...errors }
+    const error = validateField("email", formData.email)
+    newErrors.email = error
     setErrors(newErrors)
-    return isValid
+    return !error
   }
 
+  // Manejador de envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setErrors(prev => ({...prev, general: ""}))
-    
+    setErrors((prev) => ({ ...prev, general: "" }))
+
     if (!validateForm()) {
       setLoading(false)
-      showErrorAlert("Por favor corrige los errores en el formulario")
+      showErrorAlert("Por favor corrige los errores en el formulario antes de continuar")
       return
     }
 
     try {
-      const response = await axios.post(
-        "https://gitbf.onrender.com/api/auth/request-password-reset", 
-        { email: formData.email.trim() }
-      )
-
-      Swal.fire({
-        icon: "success",
-        title: "Código enviado",
-        text: "Hemos enviado un código de verificación a tu correo electrónico. Por favor revisa tu bandeja de entrada.",
-        confirmButtonText: "Entendido",
-      }).then(() => {
-        navigate("/verify-token", { state: { email: formData.email } })
+      // Mostrar alerta de carga
+      const loadingAlert = Swal.fire({
+        title: "Enviando solicitud",
+        html: '<p class="swal-loading-message">Estamos procesando tu solicitud...</p>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+        customClass: {
+          container: "swal-container",
+          popup: "swal-popup",
+          title: "swal-title",
+          htmlContainer: "swal-content",
+        },
+        backdrop: `rgba(0,0,0,0.6)`,
       })
-    } catch (error) {
-      console.error("Error al solicitar restablecimiento:", error)
-      
-      let errorMessage = "Error al solicitar restablecimiento. Por favor intente nuevamente."
 
-      if (error.response) {
-        if (error.response.status === 400) {
-          errorMessage = error.response.data?.message || "Datos inválidos"
-        } else if (error.response.status === 404) {
-          errorMessage = "El correo electrónico no está registrado"
-        }
+      // Llamada a la API para solicitar restablecimiento
+      const response = await axios.post("https://gitbf.onrender.com/api/auth/request-password-reset", {
+        email: formData.email.trim(),
+      })
+
+      loadingAlert.close()
+
+      // Guardar email en localStorage para uso posterior
+      localStorage.setItem("recoveryEmail", formData.email)
+
+      // Mostrar alerta de éxito
+      Swal.fire({
+        title: '<span class="text-success">¡Código enviado!</span>',
+        html: `
+          <div class="swal-success-content">
+            <p class="swal-success-message">Hemos enviado un código de verificación a:</p>
+            <p class="swal-email-highlight">${formData.email}</p>
+            <p class="swal-instruction">Por favor revisa tu bandeja de entrada y sigue las instrucciones.</p>
+          </div>
+        `,
+        icon: "success",
+        confirmButtonText: "Continuar",
+        confirmButtonColor: "#10b981",
+        customClass: {
+          container: "swal-container",
+          popup: "swal-popup",
+          title: "swal-title",
+          htmlContainer: "swal-content",
+          confirmButton: "swal-confirm-button",
+        },
+        showClass: {
+          popup: "animate__animated animate__zoomIn animate__faster",
+        },
+        hideClass: {
+          popup: "animate__animated animate__zoomOut animate__faster",
+        },
+        backdrop: `rgba(0,0,0,0.6)`,
+        allowOutsideClick: false,
+      }).then(() => navigate("/verify-token", { state: { email: formData.email } }))
+    } catch (error) {
+      // Manejo de diferentes tipos de errores
+      let errorMessage = "Error al solicitar restablecimiento de contraseña"
+      let errorDetail = "Por favor intenta nuevamente más tarde"
+
+      if (error.response?.status === 404) {
+        errorMessage = "Correo no registrado"
+        errorDetail = "El correo electrónico ingresado no está asociado a ninguna cuenta"
+      } else if (error.response?.status === 429) {
+        errorMessage = "Demasiados intentos"
+        errorDetail = "Has realizado muchas solicitudes. Intenta nuevamente más tarde"
       } else if (error.request) {
-        errorMessage = "No se pudo conectar al servidor. Verifique su conexión."
+        errorMessage = "Error de conexión"
+        errorDetail = "No se pudo conectar al servidor. Verifica tu conexión a internet"
       }
 
-      setErrors(prev => ({...prev, general: errorMessage}))
-      showErrorAlert(errorMessage)
+      setErrors((prev) => ({ ...prev, general: errorMessage }))
+
+      showErrorAlert(`
+        <div class="swal-error-content">
+          <p class="swal-error-title">${errorMessage}</p>
+          <p class="swal-error-detail">${errorDetail}</p>
+        </div>
+      `)
     } finally {
       setLoading(false)
     }
@@ -197,18 +211,25 @@ export default function ForgotPassword() {
         <div className="background-pattern-forgot"></div>
       </div>
 
+      {/* Tarjeta principal con animación de entrada */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
         className="forgot-card"
       >
+        {/* Sección de contenido (formulario) */}
         <div className="forgot-content">
           <div className="form-container-forgot">
             <h2 className="welcome-text-forgot">Recupera tu contraseña</h2>
 
+            {/* Mensaje de error general */}
             {errors.general && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="error-message">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                className="error-message"
+              >
                 {errors.general}
               </motion.div>
             )}
@@ -217,6 +238,7 @@ export default function ForgotPassword() {
               Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
             </p>
 
+            {/* Formulario principal */}
             <form onSubmit={handleSubmit} className="forgot-form">
               <div className="input-group-forgot">
                 <input
@@ -225,14 +247,17 @@ export default function ForgotPassword() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className={`form-input-register ${errors.email ? 'input-error' : ''}`}
+                  className={`form-input-register ${errors.email ? "input-error" : ""}`}
                   placeholder=" "
                   maxLength={80}
                 />
-                <label htmlFor="email" className="input-label-register">Correo electrónico *</label>
+                <label htmlFor="email" className="input-label-register">
+                  Correo electrónico *
+                </label>
                 {errors.email && <span className="field-error">{errors.email}</span>}
               </div>
 
+              {/* Botón de envío con animaciones */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -250,6 +275,7 @@ export default function ForgotPassword() {
               </motion.button>
             </form>
 
+            {/* Enlace para volver al login */}
             <div className="additional-options-forgot">
               <Link to="/login" className="option-link-forgot">
                 Volver al inicio de sesión
@@ -258,8 +284,10 @@ export default function ForgotPassword() {
           </div>
         </div>
 
+        {/* Sección decorativa (lado derecho en desktop) */}
         <div className="forgot-decoration">
           <div className="decoration-content-forgot">
+            {/* Logo con animación */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -272,6 +300,8 @@ export default function ForgotPassword() {
                 className="logo-image-forgot"
               />
             </motion.div>
+            
+            {/* Textos decorativos con animaciones */}
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

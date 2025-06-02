@@ -348,6 +348,9 @@ export default function TablaPermisos() {
       );
     });
 
+
+
+    
   // Paginación
   const indiceUltimoPermiso = paginaActual * permisosPorPagina;
   const indicePrimerPermiso = indiceUltimoPermiso - permisosPorPagina;

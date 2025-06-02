@@ -7,10 +7,11 @@ import Swal from "sweetalert2"
 import "./client-dashboard.css"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import {useAuth} from "../../context/AuthContext" // Importar el contexto de autenticación
 import axios from "axios"
 
 // Importar íconos
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { FontAwesomeIcon, } from "@fortawesome/react-fontawesome"
 import {
   faCalendarAlt,
   faShoppingBag,
@@ -31,6 +32,9 @@ import {
   faCog,
   faMagicWandSparkles,
   faTimes,
+  faArrowUp,
+  faArrowDown
+  
 } from "@fortawesome/free-solid-svg-icons"
 
 // Configurar moment en español
@@ -59,7 +63,7 @@ const StatCard = ({ title, value, description, icon, color, trend }) => (
         {trend && (
           <div className="flex items-center gap-1 mt-2 text-xs">
             <FontAwesomeIcon
-              icon={trend.isPositive ? "arrow-up" : "arrow-down"}
+              icon={trend.isPositive ? faArrowUp : faArrowDown}
               className={trend.isPositive ? "text-green-500" : "text-red-500"}
             />
             <span className={trend.isPositive ? "text-green-500" : "text-red-500"}>{trend.value}</span>
@@ -360,6 +364,7 @@ const ClientDashboard = () => {
   const [debugMode, setDebugMode] = useState(false)
   const [lastFetchTime, setLastFetchTime] = useState(null)
   const navigate = useNavigate()
+  const { user, loading } = useAuth() // Obtener el usuario desde el contexto de autenticación
 
   // Cargar datos desde localStorage al inicio
   useEffect(() => {
@@ -402,7 +407,33 @@ const ClientDashboard = () => {
     if (storedLastFetch) {
       setLastFetchTime(new Date(storedLastFetch))
     }
+
+    
+
   }, [])
+
+
+
+
+useEffect(() => {
+  if (!user) return;
+
+  fetchData({
+    user,
+    citas,
+    ventas,
+    userData,
+    setUserData,
+    setCitas,
+    setVentas,
+    lastFetchTime,
+    setLastFetchTime,
+    setIsLoading,
+    navigate,
+  });
+}, [user]);
+
+
 
   // Guardar datos en localStorage cuando cambien
   useEffect(() => {
@@ -422,6 +453,10 @@ const ClientDashboard = () => {
       localStorage.setItem(STORAGE_KEYS.LAST_FETCH, lastFetchTime.toISOString())
     }
   }, [userData, citas, ventas, lastFetchTime])
+
+
+
+
 
   // Función para cancelar una cita
   const handleCancelAppointment = async (citaId, motivoCancelacion) => {
@@ -536,321 +571,168 @@ const ClientDashboard = () => {
     return normalizedName1.includes(normalizedName2) || normalizedName2.includes(normalizedName1)
   }
 
-  // Función para obtener datos
-  const fetchData = async (forceRefresh = false) => {
-    // Si tenemos datos en caché y no se fuerza la actualización, usamos los datos en caché
-    const now = new Date()
-    const cacheExpired = !lastFetchTime || now.getTime() - lastFetchTime.getTime() > 5 * 60 * 1000 // 5 minutos
+ const fetchData = async ({
+  user,
+  citas,
+  ventas,
+  userData,
+  setUserData,
+  setCitas,
+  setVentas,
+  lastFetchTime,
+  setLastFetchTime,
+  setIsLoading,
+  navigate,
+}) => {
+  if (!user?.token) {
+    Swal.fire("Error", "Debes iniciar sesión para ver esta página", "error");
+    navigate("/login");
+    return;
+  }
 
-    if (!forceRefresh && !cacheExpired && citas.length > 0 && ventas.length > 0) {
-      console.log("Usando datos en caché. Última actualización:", lastFetchTime)
-      setIsLoading(false)
-      return
+  const now = new Date();
+  const cacheExpired =
+    !lastFetchTime || now.getTime() - lastFetchTime.getTime() > 5 * 60 * 1000;
+
+  if (!cacheExpired && citas.length > 0 && ventas.length > 0) {
+    console.log("Usando datos en caché. Última actualización:", lastFetchTime);
+    setIsLoading(false);
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const headers = { Authorization: `Bearer ${user.token}` };
+    const userId = user._id;
+    const userName = user.nombre;
+    const userEmail = user.correo;
+console.log("Usuario recibido en fetchData:", user);
+
+    if (!userId) {
+      Swal.fire("Error", "No se pudo identificar al usuario", "error");
+      navigate("/login");
+      return;
     }
 
-    setIsLoading(true)
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        Swal.fire("Error", "Debes iniciar sesión para ver esta página", "error")
-        navigate("/login")
-        return
-      }
-
-      const headers = { Authorization: `Bearer ${token}` }
-      const userId = localStorage.getItem("userId")
-      const userName = localStorage.getItem("userName")
-      const userEmail = localStorage.getItem("userEmail")
-
-      if (!userId) {
-        Swal.fire("Error", "No se pudo identificar al usuario", "error")
-        navigate("/login")
-        return
-      }
-
-      // 1. Obtener datos del usuario o usar los que ya tenemos en localStorage
+    if (!userData) {
       try {
-        if (!userData) {
-          const usuarioResponse = await axios.get(`https://gitbf.onrender.com/api/usuarios/${userId}`, { headers })
-
-          // Extraer los datos del usuario de la estructura anidada
-          const rawUserData = usuarioResponse.data
-
-          // Determinar la estructura correcta de los datos
-          let extractedUserData = rawUserData
-
-          // Si los datos vienen en formato {usuario: {...}, infoAdicional: {...}}
-          if (rawUserData.usuario) {
-            extractedUserData = rawUserData.usuario
-          }
-
-          setUserData(extractedUserData)
-        }
+        const usuarioResponse = await axios.get(
+          `https://gitbf.onrender.com/api/usuarios/${userId}`,
+          { headers }
+        );
+        const rawUserData = usuarioResponse.data;
+        const extractedUserData = rawUserData.usuario || rawUserData;
+        setUserData(extractedUserData);
       } catch (error) {
-        console.error("Error al obtener datos del usuario:", error)
-
-        // Si hay un error pero tenemos datos básicos en localStorage, creamos un objeto de usuario básico
+        console.error("Error al obtener datos del usuario:", error);
         if (userName && userEmail) {
-          console.log("Usando datos básicos de localStorage para el usuario")
           setUserData({
             _id: userId,
             nombre: userName,
             correo: userEmail,
-            rol: localStorage.getItem("userRole") || "cliente",
-          })
+            rol: user.rol || "cliente",
+          });
         } else {
-          Swal.fire("Error", "No se pudieron cargar tus datos de perfil", "error")
-          setIsLoading(false)
-          return
+          Swal.fire("Error", "No se pudieron cargar tus datos de perfil", "error");
+          setIsLoading(false);
+          return;
         }
       }
-
-      // 2. Obtener todas las citas
-      try {
-        const todasCitasResponse = await axios.get(`https://gitbf.onrender.com/api/citas`, { headers })
-        const todasLasCitas = todasCitasResponse.data.citas || todasCitasResponse.data || []
-
-        // Intentar buscar por correo electrónico y otros campos
-        const correoUsuario = userData?.correo || userData?.email || userEmail
-        const nombreUsuario = userData?.nombre || userName
-
-        // Buscar citas que coincidan con cualquier dato del usuario
-        const citasFiltradas = todasLasCitas.filter((cita) => {
-          // Verificar por ID directo o similar
-          if (areIdsSimilar(cita.nombrecliente, userId) || areIdsSimilar(cita.cliente, userId)) {
-            return true
-          }
-
-          // Verificar por ID en objetos anidados
-          if (areIdsSimilar(cita.nombrecliente?._id, userId) || areIdsSimilar(cita.cliente?._id, userId)) {
-            return true
-          }
-
-          // Verificar por correo
-          const correoCliente = cita.nombrecliente?.correocliente || cita.cliente?.correocliente
-          if (correoUsuario && correoCliente && areEmailsSimilar(correoCliente, correoUsuario)) {
-            return true
-          }
-
-          // Verificar por nombre
-          const nombreCliente = cita.nombrecliente?.nombrecliente || cita.cliente?.nombrecliente || cita.cliente?.nombre
-          if (nombreUsuario && nombreCliente && areNamesSimilar(nombreCliente, nombreUsuario)) {
-            return true
-          }
-
-          return false
-        })
-
-        if (citasFiltradas.length > 0) {
-          // Formatear citas para el calendario
-          const citasFormateadas = citasFiltradas.map((cita) => {
-            const fechaInicio = new Date(cita.fechacita)
-            const duracionTotal = cita.duracionTotal || 60 // Duración en minutos
-            const fechaFin = new Date(fechaInicio.getTime() + duracionTotal * 60000)
-
-            // Determinar el color según el estado
-            let colorEvento = "#3174ad" // Azul por defecto (Pendiente)
-            if (cita.estadocita === "Completada") colorEvento = "#5cb85c" // Verde
-            if (cita.estadocita === "Cancelada") colorEvento = "#d9534f" // Rojo
-            if (cita.estadocita === "En Progreso") colorEvento = "#f0ad4e" // Amarillo
-
-            return {
-              id: cita._id,
-              title: `${cita.nombreempleado?.nombreempleado || "Sin asignar"}`,
-              start: fechaInicio,
-              end: fechaFin,
-              estado: cita.estadocita,
-              cita: cita,
-              backgroundColor: colorEvento,
-              motivoCancelacion: cita.motivoCancelacion,
-            }
-          })
-
-          setCitas(citasFormateadas)
-        }
-      } catch (error) {
-        console.error("Error al obtener todas las citas:", error)
-      }
-
-      // 3. Obtener todas las ventas
-      try {
-        const todasVentasResponse = await axios.get(`https://gitbf.onrender.com/api/ventas`, { headers })
-        const todasLasVentas = todasVentasResponse.data.ventas || todasVentasResponse.data || []
-
-        // Intentar buscar por correo electrónico y otros campos
-        const correoUsuario = userData?.correo || userData?.email || userEmail
-        const nombreUsuario = userData?.nombre || userName
-
-        // Buscar ventas que coincidan con cualquier dato del usuario
-        const ventasFiltradas = todasLasVentas.filter((venta) => {
-          // Verificar por ID directo o similar
-          if (areIdsSimilar(venta.cliente, userId)) {
-            return true
-          }
-
-          // Verificar por ID en objetos anidados
-          if (venta.cliente?._id && areIdsSimilar(venta.cliente._id, userId)) {
-            return true
-          }
-
-          // Verificar por correo
-          const correoCliente = venta.cliente?.correocliente
-          if (correoUsuario && correoCliente && areEmailsSimilar(correoCliente, correoUsuario)) {
-            return true
-          }
-
-          // Verificar por nombre
-          const nombreCliente = venta.cliente?.nombrecliente || venta.cliente?.nombre
-          if (nombreUsuario && nombreCliente && areNamesSimilar(nombreCliente, nombreUsuario)) {
-            return true
-          }
-
-          return false
-        })
-
-        if (ventasFiltradas.length > 0) {
-          setVentas(ventasFiltradas)
-        }
-      } catch (error) {
-        console.error("Error al obtener todas las ventas:", error)
-      }
-
-      // Actualizar la hora de la última actualización
-      const newFetchTime = new Date()
-      setLastFetchTime(newFetchTime)
-    } catch (error) {
-      console.error("Error general:", error)
-      Swal.fire("Error", "No se pudieron cargar tus datos", "error")
-    } finally {
-      setIsLoading(false)
     }
+
+    // 2. Obtener y filtrar citas
+    try {
+      const citasResponse = await axios.get(`https://gitbf.onrender.com/api/citas`, { headers });
+      const todasLasCitas = citasResponse.data.citas || citasResponse.data || [];
+
+      const correoUsuario = userData?.correo || userEmail;
+      const nombreUsuario = userData?.nombre || userName;
+
+      const citasFiltradas = todasLasCitas.filter((cita) => {
+        // lógica para filtrar según ID, email, nombre, igual que antes
+        if (areIdsSimilar(cita.nombrecliente, userId) || areIdsSimilar(cita.cliente, userId)) return true;
+        if (areIdsSimilar(cita.nombrecliente?._id, userId) || areIdsSimilar(cita.cliente?._id, userId)) return true;
+
+        const correoCliente = cita.nombrecliente?.correocliente || cita.cliente?.correocliente;
+        if (correoUsuario && correoCliente && areEmailsSimilar(correoCliente, correoUsuario)) return true;
+
+        const nombreCliente = cita.nombrecliente?.nombrecliente || cita.cliente?.nombrecliente || cita.cliente?.nombre;
+        if (nombreUsuario && nombreCliente && areNamesSimilar(nombreCliente, nombreUsuario)) return true;
+
+        return false;
+      });
+
+      if (citasFiltradas.length > 0) {
+        const citasFormateadas = citasFiltradas.map((cita) => {
+          const fechaInicio = new Date(cita.fechacita);
+          const duracionTotal = cita.duracionTotal || 60;
+          const fechaFin = new Date(fechaInicio.getTime() + duracionTotal * 60000);
+
+          let colorEvento = "#3174ad"; // Azul (Pendiente)
+          if (cita.estadocita === "Completada") colorEvento = "#5cb85c";
+          if (cita.estadocita === "Cancelada") colorEvento = "#d9534f";
+          if (cita.estadocita === "En Progreso") colorEvento = "#f0ad4e";
+
+          return {
+            id: cita._id,
+            title: cita.nombreempleado?.nombreempleado || "Sin asignar",
+            start: fechaInicio,
+            end: fechaFin,
+            estado: cita.estadocita,
+            cita,
+            backgroundColor: colorEvento,
+            motivoCancelacion: cita.motivoCancelacion,
+          };
+        });
+
+        setCitas(citasFormateadas);
+      }
+    } catch (error) {
+      console.error("Error al obtener las citas:", error);
+    }
+
+    // 3. Obtener y filtrar ventas
+    try {
+      const ventasResponse = await axios.get(`https://gitbf.onrender.com/api/ventas`, { headers });
+      const todasLasVentas = ventasResponse.data.ventas || ventasResponse.data || [];
+
+      const correoUsuario = userData?.correo || userEmail;
+      const nombreUsuario = userData?.nombre || userName;
+
+      const ventasFiltradas = todasLasVentas.filter((venta) => {
+        if (areIdsSimilar(venta.cliente, userId)) return true;
+        if (venta.cliente?._id && areIdsSimilar(venta.cliente._id, userId)) return true;
+
+        const correoCliente = venta.cliente?.correocliente;
+        if (correoUsuario && correoCliente && areEmailsSimilar(correoCliente, correoUsuario)) return true;
+
+        const nombreCliente = venta.cliente?.nombrecliente || venta.cliente?.nombre;
+        if (nombreUsuario && nombreCliente && areNamesSimilar(nombreCliente, nombreUsuario)) return true;
+
+        return false;
+      });
+
+      if (ventasFiltradas.length > 0) {
+        setVentas(ventasFiltradas);
+      }
+    } catch (error) {
+      console.error("Error al obtener las ventas:", error);
+    }
+
+     setLastFetchTime(new Date());
+  } catch (error) {
+    console.error("Error general:", error);
+    Swal.fire("Error", "No se pudieron cargar tus datos", "error");
+  } finally {
+    setIsLoading(false);
   }
+};
 
-  // Función para crear datos de prueba
-  const crearCitasDePrueba = () => {
-    // Obtener el nombre real del usuario para personalizar los datos de prueba
-    const nombreReal = userData?.nombre || localStorage.getItem("userName") || "Cliente"
+ 
+ 
+ 
 
-    const citasPrueba = [
-      {
-        id: "cita-prueba-1",
-        title: "Manicure con Lucia",
-        start: new Date(new Date().setDate(new Date().getDate() + 2)),
-        end: new Date(new Date().setDate(new Date().getDate() + 2) + 60 * 60 * 1000),
-        estado: "Pendiente",
-        backgroundColor: "#3174ad",
-        cita: {
-          servicios: [{ nombreServicio: "Manicure Semipermanente", precio: 45000 }],
-          montototal: 45000,
-          nombrecliente: { nombrecliente: nombreReal },
-          nombreempleado: { nombreempleado: "Lucia Martínez" },
-          fechacita: new Date(new Date().setDate(new Date().getDate() + 2)),
-        },
-      },
-      {
-        id: "cita-prueba-2",
-        title: "Pedicure con Carlos",
-        start: new Date(new Date().setDate(new Date().getDate() + 5)),
-        end: new Date(new Date().setDate(new Date().getDate() + 5) + 90 * 60 * 1000),
-        estado: "Confirmada",
-        backgroundColor: "#5cb85c",
-        cita: {
-          servicios: [{ nombreServicio: "Pedicure Spa", precio: 55000 }],
-          montototal: 55000,
-          nombrecliente: { nombrecliente: nombreReal },
-          nombreempleado: { nombreempleado: "Carlos Rodríguez" },
-          fechacita: new Date(new Date().setDate(new Date().getDate() + 5)),
-        },
-      },
-      {
-        id: "cita-prueba-3",
-        title: "Tratamiento facial con Ana",
-        start: new Date(new Date().setDate(new Date().getDate() + 7)),
-        end: new Date(new Date().setDate(new Date().getDate() + 7) + 120 * 60 * 1000),
-        estado: "Pendiente",
-        backgroundColor: "#3174ad",
-        cita: {
-          servicios: [{ nombreServicio: "Tratamiento Facial Hidratante", precio: 75000 }],
-          montototal: 75000,
-          nombrecliente: { nombrecliente: nombreReal },
-          nombreempleado: { nombreempleado: "Ana López" },
-          fechacita: new Date(new Date().setDate(new Date().getDate() + 7)),
-        },
-      },
-    ]
-
-    setCitas(citasPrueba)
-
-    const ventasPrueba = [
-      {
-        _id: "venta-prueba-1",
-        codigoVenta: "VP001",
-        fechaCreacion: new Date(),
-        servicios: [{ nombreServicio: "Manicure Semipermanente", precio: 45000 }],
-        productos: [],
-        total: 45000,
-        estado: true,
-        cliente: { nombrecliente: nombreReal },
-      },
-      {
-        _id: "venta-prueba-2",
-        codigoVenta: "VP002",
-        fechaCreacion: new Date(new Date().setDate(new Date().getDate() - 10)),
-        servicios: [],
-        productos: [{ nombreProducto: "Esmalte Premium", precio: 25000 }],
-        total: 25000,
-        estado: true,
-        cliente: { nombrecliente: nombreReal },
-      },
-      {
-        _id: "venta-prueba-3",
-        codigoVenta: "VP003",
-        fechaCreacion: new Date(new Date().setDate(new Date().getDate() - 20)),
-        servicios: [{ nombreServicio: "Pedicure Spa", precio: 55000 }],
-        productos: [{ nombreProducto: "Crema Hidratante", precio: 35000 }],
-        total: 90000,
-        estado: true,
-        cliente: { nombrecliente: nombreReal },
-      },
-      {
-        _id: "venta-prueba-4",
-        codigoVenta: "VP004",
-        fechaCreacion: new Date(new Date().setDate(new Date().getDate() - 30)),
-        servicios: [{ nombreServicio: "Tratamiento Capilar", precio: 65000 }],
-        productos: [],
-        total: 65000,
-        estado: true,
-        cliente: { nombrecliente: nombreReal },
-      },
-      {
-        _id: "venta-prueba-5",
-        codigoVenta: "VP005",
-        fechaCreacion: new Date(new Date().setDate(new Date().getDate() - 45)),
-        servicios: [{ nombreServicio: "Depilación", precio: 40000 }],
-        productos: [],
-        total: 40000,
-        estado: true,
-        cliente: { nombrecliente: nombreReal },
-      },
-    ]
-
-    setVentas(ventasPrueba)
-
-    // Actualizar la hora de la última actualización
-    const newFetchTime = new Date()
-    setLastFetchTime(newFetchTime)
-
-    Swal.fire({
-      title: "Datos de prueba cargados",
-      text: `Se han cargado datos de prueba personalizados para ${nombreReal}`,
-      icon: "success",
-      confirmButtonText: "Entendido",
-    })
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
+  
 
   const eventStyleGetter = (event) => {
     return {
@@ -1017,10 +899,10 @@ const ClientDashboard = () => {
                   <FontAwesomeIcon icon={faSync} className="mr-2" />
                   Actualizar datos
                 </button>
-                <button onClick={crearCitasDePrueba} className="dropdown-item">
+                {/* <button onClick={crearCitasDePrueba} className="dropdown-item">
                   <FontAwesomeIcon icon={faFileInvoice} className="mr-2" />
                   Cargar datos de prueba
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

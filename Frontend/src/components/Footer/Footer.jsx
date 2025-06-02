@@ -3,10 +3,13 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { FaInstagram, FaFacebookF, FaTwitter, FaPhone, FaEnvelope, FaMapMarkerAlt, FaHeart } from "react-icons/fa"
 import { useSidebar } from "../Sidebar/Sidebar" // Importamos el contexto del sidebar
+import {useAuth} from "../../context/AuthContext" // Importamos el contexto de autenticación
 import "./footer.css"
 
 const Footer = () => {
-  const userRole = localStorage.getItem("userRole")?.toLowerCase()
+  const { user } = useAuth() // Obtenemos el rol del usuario desde el contexto de autenticación
+  const userRole = user?.role?.toLowerCase() // Aseguramos que userRole sea una cadena vacía si no hay usuario
+
   const isAdmin = userRole === "admin"
   const isEmployee = userRole === "empleado"
   const { isCollapsed } = useSidebar() // Obtenemos el estado del sidebar

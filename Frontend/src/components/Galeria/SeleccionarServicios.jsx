@@ -998,13 +998,19 @@ const SeleccionarServicios = () => {
       tiempo: servicio.tiempo,
     }))
 
-    // SOLUCIÓN CORREGIDA: Crear una fecha en formato ISO string sin conversión de zona horaria
-    // Formato: "YYYY-MM-DDThh:mm:00Z" - La Z al final indica UTC
-    // Esto asegura que la hora se mantenga exactamente como fue seleccionada
-    const fechaISO = `${formData.fecha}T${formData.hora}:00`
+    // Crear fecha en local usando año, mes, día, hora y minutos
+const [year, month, day] = formData.fecha.split("-").map(Number);
+const [hour, minute] = formData.hora.split(":").map(Number);
 
-    console.log("Fecha y hora seleccionadas:", formData.fecha, formData.hora)
-    console.log("Fecha ISO a enviar:", fechaISO)
+// Nota: El mes en Date es 0-indexed, por eso resta 1 al mes
+const fechaLocal = new Date(year, month - 1, day, hour, minute);
+
+// Obtener el ISO string con zona UTC para enviar al backend
+const fechaISO = fechaLocal.toISOString();
+
+console.log("Fecha local:", fechaLocal);
+console.log("Fecha ISO con zona UTC a enviar:", fechaISO);
+
 
     // Crear el objeto de datos para enviar al servidor
     const dataToSend = {
@@ -1164,9 +1170,9 @@ const SeleccionarServicios = () => {
             {/* Página izquierda - Contenido dinámico según el paso */}
             <motion.div
               className={`notebook-page left-page ${isFlipping ? "flipping" : ""}`}
-              initial={{ rotateY: 0 }}
-              animate={{ rotateY: isFlipping ? -180 : 0 }}
-              transition={{ duration: 1 }}
+              // initial={{ rotateY: 0 }}
+              // animate={{ rotateY: isFlipping ? -180 : 0 }}
+              // transition={{ duration: 1 }}
             >
               {/* PASO 1: Selección de servicios */}
               {currentStep === 1 && (

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Heart, LogOut, Settings, User } from "lucide-react"
-
+import {useAuth} from "../../context/AuthContext" // Importar el contexto de autenticación
 import { cn } from "../../libs/util"
 import { useSidebar } from "../Sidebar/Sidebar"
 import ThemeToggle from "../ThemeToggle" // Importar el componente ThemeToggle
@@ -53,7 +53,8 @@ const DashboardNavbar = () => {
   const [notifications, setNotifications] = useState(3)
   const [userName, setUserName] = useState("")
   const [userAvatar, setUserAvatar] = useState("avatar1")
-
+  const user = useAuth(); // Obtener el usuario desde el contexto de autenticación
+  const userRole = user?.role  || "admin";
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
@@ -184,7 +185,7 @@ const DashboardNavbar = () => {
                         {userName || "Usuario"}
                       </span>
                       <span className="text-xl text-pink-500">
-                        {localStorage.getItem("userRole") || "Admin"}
+                        {userRole}
                       </span>
                     </div>
                   </div>
