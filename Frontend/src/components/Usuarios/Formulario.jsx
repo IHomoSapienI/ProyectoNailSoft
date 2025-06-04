@@ -329,7 +329,7 @@ export default function FormularioUsuario({ onClose, onUsuarioActualizado, usuar
 
   if (error.response?.data?.errores && Array.isArray(error.response.data.errores)) {
     // Si viene un array de errores, lo convertimos a string amigable
-    errorMsg = "Errores de validación:"
+    errorMsg = "Errores de validación: Intente corregir el campo de email usar un dominio válido"
     errorDetails = error.response.data.errores.join("\n")
   } else if (error.response?.data?.error) {
     errorMsg = error.response.data.error

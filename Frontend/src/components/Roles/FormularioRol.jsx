@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
+import { useAuth } from "../../context/AuthContext"; // Ajusta la ruta según tu estructura
 import { FaSpinner, FaCheck, FaTimes } from "react-icons/fa"
 import "./formularioRol.css"
 
@@ -15,6 +16,7 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("")
   const [cargando, setCargando] = useState(false)
   const [enviando, setEnviando] = useState(false)
+    const { user,refreshUser } = useAuth(); // Añade esto
 
   const categorias = [
     "bajaProductos",
@@ -32,62 +34,49 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     "roles",
     "servicios",
     "usuarios",
-    "ventaProductos",
-    "ventaServicios",
+    "ventas",
+    "vistasSidebar"
   ]
 
-  useEffect(() => {
-    const cargarPermisos = async () => {
-      setCargando(true)
-      setMensaje("")
-      try {
-        // Obtener el token de localStorage
-        const token = localStorage.getItem("token")
-        if (!token) {
-          throw new Error("No se encontró token de autenticación")
-        }
+  // Reemplaza tu useEffect de carga de permisos por esto:
+useEffect(() => {
+  const cargarPermisos = async () => {
+    setCargando(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No se encontró token");
 
-        // Realizar la solicitud con el token en el encabezado
-        const response = await fetch("https://gitbf.onrender.com/api/permisos", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
+      const response = await fetch("https://gitbf.onrender.com/api/permisos", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          console.error("Error en respuesta:", errorData)
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const data = await response.json()
-        setPermisos(data.permisos || [])
-
-        if (data.permisos && data.permisos.length === 0) {
-          setMensaje("No hay permisos disponibles")
-        }
-      } catch (error) {
-        console.error("Error al cargar permisos:", error)
-        setMensaje(`Error al cargar permisos: ${error.message}`)
-
-        // Si el error es de autenticación, mostrar un mensaje específico
-        if (error.message.includes("401")) {
-          Swal.fire({
-            icon: "error",
-            title: "Error de autenticación",
-            text: "Tu sesión ha expirado o no tienes permiso para acceder a esta información.",
-            confirmButtonText: "Entendido",
-            confirmButtonColor: "#db2777",
-          })
-        }
-      } finally {
-        setCargando(false)
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      setPermisos(data.permisos || []);
+      
+    } catch (error) {
+      console.error("Error al cargar permisos:", error);
+      setMensaje(error.message);
+      
+      if (error.message.includes("401")) {
+        Swal.fire({
+          icon: "error",
+          title: "Error de autenticación",
+          text: "Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.",
+          confirmButtonColor: "#db2777",
+        });
       }
+    } finally {
+      setCargando(false);
     }
+  };
 
-    cargarPermisos()
-  }, [])
+  cargarPermisos();
+}, []);
 
   useEffect(() => {
     if (rolSeleccionado) {
@@ -113,97 +102,339 @@ const FormularioRol = ({ rolSeleccionado, onRolActualizado, onClose }) => {
     )
   }
 
-  const manejarEnvio = async (e) => {
-    e.preventDefault()
-    setEnviando(true)
+  // const manejarEnvio = async (e) => {
+  //   e.preventDefault()
+  //   setEnviando(true)
 
-    //VAlidación en el frontend del nombre rol
-    const regex = /^[a-zA-Z0-9\s]{5,30}$/
+  //   //VAlidación en el frontend del nombre rol
+  //   const regex = /^[a-zA-Z0-9\s]{5,30}$/
 
 
-    if (!regex.test(nombreRol.trim())) {
-      Swal.fire({
-        icon: "warning",
-        title: "Nombre no válido",
-        text: "El nombre del rol debe tener entre 5 y 20 caracteres y solo contener letras y espacios.",
-        confirmButtonText: "Entendido",
-        confirmButtonColor: "#db2777",
-      })
-      setEnviando(false)
-      return
-    }
+  //   if (!regex.test(nombreRol.trim())) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "Nombre no válido",
+  //       text: "El nombre del rol debe tener entre 5 y 20 caracteres y solo contener letras y espacios.",
+  //       confirmButtonText: "Entendido",
+  //       confirmButtonColor: "#db2777",
+  //     })
+  //     setEnviando(false)
+  //     return
+  //   }
 
-    if (permisosSeleccionados.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Advertencia",
-        text: "Debes seleccionar al menos un permiso para el rol",
-        confirmButtonText: "Entendido",
-        confirmButtonColor: "#db2777",
-      })
-      setEnviando(false)
-      return
-    }
+  //   if (permisosSeleccionados.length === 0) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "Advertencia",
+  //       text: "Debes seleccionar al menos un permiso para el rol",
+  //       confirmButtonText: "Entendido",
+  //       confirmButtonColor: "#db2777",
+  //     })
+  //     setEnviando(false)
+  //     return
+  //   }
 
-    const nuevoRol = { nombreRol, permisoRol: permisosSeleccionados, estadoRol: activo }
+  //   const nuevoRol = { nombreRol, permisoRol: permisosSeleccionados, estadoRol: activo }
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("No se encontró token de autenticación")
-      }
+  //   try {
+  //     const token = localStorage.getItem("token")
+  //     if (!token) {
+  //       throw new Error("No se encontró token de autenticación")
+  //     }
 
-      const url = modoEdicion
-        ? `https://gitbf.onrender.com/api/roles/${rolSeleccionado._id}`
-        : "https://gitbf.onrender.com/api/roles"
+  //     const url = modoEdicion
+  //       ? `https://gitbf.onrender.com/api/roles/${rolSeleccionado._id}`
+  //       : "https://gitbf.onrender.com/api/roles"
 
-      const metodo = modoEdicion ? "PUT" : "POST"
-      const response = await fetch(url, {
-        method: metodo,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(nuevoRol),
-      })
+  //     const metodo = modoEdicion ? "PUT" : "POST"
+  //     const response = await fetch(url, {
+  //       method: metodo,
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify(nuevoRol),
+  //     })
 
-      if (response.ok) {
-        Swal.fire({
-          icon: "success",
-          title: modoEdicion ? "Rol actualizado exitosamente" : "Rol creado exitosamente",
-          confirmButtonText: "Ok",
-          confirmButtonColor: "#db2777",
-        })
+  //     if (response.ok) {
+  //       await refreshUser(); // 👈 Actualiza los permisos en toda la app
+  //       Swal.fire({
+  //         icon: "success",
+  //         title: modoEdicion ? "Rol actualizado exitosamente" : "Rol creado exitosamente",
+  //         confirmButtonText: "Ok",
+  //         confirmButtonColor: "#db2777",
+  //       })
 
-        if (onRolActualizado) onRolActualizado()
-        setNombreRol("")
-        setPermisosSeleccionados([])
-        setActivo(true)
-        if (onClose) onClose()
-      } else {
-        const errorData = await response.json()
-        const mensageError = Array.isArray(errorData.errors)
-        ? errorData.errors.join("\n")
-        : errorData.msg || errorData.message || errorData.statusText
+  //       if (onRolActualizado) onRolActualizado()
+  //       setNombreRol("")
+  //       setPermisosSeleccionados([])
+  //       setActivo(true)
+  //       if (onClose) onClose()
+  //     } else {
+  //       const errorData = await response.json()
+  //       const mensageError = Array.isArray(errorData.errors)
+  //       ? errorData.errors.join("\n")
+  //       : errorData.msg || errorData.message || errorData.statusText
         
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: mensageError,
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Error",
+  //         text: mensageError,
+  //         confirmButtonColor: "#db2777",
+  //       })
+  //     }
+  //   } catch (error) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Error en la solicitud",
+  //       text: error.message,
+  //       confirmButtonColor: "#db2777",
+  //     })
+  //   } finally {
+  //     setEnviando(false)
+  //   }
+  // }
+
+// const manejarEnvio = async (e) => {
+//   e.preventDefault();
+//   setEnviando(true);
+
+//   const regex = /^[a-zA-Z0-9\s]{5,30}$/;
+//   if (!regex.test(nombreRol.trim())) {
+//     Swal.fire({
+//       icon: "warning",
+//       title: "Nombre no válido",
+//       text: "El nombre del rol debe tener entre 5 y 20 caracteres y solo contener letras y espacios.",
+//       confirmButtonText: "Entendido",
+//       confirmButtonColor: "#db2777",
+//     });
+//     setEnviando(false);
+//     return;
+//   }
+
+//   if (permisosSeleccionados.length === 0) {
+//     Swal.fire({
+//       icon: "warning",
+//       title: "Advertencia",
+//       text: "Debes seleccionar al menos un permiso para el rol",
+//       confirmButtonText: "Entendido",
+//       confirmButtonColor: "#db2777",
+//     });
+//     setEnviando(false);
+//     return;
+//   }
+
+//   const nuevoRol = {
+//     nombreRol,
+//     permisoRol: permisosSeleccionados,
+//     estadoRol: activo,
+//   };
+
+//   try {
+//     const token = localStorage.getItem("token");
+//     if (!token) throw new Error("No se encontró token de autenticación");
+
+//     const url = modoEdicion
+//       ? `https://gitbf.onrender.com/api/roles/${rolSeleccionado._id}`
+//       : "https://gitbf.onrender.com/api/roles";
+
+//     const metodo = modoEdicion ? "PUT" : "POST";
+
+//     const response = await fetch(url, {
+//       method: metodo,
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(nuevoRol),
+//     });
+
+//     if (response.ok) {
+
+//       await refreshUser();
+
+//       // ⚠️ Verificamos si editó su propio rol
+//       const userRoleId = user?.role; // Asegúrate que esto sea el _id del rol
+//       const editedRoleId = rolSeleccionado?._id;
+//       const editoSuPropioRol = modoEdicion && userRoleId === editedRoleId;
+// console.log(userRoleId, editedRoleId)
+//       if (editoSuPropioRol) {
+//         Swal.fire({
+//           icon: "info",
+//           title: "Sesión reiniciada",
+//           text: "Has editado el rol asociado a tu cuenta. Por seguridad, es necesario volver a iniciar sesión.",
+//           confirmButtonText: "Cerrar sesión",
+//           confirmButtonColor: "#db2777",
+//         }).then(() => {
+//           localStorage.clear();
+//           window.location.href = "/login";
+//         });
+//         return; // No continuar con el flujo normal
+//       }
+
+//       Swal.fire({
+//         icon: "success",
+//         title: modoEdicion
+//           ? "Rol actualizado exitosamente"
+//           : "Rol creado exitosamente",
+//         confirmButtonText: "Ok",
+//         confirmButtonColor: "#db2777",
+//       });
+
+//       if (onRolActualizado) onRolActualizado();
+//       setNombreRol("");
+//       setPermisosSeleccionados([]);
+//       setActivo(true);
+//       if (onClose) onClose();
+//     } else {
+//       const errorData = await response.json();
+//       const mensageError = Array.isArray(errorData.errors)
+//         ? errorData.errors.join("\n")
+//         : errorData.msg || errorData.message || errorData.statusText;
+
+//       Swal.fire({
+//         icon: "error",
+//         title: "Error",
+//         text: mensageError,
+//         confirmButtonColor: "#db2777",
+//       });
+//     }
+//   } catch (error) {
+//     Swal.fire({
+//       icon: "error",
+//       title: "Error en la solicitud",
+//       text: error.message,
+//       confirmButtonColor: "#db2777",
+//     });
+//   } finally {
+//     setEnviando(false);
+//   }
+// };
+const manejarEnvio = async (e) => {
+  e.preventDefault();
+  setEnviando(true);
+
+  const regex = /^[a-zA-Z0-9\s]{5,30}$/;
+  if (!regex.test(nombreRol.trim())) {
+    Swal.fire({
+      icon: "warning",
+      title: "Nombre no válido",
+      text: "El nombre del rol debe tener entre 5 y 20 caracteres y solo contener letras y espacios.",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#db2777",
+    });
+    setEnviando(false);
+    return;
+  }
+
+  if (permisosSeleccionados.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Advertencia",
+      text: "Debes seleccionar al menos un permiso para el rol",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#db2777",
+    });
+    setEnviando(false);
+    return;
+  }
+
+  const nuevoRol = {
+    nombreRol,
+    permisoRol: permisosSeleccionados,
+    estadoRol: activo,
+  };
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No se encontró token de autenticación");
+
+    const url = modoEdicion
+      ? `https://gitbf.onrender.com/api/roles/${rolSeleccionado._id}`
+      : "https://gitbf.onrender.com/api/roles";
+
+    const metodo = modoEdicion ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: metodo,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(nuevoRol),
+    });
+
+    if (response.ok) {
+      // Aquí ponemos los logs para debuggear
+      console.log("user?.role:", user?.role);
+      console.log("rolSeleccionado?.nombre:", rolSeleccionado?.nombre);
+      console.log("modoEdicion:", modoEdicion);
+      console.log(
+        "Comparación (user.role === rolSeleccionado.nombre.toLowerCase()):",
+        user?.role === rolSeleccionado?.nombre?.toLowerCase()
+      );
+
+      const userRoleName = user?.role?.toLowerCase();
+const editedRoleName = rolSeleccionado?.nombreRol?.toLowerCase();
+
+const editoSuPropioRol = modoEdicion && userRoleName === editedRoleName;
+
+      if (editoSuPropioRol) {
+        return Swal.fire({
+          icon: "info",
+          title: "Sesión reiniciada",
+          text: "Has editado el rol asociado a tu cuenta. Por seguridad, es necesario volver a iniciar sesión.",
+          confirmButtonText: "Cerrar sesión",
           confirmButtonColor: "#db2777",
-        })
+        }).then(() => {
+          localStorage.clear();
+          window.location.href = "/login";
+        });
       }
-    } catch (error) {
+
+      await refreshUser();
+
+      await Swal.fire({
+        icon: "success",
+        title: modoEdicion
+          ? "Rol actualizado exitosamente"
+          : "Rol creado exitosamente",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#db2777",
+      });
+
+      if (onRolActualizado) onRolActualizado();
+      setNombreRol("");
+      setPermisosSeleccionados([]);
+      setActivo(true);
+      if (onClose) onClose();
+    } else {
+      const errorData = await response.json();
+      const mensageError = Array.isArray(errorData.errors)
+        ? errorData.errors.join("\n")
+        : errorData.msg || errorData.message || errorData.statusText;
+
       Swal.fire({
         icon: "error",
-        title: "Error en la solicitud",
-        text: error.message,
+        title: "Error",
+        text: mensageError,
         confirmButtonColor: "#db2777",
-      })
-    } finally {
-      setEnviando(false)
+      });
     }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error en la solicitud",
+      text: error.message,
+      confirmButtonColor: "#db2777",
+    });
+  } finally {
+    setEnviando(false);
   }
+};
+
+
+
 
   return (
     <div className="formulario-moderno max-h-[70vh] overflow-y-auto bg-white p-6 rounded-lg shadow-lg">

@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, Heart, LogOut, Settings, User } from "lucide-react"
-import {useAuth} from "../../context/AuthContext" // Importar el contexto de autenticación
+import { useAuth } from "../../context/AuthContext"
+import { usePermissions } from "../../hooks/usePermissions"
+import { useLayoutType } from "../../hooks/useLayoutType"
 import { cn } from "../../libs/util"
 import { useSidebar } from "../Sidebar/Sidebar"
-import ThemeToggle from "../ThemeToggle" // Importar el componente ThemeToggle
+import ThemeToggle from "../ThemeToggle"
 import "./dashboardNavBar.css"
 
 // Opciones de avatares predefinidos
@@ -46,15 +48,24 @@ const avatarOptions = [
 
 const DashboardNavbar = () => {
   const navigate = useNavigate()
-  const location = useLocation()
+  const { user, logout } = useAuth()
+  const { hasPermission } = usePermissions()
+  const { shouldShowSidebar } = useLayoutType()
   const { isCollapsed } = useSidebar()
   const [isScrolled, setIsScrolled] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [notifications, setNotifications] = useState(3)
   const [userName, setUserName] = useState("")
   const [userAvatar, setUserAvatar] = useState("avatar1")
-  const user = useAuth(); // Obtener el usuario desde el contexto de autenticación
-  const userRole = user?.role  || "admin";
+  const [sidebarState, setSidebarState] = useState(isCollapsed)
+
+  const userRole = user?.role || "admin"
+
+  // Efecto para escuchar cambios en el estado del sidebar
+  useEffect(() => {
+    setSidebarState(isCollapsed)
+  }, [isCollapsed])
+
+  // Efecto para escuchar eventos de scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
@@ -62,11 +73,9 @@ const DashboardNavbar = () => {
 
     window.addEventListener("scroll", handleScroll)
 
-    // Obtener el nombre de usuario del localStorage o usar iniciales por defecto
-    const storedName = localStorage.getItem("userName") || ""
+    const storedName = user?.nombre || localStorage.getItem("userName") || ""
     setUserName(storedName)
 
-    // Obtener el avatar del usuario del localStorage
     const userId = localStorage.getItem("userId")
     const savedAvatar = localStorage.getItem(`userAvatar_${userId}`)
     if (savedAvatar) {
@@ -74,45 +83,43 @@ const DashboardNavbar = () => {
     }
 
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [user])
+
+  // Efecto para escuchar eventos de cambio de estado del sidebar
+  useEffect(() => {
+    const handleSidebarStateChange = (event) => {
+      if (event.detail && event.detail.isCollapsed !== undefined) {
+        setSidebarState(event.detail.isCollapsed)
+      }
+    }
+
+    window.addEventListener("sidebarStateChanged", handleSidebarStateChange)
+    return () => window.removeEventListener("sidebarStateChanged", handleSidebarStateChange)
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("userRole")
-    localStorage.removeItem("userId")
-    localStorage.removeItem("userName")
-    localStorage.removeItem("userEmail")
-    localStorage.removeItem("clienteId")
+    logout()
     navigate("/login")
+  }
+
+  // Solo mostrar este navbar si debe mostrar sidebar
+  if (!shouldShowSidebar) {
+    return null
   }
 
   // Obtener la URL del avatar actual
   const currentAvatarUrl = avatarOptions.find((a) => a.id === userAvatar)?.url || avatarOptions[0].url
 
-  // Obtener el título de la página basado en la ruta actual
-  const getPageTitle = () => {
-    if (location.pathname === "/dashboard") return "Dashboard"
-
-    // Extraer el nombre de la ruta y formatearlo
-    const path = location.pathname.split("/").pop()
-    if (!path) return "Dashboard"
-
-    // Convertir guiones a espacios y capitalizar cada palabra
-    return path
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-  }
-
   return (
     <header
       className={cn(
-        " top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:card-gradient-4 dark:border-pink-900/20",
+        "dashboard-navbar fixed top-0 z-30 flex h-16 items-center border-b border-pink-100/100 bg-white/95 backdrop-blur-md transition-all duration-300 dark:card-gradient-4 dark:border-pink-900/20",
         isScrolled && "shadow-md shadow-pink-600/10 dark:shadow-pink-600/5",
-        isCollapsed ? "ml-[70px] w-[calc(100%-70px)]" : "m-[auto] w-[calc(100%-0vh)]",
+        sidebarState ? "sidebar-collapsed" : "sidebar-expanded",
       )}
     >
-      <div className=" flex w-full items-center justify-between px-16">
+      <div className="flex w-full items-center justify-between px-6 text-black">
+        {/* Logo y título */}
         <div className="flex items-center gap-4">
           <motion.div
             animate={{ rotate: [0, -50, 0] }}
@@ -128,38 +135,24 @@ const DashboardNavbar = () => {
           </motion.div>
         </div>
 
+        {/* Controles de usuario - SOLO TEMA Y AVATAR */}
         <div className="flex items-center gap-4">
-          {/* <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
-            <input
-              type="search"
-              placeholder="Buscar..."
-              className="h-9 w-64 rounded-full bg-pink-50/50 pl-10 pr-4 text-sm outline-none ring-pink-200 transition-all focus:ring-2 dark:bg-gray-800 dark:text-gray-200 dark:ring-pink-800"
-            />
-          </div> */}
-
-          {/* <div className="relative">
-            <button className="flex h-9 w-9 items-center justify-center rounded-full border border-pink-200/20 transition-colors hover:bg-pink-50/50 dark:border-pink-800/20 dark:hover:bg-pink-900/20">
-              <Bell className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-              {notifications > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-pink-600 text-[10px] font-medium text-white">
-                  {notifications}
-                </span>
-              )}
-            </button>
-          </div> */}
-
-          {/* Añadir el botón de cambio de tema */}
+          {/* Botón de cambio de tema */}
           <ThemeToggle />
+
+          {/* Avatar y menú de usuario */}
           <div className="relative">
             <button className="flex items-center gap-2" onClick={() => setShowUserMenu(!showUserMenu)}>
               <div className="avatar-container h-8 w-8 overflow-hidden rounded-full border-2 border-pink-200 dark:border-pink-800">
                 <img
-                  src={currentAvatarUrl || "/placeholder.svg"}
+                  src={currentAvatarUrl || "/placeholder.svg?height=32&width=32"}
                   alt="Avatar de usuario"
                   className="h-full w-full object-cover"
                 />
               </div>
+              <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {userName || "Usuario"}
+              </span>
               <ChevronDown className="h-4 w-4 text-gray-500 opacity-50 dark:text-gray-400" />
             </button>
 
@@ -175,23 +168,21 @@ const DashboardNavbar = () => {
                   <div className="mb-2 flex items-center gap-3 border-b border-pink-100 p-2 dark:border-pink-900">
                     <div className="avatar-container h-10 w-10 overflow-hidden rounded-full border-2 border-pink-200 dark:border-pink-800">
                       <img
-                        src={currentAvatarUrl || "/placeholder.svg"}
+                        src={currentAvatarUrl || "/placeholder.svg?height=40&width=40"}
                         alt="Avatar de usuario"
                         className="h-full w-full object-cover"
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-800">
+                      <span className="text-sm font-medium text-gray-800 ">
                         {userName || "Usuario"}
                       </span>
-                      <span className="text-xl text-pink-500">
-                        {userRole}
-                      </span>
+                      <span className="text-xs text-pink-500">{userRole}</span>
                     </div>
                   </div>
 
                   <button
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 hover:bg-pink-900/20"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-black  transition-colors hover:bg-pink-50 dark:hover:bg-pink-900/20"
                     onClick={() => {
                       navigate("/profile")
                       setShowUserMenu(false)
@@ -201,16 +192,19 @@ const DashboardNavbar = () => {
                     <span>Mi Perfil</span>
                   </button>
 
-                  <button
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-pink-50 hover:bg-pink-900/20"
-                    onClick={() => {
-                      navigate("/usuarios")
-                      setShowUserMenu(false)
-                    }}
-                  >
-                    <Settings className="h-4 w-4" />
-                    <span>Configuración</span>
-                  </button>
+                  {/* Solo mostrar configuración si tiene permisos */}
+                  {hasPermission("verUsuariosMenu") && (
+                    <button
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-black  transition-colors hover:bg-pink-50 dark:hover:bg-pink-900/20"
+                      onClick={() => {
+                        navigate("/usuarios")
+                        setShowUserMenu(false)
+                      }}
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Configuración</span>
+                    </button>
+                  )}
 
                   <div className="my-1 h-px bg-pink-100 dark:bg-pink-900"></div>
 

@@ -2,13 +2,12 @@ import axios from "axios"
 import Swal from "sweetalert2"
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 })
-
 // Interceptor de solicitudes para agregar el token JWT
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -71,7 +70,7 @@ axiosInstance.interceptors.response.use(
         })
       }
       // Manejar error de autenticación (401)
-      else if (error.response.status === 401) {
+      else if (error.response.status === 401 || error.response.status === 403) {
         Swal.fire({
           icon: "error",
           title: "Sesión expirada",

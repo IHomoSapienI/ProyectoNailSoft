@@ -1,45 +1,86 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-
+import axiosInstance from "../util/axiosConfig";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Función para obtener datos del usuario
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token para fetchUserData:", token);
+      if (!token) return;
+
+      // Usar axiosInstance (ya incluye el token automáticamente)
+      const response = await axiosInstance.get("/auth/user");
+
+      console.log("Datos usuario:", response.data);
+      const { role, _id, nombre, correo, permisos } = response.data;
+
+      setUser({
+        token,
+        role: role ? role.toLowerCase() : "",
+        _id,
+        nombre,
+        correo,
+        permisos: permisos || [],
+      });
+
+      // Guardar en localStorage
+      localStorage.setItem("userRole", role.toLowerCase());
+      localStorage.setItem("userId", _id);
+      localStorage.setItem("userName", nombre);
+      localStorage.setItem("userEmail", correo);
+      localStorage.setItem("permisos", JSON.stringify(permisos || []));
+    } catch (error) {
+      console.error("Error al obtener los datos del usuario:", error);
+    }
+  };
+
+  const refreshUser = async () => {
+    await fetchUserData();
+  };
+
   useEffect(() => {
-    // Al recargar la página, intenta obtener el usuario desde localStorage
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("userRole");
     const userId = localStorage.getItem("userId");
     const userName = localStorage.getItem("userName");
     const userEmail = localStorage.getItem("userEmail");
+    const permisos = localStorage.getItem("permisos");
 
     if (token && role && userId && userName && userEmail) {
       setUser({
         token,
-        role: role.toLowerCase(),
+          role: role ? role.toLowerCase() : "",
         _id: userId,
         nombre: userName,
         correo: userEmail,
+        permisos: permisos ? JSON.parse(permisos) : [],
       });
     }
     setLoading(false);
   }, []);
 
   const login = (userData) => {
-    const { token, role, _id, nombre, correo } = userData;
+    const { token, role, _id, nombre, correo, permisos } = userData;
+
     localStorage.setItem("token", token);
     localStorage.setItem("userRole", role.toLowerCase());
     localStorage.setItem("userId", _id);
     localStorage.setItem("userName", nombre);
     localStorage.setItem("userEmail", correo);
+    localStorage.setItem("permisos", JSON.stringify(permisos || []));
 
     setUser({
       token,
-      role: role.toLowerCase(),
+        role: role ? role.toLowerCase() : "",
       _id,
       nombre,
       correo,
+      permisos: permisos || [],
     });
   };
 
@@ -49,116 +90,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUserData) => {
-    setUser((prevUser) => ({
-      ...prevUser,
-      ...updatedUserData,
-    }));
+    setUser((prevUser) => {
+      const updatedUser = {
+        ...prevUser,
+        ...updatedUserData,
+      };
 
-    // También actualizar localStorage para persistencia
-    Object.entries(updatedUserData).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
+      Object.entries(updatedUserData).forEach(([key, value]) => {
+        if (key === "permisos") {
+          localStorage.setItem("permisos", JSON.stringify(value));
+        } else {
+          localStorage.setItem(key, value);
+        }
+      });
+
+      return updatedUser;
     });
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        updateUser,
+        fetchUserData,
+        refreshUser,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-
-
-
-// import React, { createContext, useContext, useState, useEffect } from "react";
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-
-//   useEffect(() => {
-//     // Al recargar la página, intenta obtener el usuario desde localStorage
-//     const token = localStorage.getItem("token");
-//     const role = localStorage.getItem("userRole");
-
-//     if (token && role) {
-//       setUser({ token, role });
-//     }
-//   }, []);
-
-//   const login = (userData) => {
-//     const { token, role } = userData;
-//     localStorage.setItem("token", token);
-//     localStorage.setItem("userRole", role.toLowerCase());
-
-//     setUser({ token, role: role.toLowerCase() });
-//   };
-
-//   const logout = () => {
-//     localStorage.clear();
-//     setUser(null);
-//   };
-
-//   const updateUser = (updatedUserData) => {
-//     setUser((prevUser) => ({
-//       ...prevUser,
-//       ...updatedUserData,
-//     }));
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, login, logout, updateUser }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-
-
-
- 
-// import React, { createContext, useContext, useState } from 'react';
-
-// // Crear el contexto
-// const AuthContext = createContext();
-
-// // Proveedor del contexto
-// export const AuthProvider = ({ children }) => {
-//     const [user, setUser] = useState(null); // Inicializa el usuario como null
-
-//     // Función para iniciar sesión
-//     const login = (userData) => {
-//         setUser(userData); // Establece el usuario en el contexto
-//         localStorage.setItem('token', userData.token); // Almacena el token en localStorage
-//     };
-
-//     // Función para cerrar sesión
-//     const logout = () => {
-//         setUser(null); // Limpia el usuario del contexto
-//         localStorage.removeItem('token'); // Elimina el token de localStorage
-//     };
-
-//     // Función para actualizar el usuario
-//     const updateUser = (updatedUserData) => {
-//         setUser((prevUser) => ({
-//             ...prevUser,
-//             ...updatedUserData, // Mezcla los datos anteriores con los nuevos
-//         }));
-//     };
-
-//     return (
-//         <AuthContext.Provider value={{ user, login, logout, updateUser }}>
-//             {children}
-//         </AuthContext.Provider>
-//     );
-// };
-
-// // Hook para usar el contexto
-// export const useAuth = () => {
-//     return useContext(AuthContext);
-// };

@@ -1,125 +1,70 @@
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
-import React, { lazy, Suspense } from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-// import "bootstrap/dist/css/bootstrap.min.css"
-// import "./output.css"
-import "./tailwind.css";
-// import "./App.css"
-import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo";
-import MainLayout from "./components/Sidebar/MainLayout";
-// const ClientDashboard = lazy(() => import("./components/Clientes/client-dashboard"))
-import ClientDashboard from "./components/Clientes/client-dashboard";
-import Sidebar from "./components/Sidebar/Sidebar";
-import Navbar from "./components/NavBars/Navbar";
-import NavbarAuth from "./components/NavBars/NavbarAuth";
-import Footer from "./components/Footer/Footer";
-const Index = lazy(() => import("./components/LandingI/Index"));
-// import Index from "./components/LandingI/Index"
-const TablaRoles = lazy(() => import("./components/Roles/TablaRoles"));
-// import TablaRoles from "./components/Roles/TablaRoles"
-const TablaServicios = lazy(() =>
-  import("./components/Servicios/TablaServicios")
-);
-// import TablaServicios from "./components/Servicios/TablaServicios"
-const TablaUsuarios = lazy(() => import("./components/Usuarios/TablaUsuarios"));
-// import TablaUsuarios from "./components/Usuarios/TablaUsuarios"
-const UserProfile = lazy(() =>
-  import("./components/PerfilUsuario/UserProfile")
-);
-// import UserProfile from "./components/PerfilUsuario/UserProfile"
-const TablaVentas = lazy(() => import("./components/Venta/TablaVentas"));
-// import TablaVentas from "./components/Venta/TablaVentas"
+"use client"
 
-// import TablaVentaServicios from "./components/VentaServicios/TablaVentaServicios"
-const GestionVentaServicio = lazy(() =>
-  import("./components/VentaServicios/GestionVentaServicio")
-);
-// import GestionVentaServicio from "./components/VentaServicios/GestionVentaServicio"
-const CitasEnProgreso = lazy(() =>
-  import("./components/Citas_Agenda/CitasEnProgreso")
-);
-// import CitasEnProgreso from "./components/Citas_Agenda/CitasEnProgreso"
-const AgendaEmpleado = lazy(() =>
-  import("./components/Citas_Agenda/AgendaEmpleado")
-);
-// import AgendaEmpleado from "./components/Citas_Agenda/AgendaEmpleado"
-const ArticlesGrid = lazy(() => import("./components/Galeria/ArticlesGrid"));
-// import ArticlesGrid from "./components/Galeria/ArticlesGrid"
-const SeleccionarServicios = lazy(() =>
-  import("./components/Galeria/SeleccionarServicios")
-);
-// import SeleccionarServicios from "./components/Galeria/SeleccionarServicios"
-const TablaInsumos = lazy(() => import("./components/Insumos/TablaInsumos"));
-// import TablaInsumos from "./components/Insumos/TablaInsumos"
-const TablaEmpleados = lazy(() =>
-  import("./components/Empleados/TablaEmpleados")
-);
-// import TablaEmpleados from "./components/Empleados/TablaEmpleados"
-const TablaClientes = lazy(() => import("./components/Clientes/TablaClientes"));
-// import TablaClientes from "./components/Clientes/TablaClientes"
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"
+import { lazy, Suspense } from "react"
+import { AuthProvider, useAuth } from "./context/AuthContext"
+import { usePermissions } from "./hooks/usePermissions"
+import "./tailwind.css"
+import TablaBajaInsumo from "./components/BajaProducto/TablaBajaInsumo"
+import MainLayout from "./components/Sidebar/MainLayout"
+import ClientDashboard from "./components/Clientes/client-dashboard"
+import Sidebar from "./components/Sidebar/Sidebar"
+import Navbar from "./components/NavBars/Navbar"
+import NavbarAuth from "./components/NavBars/NavbarAuth"
+import Footer from "./components/Footer/Footer"
+import { useLayoutType } from "./hooks/useLayoutType"
 
-const TablaCitas = lazy(() => import("./components/Citas_Agenda/TablaCitas"));
-// import TablaCitas from "./components/Citas_Agenda/TablaCitas"
-const TablaProveedores = lazy(() =>
-  import("./components/Proveedores/TablaProveedores")
-);
-// import TablaProveedores from "./components/Proveedores/TablaProveedores"
-const TablaCategorias = lazy(() =>
-  import("./components/CategoriaProducto/TablaCategorias")
-);
-// import TablaCategorias from "./components/CategoriaProducto/TablaCategorias"
-const TablaProductos = lazy(() =>
-  import("./components/Productos/TablaProductos")
-);
-// import TablaProductos from "./components/Productos/TablaProductos"
+// Lazy imports
+const Index = lazy(() => import("./components/LandingI/Index"))
+const TablaRoles = lazy(() => import("./components/Roles/TablaRoles"))
+const TablaServicios = lazy(() => import("./components/Servicios/TablaServicios"))
+const TablaUsuarios = lazy(() => import("./components/Usuarios/TablaUsuarios"))
+const UserProfile = lazy(() => import("./components/PerfilUsuario/UserProfile"))
+const TablaVentas = lazy(() => import("./components/Venta/TablaVentas"))
+const GestionVentaServicio = lazy(() => import("./components/VentaServicios/GestionVentaServicio"))
+const CitasEnProgreso = lazy(() => import("./components/Citas_Agenda/CitasEnProgreso"))
+const AgendaEmpleado = lazy(() => import("./components/Citas_Agenda/AgendaEmpleado"))
+const ArticlesGrid = lazy(() => import("./components/Galeria/ArticlesGrid"))
+const SeleccionarServicios = lazy(() => import("./components/Galeria/SeleccionarServicios"))
+const TablaInsumos = lazy(() => import("./components/Insumos/TablaInsumos"))
+const TablaEmpleados = lazy(() => import("./components/Empleados/TablaEmpleados"))
+const TablaClientes = lazy(() => import("./components/Clientes/TablaClientes"))
+const TablaCitas = lazy(() => import("./components/Citas_Agenda/TablaCitas"))
+const TablaProveedores = lazy(() => import("./components/Proveedores/TablaProveedores"))
+const TablaCategorias = lazy(() => import("./components/CategoriaProducto/TablaCategorias"))
+const TablaProductos = lazy(() => import("./components/Productos/TablaProductos"))
+const TablaCompras = lazy(() => import("./components/Compras/TablaCompras"))
+const Dashboard = lazy(() => import("./components/Dashboard/Dashboard"))
+const Login = lazy(() => import("./components/Login_Register/Login"))
+const Register = lazy(() => import("./components/Login_Register/Register"))
+const Politicas = lazy(() => import("./components/Politicas/Politicas"))
+const ForgotPassword = lazy(() => import("./components/Login_Register/ForgotPassword/ForgotPassword"))
+const VerifyToken = lazy(() => import("./components/Login_Register/VerifyToken/VerifyToken"))
+const ResetPassword = lazy(() => import("./components/Login_Register/ResetPassword/ResetPassword"))
+const TablaTipoServicios = lazy(() => import("./components/Servicios/TablaTipoServicios"))
+const TablaTipoServicioss = lazy(() => import("./components/TipoServicios/TablaTipoServicioss"))
+const TablaPermisos = lazy(() => import("./components/Permisos/TablaPermisos"))
 
-// import TablaVentaProductos from "./components/VentaProductos/TablaVentaProductos"
-const TablaCompras = lazy(() => import("./components/Compras/TablaCompras"));
-// import TablaCompras from "./components/Compras/TablaCompras"
-
-import Dashboard from "./components/Dashboard/Dashboard";
-
-import Login from "./components/Login_Register/Login";
-import Register from "./components/Login_Register/Register";
-const Politicas = lazy(() => import("./components/Politicas/Politicas"));
-// import Politicas from "./components/Politicas/Politicas"
-import ForgotPassword from "./components/Login_Register/ForgotPassword/ForgotPassword";
-import VerifyToken from "./components/Login_Register/VerifyToken/VerifyToken";
-import ResetPassword from "./components/Login_Register/ResetPassword/ResetPassword";
-const TablaTipoServicios = lazy(() =>
-  import("./components/Servicios/TablaTipoServicios")
-);
-// import TablaTipoServicios from "./components/Servicios/TablaTipoServicios"
-const TablaTipoServicioss = lazy(() =>
-  import("./components/TipoServicios/TablaTipoServicioss")
-);
-// import TablaTipoServicioss from "./components/TipoServicios/TablaTipoServicioss"
-
-import TablaPermisos from "./components/Permisos/TablaPermisos";
-import axios from "axios";
+import axios from "axios"
 
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token")
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+      config.headers["Authorization"] = `Bearer ${token}`
     }
-    return config;
+    return config
   },
   (error) => {
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)
 
-const PrivateRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
+// Componente para rutas protegidas basado en permisos
+const PrivateRoute = ({ children, requiredPermissions = [], allowedRoles = [] }) => {
+  const { user, loading } = useAuth()
+  const { hasPermission } = usePermissions()
 
-  // Mientras carga el estado del usuario, no mostrar nada (o mostrar un spinner)
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[64vh]">
@@ -128,53 +73,58 @@ const PrivateRoute = ({ children, allowedRoles }) => {
           <p className="mt-4 text-foreground">Cargando...</p>
         </div>
       </div>
-    );
+    )
   }
 
-  const isAuthenticated = Boolean(user?.token);
-  const userRole = user?.rol || user?.role;
+  const isAuthenticated = Boolean(user?.token)
+  const userRole = user?.rol || user?.role
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" />
   }
 
-  if (allowedRoles && userRole) {
-    if (!allowedRoles.includes(userRole.toLowerCase())) {
-      return <Navigate to="/unauthorized" />;
+  // Verificar permisos si se especifican
+  if (requiredPermissions.length > 0) {
+    const hasRequiredPermission = requiredPermissions.some((permission) => hasPermission(permission))
+
+    if (!hasRequiredPermission) {
+      return <Navigate to="/unauthorized" />
     }
-  } else if (allowedRoles) {
-    // allowedRoles definido pero no hay userRole válido
-    return <Navigate to="/login" />;
   }
 
-  return children;
-};
+  // Verificar roles como fallback si se especifican
+  if (allowedRoles.length > 0 && userRole) {
+    if (!allowedRoles.includes(userRole.toLowerCase())) {
+      return <Navigate to="/unauthorized" />
+    }
+  }
 
-// Layout modificado para usar MainLayout para admin y empleado
+  return children
+}
+
+// Layout dinámico basado en permisos
 const Layout = ({ children }) => {
-  const { user } = useAuth(); // Obtener el usuario desde el contexto de autenticación
-  const userRole = user?.role; // Asegurarse de que user no sea null o undefined
-  const isAdmin = userRole === "admin";
-  const isEmployee = userRole === "empleado";
-  const showSidebar = isAdmin || isEmployee;
+  const { shouldShowSidebar, isClient } = useLayoutType()
 
   return (
     <div className="min-h-screen bg-gray-10">
-      {showSidebar ? (
-        <>
+      {shouldShowSidebar ? (
+        // Layout administrativo: Sidebar + MainLayout (que incluye DashboardNavbar)
+        <div className="admin-layout">
           <Sidebar />
           <MainLayout>{children}</MainLayout>
-        </>
+        </div>
       ) : (
-        <>
+        // Layout de cliente: Navbar + contenido + Footer
+        <div className="client-layout">
           <Navbar />
           <div className="content min-h-screen">{children}</div>
           <Footer />
-        </>
+        </div>
       )}
 
       {/* Botones de redes sociales solo para la vista del cliente */}
-      {!showSidebar && (
+      {isClient && (
         <>
           <a
             href="https://wa.me/3015789978?text=Quisiera realizar una reserva y poner magia en mis uñas"
@@ -205,21 +155,30 @@ const Layout = ({ children }) => {
         </>
       )}
     </div>
-  );
-};
+  )
+}
 
 const AuthLayout = ({ children }) => (
   <div className="App">
     <NavbarAuth />
     <div className="content">{children}</div>
   </div>
-);
+)
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-[64vh]">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+                <p className="mt-4 text-foreground">Cargando...</p>
+              </div>
+            </div>
+          }
+        >
           <Routes>
             <Route
               path="/login"
@@ -240,6 +199,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-token" element={<VerifyToken />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+
             <Route
               path="/"
               element={
@@ -248,16 +208,20 @@ function App() {
                 </Layout>
               }
             />
+
+            {/* Dashboard - requiere permiso específico */}
             <Route
               path="/dashboard"
               element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
+                <PrivateRoute requiredPermissions={["visualizarDashboardMenu"]}>
                   <Layout>
                     <Dashboard />
                   </Layout>
                 </PrivateRoute>
               }
             />
+
+            {/* Cliente dashboard - solo para clientes */}
             <Route
               path="/mi-cuenta"
               element={
@@ -268,14 +232,125 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            {/* Rutas basadas en permisos */}
             <Route
-              path="/politicas"
+              path="/usuarios"
               element={
-                <PrivateRoute allowedRoles={["cliente"]}>
+                <PrivateRoute requiredPermissions={["verUsuariosMenu"]}>
                   <Layout>
-                    <Politicas />
+                    <TablaUsuarios />
                   </Layout>
                 </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/roles"
+              element={
+                <PrivateRoute requiredPermissions={["visualizarRolesMenu"]}>
+                  <Layout>
+                    <TablaRoles />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/permisos"
+              element={
+                <PrivateRoute requiredPermissions={["verPermisosMenu"]}>
+                  <Layout>
+                    <TablaPermisos />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/servicios"
+              element={
+                <PrivateRoute requiredPermissions={["verServiciosMenu"]}>
+                  <Layout>
+                    <TablaServicios />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/empleados"
+              element={
+                <PrivateRoute requiredPermissions={["verEmpleadosMenu"]}>
+                  <Layout>
+                    <TablaEmpleados />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/clientes"
+              element={
+                <PrivateRoute requiredPermissions={["verClientesMenu"]}>
+                  <Layout>
+                    <TablaClientes />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/citas"
+              element={
+                <PrivateRoute requiredPermissions={["verCitasMenu"]}>
+                  <Layout>
+                    <TablaCitas />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/citas-en-progreso"
+              element={
+                <PrivateRoute requiredPermissions={["visualizarCitaEnProgresoMenu"]}>
+                  <Layout>
+                    <CitasEnProgreso />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/agenda-empleado"
+              element={
+                <PrivateRoute requiredPermissions={["verAgendaEmpleados"]}>
+                  <Layout>
+                    <AgendaEmpleado />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            {/* Resto de rutas... */}
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute allowedRoles={["admin", "usuario", "cliente", "empleado"]}>
+                  <Layout>
+                    <UserProfile />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/unauthorized"
+              element={
+                <Layout>
+                  <h1>No tienes permiso para acceder a esta página :3</h1>
+                </Layout>
               }
             />
 
@@ -300,73 +375,11 @@ function App() {
               }
             />
             <Route
-              path="/usuarios"
-              element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
-                  <Layout>
-                    <TablaUsuarios />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute
-                  allowedRoles={["admin", "usuario", "cliente", "empleado"]}
-                >
-                  <Layout>
-                    <UserProfile />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/roles"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <Layout>
-                    <TablaRoles />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/permisos"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <Layout>
-                    <TablaPermisos />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            {/* <Route
-          path="/ventas"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <Layout>
-                <TablaVentaServicios />
-              </Layout>
-            </PrivateRoute>
-          }
-        /> */}
-            <Route
               path="/ventas-unificadas"
               element={
                 <PrivateRoute allowedRoles={["admin", "empleado", "cliente"]}>
                   <Layout>
                     <TablaVentas />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/servicios"
-              element={
-                <PrivateRoute allowedRoles={["admin", "cliente", "empleado"]}>
-                  <Layout>
-                    <TablaServicios />
                   </Layout>
                 </PrivateRoute>
               }
@@ -412,38 +425,6 @@ function App() {
               }
             />
             <Route
-              path="/empleados"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <Layout>
-                    <TablaEmpleados />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/clientes"
-              element={
-                <PrivateRoute allowedRoles={["admin"]}>
-                  <Layout>
-                    <TablaClientes />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/citas"
-              element={
-                <PrivateRoute
-                  allowedRoles={["admin", "empleado", "usuario", "cliente"]}
-                >
-                  <Layout>
-                    <TablaCitas />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
               path="/proveedores"
               element={
                 <PrivateRoute allowedRoles={["admin"]}>
@@ -483,28 +464,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-            {/* <Route
-          path="/ventasProductos"
-          element={
-            <PrivateRoute allowedRoles={["admin"]}>
-              <Layout>
-                <TablaVentaProductos />
-              </Layout>
-            </PrivateRoute>
-          }
-        /> */}
-
-            {/* Nuevas rutas para la gestión de ventas y agenda de empleados */}
-            <Route
-              path="/citas-en-progreso"
-              element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
-                  <Layout>
-                    <CitasEnProgreso />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
             <Route
               path="/gestion-venta/:id"
               element={
@@ -525,30 +484,13 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/agenda-empleado"
-              element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
-                  <Layout>
-                    <AgendaEmpleado />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/unauthorized"
-              element={
-                <Layout>
-                  <h1>No tienes permiso para acceder a esta página :3</h1>
-                </Layout>
-              }
-            />
           </Routes>
         </Suspense>
       </Router>
     </AuthProvider>
-  );
+  )
 }
 
-export default App;
+export default App
+
+

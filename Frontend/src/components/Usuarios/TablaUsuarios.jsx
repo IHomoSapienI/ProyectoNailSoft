@@ -434,11 +434,11 @@ const TablaUsuarios = () => {
                       </button> */}
                       <button
                         className={`btn-toggle-1
-    ${
+      ${
       usuario.estado
         ? "bg-emerald-400/70  dark:bg-emerald-700 "
         : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
-    }`}
+      }`}
                         onClick={() =>
                           manejarToggleEstado(usuario._id, usuario.estado)
                         }

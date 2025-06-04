@@ -1,592 +1,221 @@
 "use client"
 
-import React from "react"
-
-import { useState, useEffect, useRef, createContext, useContext } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-// import { HeartHandshake, Download, Heart, Copyright } from "lucide-react"
-import { BiAlbum, BiSolidDiscount } from "react-icons/bi";
-import { motion, AnimatePresence } from "framer-motion"
-import {useAuth} from "../../context/AuthContext" // Importamos el contexto de autenticación
-import {
-  FaUsers,
-  FaUserShield,
-  FaShoppingCart,
-  FaCalendarAlt,
-  FaClipboardList,
-  FaUserCog,
-  FaTachometerAlt,
-  FaBoxes,
-  FaMoneyBillWave,
-  FaCashRegister,
-  FaTags,
-  FaCube,
-  FaTruck,
-  FaSignOutAlt,
-  FaChevronDown,
-  FaBars,
-  FaCalendarCheck,
-  FaUserLock,
-  FaCalendarWeek,
-  FaUserCircle,
-  FaChevronLeft,
-  FaChevronRight,
-} from "react-icons/fa"
-import { Md10K, MdAdUnits, MdAirlineSeatLegroomReduced, MdOutlineSpa, MdOutlineVrpano,MdOutlineRoomPreferences,MdOutlineMonetizationOn } from "react-icons/md"
+import { useState, useEffect, useRef, createContext, useContext, useCallback, useMemo } from "react"
+import { Link } from "react-router-dom"
+import { FaSignOutAlt, FaBars, FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { useAuth } from "../../context/AuthContext"
+import { useLayoutType } from "../../hooks/useLayoutType"
+import SidebarMenu from "./SidebarMenu"
 import "./sidebar.css"
 
-// Crear contexto para el estado del sidebar
+// Contexto del sidebar optimizado
 export const SidebarContext = createContext({
   isCollapsed: false,
   isSidebarOpen: true,
+  toggleCollapse: () => {},
+  toggleOpen: () => {},
+  closeMobileSidebar: () => {}, // 🔥 Nueva función para cerrar en móvil
 })
 
 export const useSidebar = () => useContext(SidebarContext)
 
-const MenuItem = ({ icon: Icon, children, to, isActive, onClick, collapsed }) => (
-  <Link
-    to={to}
-    className={`menu-item group  ${isActive ? "active" : ""}`}
-    onClick={onClick}
-    title={collapsed ? children : ""}
-  >
-    <Icon className="menu-icon" />
-    {!collapsed && <span className="menu-text">{children}</span>}
-  </Link>
-)
-
-const MenuGroup = ({ title, children, defaultExpanded = false, collapsed }) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-
-  // Si el sidebar está colapsado, no mostramos el contenido del grupo
-  if (collapsed) {
-    return (
-      <div className="menu-group collapsed">
-        
-        <div className="menu-group-header-collapsed">
-        
-          <h2>{title}</h2>
-        </div>
-        <div className="menu-group-content-collapsed">
-          {React.Children.map(children, (child) => React.cloneElement(child, { collapsed }))}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="menu-group">
-      
-      <button className="menu-group-header dark:text-foreground" onClick={() => setIsExpanded(!isExpanded)}>
-        <h2>{title}</h2>
-        <FaChevronDown className={`menu-group-icon ${isExpanded ? "expanded" : ""}`} />
-      </button>
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="menu-group-content"
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [userRole, setUserRole] = useState(null)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const sidebarRef = useRef(null)
-  const { user } = useAuth() // Obtenemos el usuario del contexto de autenticación
+  const timeoutRef = useRef(null)
+  const { user, logout } = useAuth()
+  const { shouldShowSidebar } = useLayoutType()
 
-  // Recuperar el estado del sidebar del localStorage al cargar
-  useEffect(() => {
-    const savedCollapsedState = localStorage.getItem("sidebarCollapsed")
-    if (savedCollapsedState !== null) {
-      setIsCollapsed(savedCollapsedState === "true")
-    }
+  // Detectar si es móvil de forma optimizada
+  const checkIsMobile = useCallback(() => {
+    return window.innerWidth < 768
   }, [])
 
+  // Inicializar estado del sidebar
   useEffect(() => {
+    const savedCollapsed = localStorage.getItem("sidebarCollapsed")
+    const mobile = checkIsMobile()
+
+    setIsMobile(mobile)
+    setIsOpen(!mobile)
+
+    if (savedCollapsed !== null && !mobile) {
+      setIsCollapsed(savedCollapsed === "true")
+    }
+  }, [checkIsMobile])
+
+  // Optimizar el listener de resize con debounce
+  useEffect(() => {
+    let resizeTimeout
+
     const handleResize = () => {
-      const newIsMobile = window.innerWidth < 768
-      setIsMobile(newIsMobile)
-
-      // En móvil, cerramos el sidebar por defecto
-      if (newIsMobile) {
-        setIsOpen(false)
-      } else {
-        setIsOpen(true)
-      }
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        const mobile = checkIsMobile()
+        setIsMobile(mobile)
+        setIsOpen(!mobile)
+      }, 100) // Debounce de 100ms
     }
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize, { passive: true })
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      clearTimeout(resizeTimeout)
+    }
+  }, [checkIsMobile])
 
-  // Cerrar el sidebar al hacer clic fuera de él (solo en móvil)
+  // Optimizar click outside con mejor detección
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isMobile && isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        // Verificar que no se hizo clic en el botón de toggle
-        const toggleButton = document.querySelector(".mobile-toggle, .sidebar-toggle")
-        if (!toggleButton || !toggleButton.contains(event.target)) {
-          setIsOpen(false)
-        }
+    if (!isMobile) return
+
+    const handleClickOutside = (e) => {
+      if (
+        isOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target) &&
+        !e.target.closest(".mobile-toggle, .sidebar-toggle")
+      ) {
+        setIsOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside, { passive: true })
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [isMobile, isOpen])
 
-  useEffect(() => {
-    const role = user?.role; // Aseguramos que userRole sea una cadena vacía si no hay usuario
-    setUserRole(role ? role.toLowerCase() : null)
-  }, [user])
+  // Función optimizada para toggle collapse
+  const toggleCollapse = useCallback(() => {
+    if (isTransitioning) return
 
-  // Actualizar la clase del body cuando cambia el estado del sidebar
-  useEffect(() => {
-    document.body.classList.toggle("sidebar-collapsed", isCollapsed)
-    document.body.classList.toggle("sidebar-expanded", !isCollapsed)
+    setIsTransitioning(true)
+    const newState = !isCollapsed
+    setIsCollapsed(newState)
+    localStorage.setItem("sidebarCollapsed", newState.toString())
 
-    // Disparar un evento personalizado para que otros componentes puedan reaccionar
+    // Emitir evento optimizado
     window.dispatchEvent(
       new CustomEvent("sidebarStateChanged", {
-        detail: { isCollapsed, isOpen },
+        detail: { isCollapsed: newState, isOpen },
       }),
     )
 
-    // Ajustar el ancho del contenido principal
-    const mainContent = document.querySelector(".main-content")
-    if (mainContent) {
-      if (window.innerWidth >= 768) {
-        if (isCollapsed) {
-          mainContent.style.marginLeft = "70px"
-          mainContent.style.width = "calc(100% - 70px)"
-          mainContent.style.transition = "all 0.3s ease-in-out" // Transición más suave
-        } else {
-          mainContent.style.marginLeft = "280px"
-          mainContent.style.width = "calc(100% - 280px)"
-          mainContent.style.transition = "all 0.3s ease-in-out" // Transición más suave
-        }
-      } else {
-        mainContent.style.marginLeft = "0"
-        mainContent.style.width = "100%"
-      }
+    // Limpiar estado de transición
+    clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => {
+      setIsTransitioning(false)
+    }, 300) // Duración de la transición CSS
+  }, [isCollapsed, isOpen, isTransitioning])
+
+  // Función optimizada para toggle open
+  const toggleOpen = useCallback(() => {
+    setIsOpen((prev) => !prev)
+  }, [])
+
+  // 🔥 Nueva función para cerrar el sidebar en móvil cuando se selecciona una opción
+  const closeMobileSidebar = useCallback(() => {
+    if (isMobile && isOpen) {
+      setIsOpen(false)
     }
+  }, [isMobile, isOpen])
 
-    // Forzar un reflow para asegurar que los cambios se apliquen inmediatamente
-    void document.body.offsetHeight
-  }, [isCollapsed, isOpen])
+  // Función optimizada para logout
+  const handleLogout = useCallback(() => {
+    logout()
+  }, [logout])
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("userRole")
-    navigate("/login")
-  }
+  // Limpiar timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      clearTimeout(timeoutRef.current)
+    }
+  }, [])
 
-  const toggleCollapse = () => {
-    const newCollapsedState = !isCollapsed
-    setIsCollapsed(newCollapsedState)
-    // Guardar el estado en localStorage
-    localStorage.setItem("sidebarCollapsed", newCollapsedState.toString())
-  }
+  // Memoizar el valor del contexto
+  const contextValue = useMemo(
+    () => ({
+      isCollapsed,
+      isSidebarOpen: isOpen,
+      toggleCollapse,
+      toggleOpen,
+      closeMobileSidebar, // 🔥 Incluir la nueva función en el contexto
+    }),
+    [isCollapsed, isOpen, toggleCollapse, toggleOpen, closeMobileSidebar],
+  )
 
-  // If not admin or employee, don't render the sidebar
-  if (userRole !== "admin" && userRole !== "empleado") {
-    return null
-  }
+  // Solo mostrar sidebar si el usuario tiene permisos
+  if (!shouldShowSidebar) return null
 
   return (
-    <SidebarContext.Provider value={{ isCollapsed, isSidebarOpen: isOpen }}>
-      {/* Botón de toggle para móvil */}
+    <SidebarContext.Provider value={contextValue}>
+      {/* Overlay para móvil */}
+      {isMobile && isOpen && <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />}
+
+      {/* Toggle móvil */}
       {isMobile && (
-        <button className="mobile-toggle " onClick={() => setIsOpen(!isOpen)}>
+        <button className="mobile-toggle" onClick={toggleOpen} aria-label="Toggle sidebar">
           <FaBars />
         </button>
       )}
 
-      {/* Botón de toggle para colapsar (visible solo en desktop) */}
-      {!isMobile && isOpen && (
-        <motion.button
-          className="sidebar-toggle"
+      {/* Toggle desktop */}
+      {!isMobile && (
+        <button
+          className={`sidebar-toggle ${isCollapsed ? "collapsed" : "expanded"}`}
           onClick={toggleCollapse}
-          initial={false}
-          animate={{
-            left: isCollapsed ? "60px" : "260px",
-            opacity: 1,
-          }}
-          transition={{
-            duration: 0.3,
-            delay: 0.05, // Pequeño retraso para que el botón se mueva después del sidebar
-            ease: [0.25, 0.1, 0.25, 1],
-          }}
-          style={{
-            position: "fixed",
-            top: "50%",
-            zIndex: 1002,
-            transform: "translateY(-50%)",
-            background: "white",
-            borderRadius: "50%",
-            width: "24px",
-            height: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 2px 5px rgba(0,0,0,0.15)",
-            border: "1px solid #f0f0f0",
-            cursor: "pointer",
-          }}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <FaChevronRight size={12} /> : <FaChevronLeft size={12} />}
-        </motion.button>
+        </button>
       )}
 
-      <motion.div
+      {/* Sidebar principal */}
+      <aside
         ref={sidebarRef}
-        initial={false}
-        animate={{
-          width: !isOpen ? "0px" : isCollapsed ? "70px" : "280px",
-          opacity: isOpen ? 1 : 0,
-        }}
-        transition={{
-          duration: 0.3, // Reducir la duración para que sea más suave
-          ease: [0.25, 0.1, 0.25, 1], // Curva de bezier más suave
-          opacity: { duration: 0.2 },
-        }}
-        className={`sidebar-container  ${isCollapsed ? "collapsed" : ""}`}
+        className={`sidebar ${isCollapsed ? "collapsed" : "expanded"} ${isOpen ? "open" : "closed"} ${isMobile ? "mobile" : "desktop"}`}
+        data-testid="sidebar"
       >
-        <div className="sidebar-content ">
+        <div className="sidebar-content">
+          {/* Header */}
           <div className="sidebar-header">
-
-            <Link to={userRole === "admin" ? "/dashboard" : "/agenda-empleado"} className="logo-container">
-            
+            <Link
+              to="/dashboard"
+              className="logo-container"
+              onClick={closeMobileSidebar} // 🔥 Cerrar en móvil al hacer clic en el logo
+            >
               <div className="logo-wrapper">
-                <img src="http://gitbf.onrender.com/uploads/logo1.png" alt="NailsSoft Logo" className="logo-image" />
+                <img
+                  src="http://gitbf.onrender.com/uploads/logo1.png"
+                  alt="NailsSoft Logo"
+                  className="logo-image"
+                  loading="lazy"
+                />
               </div>
-              {!isCollapsed && (
-                <motion.h1
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="logo-text"
-                >
-                  NailsSoft
-                </motion.h1>
-              )}
+              <div className={`logo-text ${isCollapsed ? "hidden" : "visible"}`}>NailsSoft</div>
             </Link>
-            
           </div>
 
+          {/* Menu */}
           <div className="menu-container">
-            {/* Menú para administradores */}
-            {userRole === "admin" && (
-              <>
-              <MenuItem
-                  
-                  icon={FaTachometerAlt}
-                  to="/dashboard"
-                  isActive={location.pathname === "/dashboard"}
-                  collapsed={isCollapsed}
-                >
-                  Dashboard
-                </MenuItem>
-                {/* <MenuGroup title="Principal" defaultExpanded={true} collapsed={isCollapsed}>
-                  
-                </MenuGroup> */}
-
-                <MenuGroup title="Gestión de Ventas" collapsed={isCollapsed}>
-                  {/* <MenuItem
-                    icon={FaShoppingCart}
-                    to="/ventas"
-                    isActive={location.pathname === "/ventas"}
-                    collapsed={isCollapsed}
-                  >
-                    Ventas de servicios
-                  </MenuItem> */}
-
-                  <MenuItem
-                    icon={FaCalendarCheck}
-                    to="/citas-en-progreso"
-                    isActive={location.pathname === "/citas-en-progreso"}
-                    collapsed={isCollapsed}
-                  >
-                    Citas en Progreso
-                  </MenuItem>    
-
-                  <MenuItem
-                  icon={MdOutlineMonetizationOn }
-                  to="/ventas-unificadas"
-                  isActive={location.pathname === "/ventas"}
-                  collapsed={isCollapsed}
-                >
-                  Ventas Unificadas
-                </MenuItem>
-                  {/* <MenuItem
-                    icon={FaCashRegister}
-                    to="/ventasproductos"
-                    isActive={location.pathname === "/ventasproductos"}
-                    collapsed={isCollapsed}
-                  >
-                    Ventas de Productos
-                  </MenuItem> */}
-                </MenuGroup>
-
-                <MenuGroup title="Gestión de Servicios" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={MdOutlineSpa}
-                    to="/servicios"
-                    isActive={location.pathname === "/servicios"}
-                    collapsed={isCollapsed}
-                  >
-                    Servicios
-                  </MenuItem>
-                  <MenuItem
-                    icon={BiSolidDiscount}
-                    to="/tiposervicios"
-                    isActive={location.pathname === "/tiposervicios"}
-                    collapsed={isCollapsed}
-                  >
-                    Tipo De Descuentos
-                  </MenuItem>
-                   <MenuItem
-                    icon={BiAlbum}
-                    to="/tiposervicioss"
-                    isActive={location.pathname === "/tiposervicioss"}
-                    collapsed={isCollapsed}
-                  >
-                    Tipo De Servicios
-                  </MenuItem>
-                  <MenuItem
-                    icon={MdOutlineVrpano}
-                    to="/articles"
-                    isActive={location.pathname === "/articles"}
-                    collapsed={isCollapsed}
-                  >
-                    Catálogo de Servicios
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaClipboardList}
-                    to="/clientes"
-                    isActive={location.pathname === "/clientes"}
-                    collapsed={isCollapsed}
-                  >
-                    Clientes
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaUserCog}
-                    to="/empleados"
-                    isActive={location.pathname === "/empleados"}
-                    collapsed={isCollapsed}
-                  >
-                    Empleados
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaCalendarAlt}
-                    to="/citas"
-                    isActive={location.pathname === "/citas"}
-                    collapsed={isCollapsed}
-                  >
-                    Citas
-                  </MenuItem>
-                  
-                  <MenuItem
-                    icon={FaCalendarWeek}
-                    to="/agenda-empleado"
-                    isActive={location.pathname === "/agenda-empleado"}
-                    collapsed={isCollapsed}
-                  >
-                    Agenda de Empleados
-                  </MenuItem>
-                </MenuGroup>
-
-                <MenuGroup title="Gestión de Compras" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaMoneyBillWave}
-                    to="/compras"
-                    isActive={location.pathname === "/compras"}
-                    collapsed={isCollapsed}
-                  >
-                    Compras
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaCube}
-                    to="/productos"
-                    isActive={location.pathname === "/productos"}
-                    collapsed={isCollapsed}
-                  >
-                    Productos
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaBoxes}
-                    to="/insumos"
-                    isActive={location.pathname === "/insumos"}
-                    collapsed={isCollapsed}
-                  >
-                    Insumos
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaTruck}
-                    to="/proveedores"
-                    isActive={location.pathname === "/proveedores"}
-                    collapsed={isCollapsed}
-                  >
-                    Proveedores
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaTags}
-                    to="/categoriaProductos"
-                    isActive={location.pathname === "/categoriaProductos"}
-                    collapsed={isCollapsed}
-                  >
-                    Categoría Productos
-                  </MenuItem>
-                  <MenuItem icon={FaClipboardList} to="/baja-producto" isActive={location.pathname === "/baja-producto"}>
-                      Baja de Productos
-                    </MenuItem>
-
-                </MenuGroup>
-                
-
-                <MenuGroup title="Configuración" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaUserShield}
-                    to="/roles"
-                    isActive={location.pathname === "/roles"}
-                    collapsed={isCollapsed}
-                  >
-                    Roles
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaUserLock}
-                    to="/permisos"
-                    isActive={location.pathname === "/permisos"}
-                    collapsed={isCollapsed}
-                  >
-                    Permisos
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaUsers}
-                    to="/usuarios"
-                    isActive={location.pathname === "/usuarios"}
-                    collapsed={isCollapsed}
-                  >
-                    Usuarios
-                  </MenuItem>
-                </MenuGroup>
-              </>
-            )}
-
-            {/* Menú para empleados */}
-            {userRole === "empleado" && (
-              <>
-                <MenuGroup title="Mi Agenda" defaultExpanded={true} collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaCalendarWeek}
-                    to="/agenda-empleado"
-                    isActive={location.pathname === "/agenda-empleado"}
-                    collapsed={isCollapsed}
-                  >
-                    Mi Agenda
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaCalendarCheck}
-                    to="/citas-en-progreso"
-                    isActive={location.pathname === "/citas-en-progreso"}
-                    collapsed={isCollapsed}
-                  >
-                    Citas en Progreso
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaCalendarAlt}
-                    to="/citas"
-                    isActive={location.pathname === "/citas"}
-                    collapsed={isCollapsed}
-                  >
-                    Todas las Citas
-                  </MenuItem>
-                </MenuGroup>
-
-                <MenuGroup title="Servicios" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={MdOutlineSpa}
-                    to="/servicios"
-                    isActive={location.pathname === "/servicios"}
-                    collapsed={isCollapsed}
-                  >
-                    Catálogo de Servicios
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaTags}
-                    to="/articles"
-                    isActive={location.pathname === "/articles"}
-                    collapsed={isCollapsed}
-                  >
-                    Galería de Servicios
-                  </MenuItem>
-                </MenuGroup>
-
-                <MenuGroup title="Ventas" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaShoppingCart}
-                    to="/ventas"
-                    isActive={location.pathname === "/ventas"}
-                    collapsed={isCollapsed}
-                  >
-                    Registrar Venta
-                  </MenuItem>
-                  <MenuItem
-                    icon={FaShoppingCart}
-                    to="/gestion-venta/new"
-                    isActive={location.pathname.includes("/gestion-venta")}
-                    collapsed={isCollapsed}
-                  >
-                    Gestionar Venta
-                  </MenuItem>
-                </MenuGroup>
-
-                <MenuGroup title="Mi Perfil" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaUserCircle}
-                    to="/profile"
-                    isActive={location.pathname === "/profile"}
-                    collapsed={isCollapsed}
-                  >
-                    Ver Perfil
-                  </MenuItem>
-                </MenuGroup>
-
-                <MenuGroup title="Configuración" collapsed={isCollapsed}>
-                  <MenuItem
-                    icon={FaUsers}
-                    to="/usuarios"
-                    isActive={location.pathname === "/usuarios"}
-                    collapsed={isCollapsed}
-                  >
-                    Usuarios
-                  </MenuItem>
-                </MenuGroup>
-              </>
-            )}
+            <SidebarMenu collapsed={isCollapsed} />
           </div>
 
-         
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className={`logout-button ${isCollapsed ? "collapsed" : "expanded"}`}
+            title={isCollapsed ? "Cerrar Sesión" : ""}
+            aria-label="Cerrar sesión"
+          >
+            <FaSignOutAlt className="logout-icon" />
+            <span className={`logout-text ${isCollapsed ? "hidden" : "visible"}`}>Cerrar Sesión</span>
+          </button>
         </div>
-      </motion.div>
+      </aside>
     </SidebarContext.Provider>
   )
 }
 
 export default Sidebar
-

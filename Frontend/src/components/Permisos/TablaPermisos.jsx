@@ -61,8 +61,8 @@ export default function TablaPermisos() {
     { value: "tipoServicios", label: "Tipo de Servicios" },
     { value: "servicios", label: "Servicios" },
     { value: "usuarios", label: "Usuarios" },
-    { value: "ventaServicios", label: "Venta de Servicios" },
-    { value: "ventaProductos", label: "Venta de Productos" },
+    { value: "ventas", label: "Ventas" },
+    { value: "vistasSidebar", label: "Vistas del Sidebar" },
   ];
 
   const obtenerPermisos = async () => {
@@ -513,7 +513,7 @@ export default function TablaPermisos() {
             >
               {categorias.map((cat) => (
                 <option
-                  className="text-black"
+                  className="text-black "
                   key={cat.value}
                   value={cat.value}
                 >

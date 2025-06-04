@@ -390,16 +390,18 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .btn-add,
-    .btn-export,
-    .btn-secondary{
-      display: flex-inline-block ;
-    height: 8vh;
-    width: 15vh;
-    padding: 0.5rem 1rem;
-      
-    }
-  
+    .button-group {
+    flex-direction: column; /* uno debajo del otro */
+    align-items: stretch;   /* que ocupen el ancho disponible */
+  }
+
+  .btn-add,
+  .btn-export,
+  .btn-secondary {
+    width: 100%;      /* que ocupen todo el ancho */
+    height: auto;
+    font-size: 1rem;
+  }
     .universal-tabla-moderna {
       display: block;
       overflow-x: auto;

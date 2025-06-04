@@ -754,13 +754,13 @@ console.log("Fecha cruda de cita:", ventaCompleta?.cita?.fechacita);
                       >
                         <FontAwesomeIcon icon={faEdit} />
                       </button> */}
-                      <button
+                      {/* <button
                         className="btn-delete-1"
                         onClick={() => manejarEliminarVenta(venta._id)}
                         title="Eliminar venta"
                       >
                         <FontAwesomeIcon icon={faTrash} />
-                      </button>
+                      </button> */}
                       <button
                         className="btn-info-1"
                         onClick={() => mostrarDetallesVenta(venta)}

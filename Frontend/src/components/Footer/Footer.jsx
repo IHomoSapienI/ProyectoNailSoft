@@ -1,30 +1,29 @@
+
 "use client"
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { FaInstagram, FaFacebookF, FaTwitter, FaPhone, FaEnvelope, FaMapMarkerAlt, FaHeart } from "react-icons/fa"
-import { useSidebar } from "../Sidebar/Sidebar" // Importamos el contexto del sidebar
-import {useAuth} from "../../context/AuthContext" // Importamos el contexto de autenticación
+import { useSidebar } from "../Sidebar/Sidebar"
+import { useLayoutType } from "../../hooks/useLayoutType"
 import "./footer.css"
 
 const Footer = () => {
-  const { user } = useAuth() // Obtenemos el rol del usuario desde el contexto de autenticación
-  const userRole = user?.role?.toLowerCase() // Aseguramos que userRole sea una cadena vacía si no hay usuario
+  const { shouldShowSidebar, isClient } = useLayoutType()
+  const { isCollapsed } = useSidebar()
 
-  const isAdmin = userRole === "admin"
-  const isEmployee = userRole === "empleado"
-  const { isCollapsed } = useSidebar() // Obtenemos el estado del sidebar
-
-  // Mostrar el footer de admin tanto para administradores como para empleados
-  if (isAdmin || isEmployee) {
+  // Footer administrativo para usuarios con sidebar
+  if (shouldShowSidebar) {
     return (
       <div className={`admin-footer dark:bg-primary ${isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
         <p>
-          Desarrollado con <FaHeart className="inline-block text-pink-500 animate-pulse dark:text-white  " /> por NailsSoft
+          Desarrollado con <FaHeart className="inline-block text-pink-500 animate-pulse dark:text-white" /> por
+          NailsSoft
         </p>
       </div>
     )
   }
 
+  // Footer completo para clientes y usuarios sin permisos administrativos
   return (
     <footer className="main-footer">
       <div className="footer-background">

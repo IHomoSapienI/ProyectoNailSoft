@@ -60,8 +60,11 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           timer: 1500,
         })
       } else {
+        console.log("Datos enviados:", formData)
+
         // Crear nuevo permiso
-        response = await axios.post("https://gitbf.onrender.com/api/permisos", formData, {
+        response = await axios.post("https://gitbf.onrender.com/api/permisos", formData, 
+          {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -158,8 +161,8 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           <option value="permisos">Permisos</option>
           <option value="servicios">Servicios</option>
           <option value="usuarios">Usuarios</option>
-          <option value="ventaServicios">Venta de Servicios</option>
-          <option value="ventaProductos">Venta de Productos</option>
+          <option value="ventas">Ventas</option>
+          <option value="vistasSidebar">Vistas Sidebar</option>
         </select>
       </div>
 

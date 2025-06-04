@@ -413,3 +413,334 @@ body.sidebar-expanded .main-content {
   padding: 0.5rem;
 }
 
+
+
+/* Variables CSS para consistencia */
+:root {
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-transition-duration: 0.3s;
+  --sidebar-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-z-index: 1000;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-text: #374151;
+  --sidebar-text-secondary: #6b7280;
+  --sidebar-hover: #f3f4f6;
+  --sidebar-active: #eff6ff;
+  --sidebar-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode variables */
+.dark {
+  --sidebar-bg: #000000;
+  --sidebar-border: #374151;
+  --sidebar-text: #f9fafb;
+  --sidebar-text-secondary: #d1d5db;
+  --sidebar-hover: #374151;
+  --sidebar-active: #1e40af;
+}
+
+/* Overlay para móvil */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: calc(var(--sidebar-z-index) - 1);
+  opacity: 0;
+  animation: fadeIn var(--sidebar-transition-duration) var(--sidebar-transition-easing) forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Toggle móvil */
+.mobile-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: calc(var(--sidebar-z-index) + 1);
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: var(--sidebar-text);
+  box-shadow: var(--sidebar-shadow);
+  transition: all 0.2s var(--sidebar-transition-easing);
+  cursor: pointer;
+}
+
+.mobile-toggle:hover {
+  background: var(--sidebar-hover);
+  transform: translateY(-1px);
+}
+
+/* Toggle desktop */
+.sidebar-toggle {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: calc(var(--sidebar-z-index) + 1);
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--sidebar-shadow);
+  cursor: pointer;
+  transition: all var(--sidebar-transition-duration) var(--sidebar-transition-easing);
+  color: var(--sidebar-text);
+}
+
+.sidebar-toggle.collapsed {
+  left: calc(var(--sidebar-width-collapsed) - 16px);
+}
+
+.sidebar-toggle.expanded {
+  left: calc(var(--sidebar-width-expanded) - 16px);
+}
+
+.sidebar-toggle:hover {
+  background: var(--sidebar-hover);
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Sidebar principal */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  z-index: var(--sidebar-z-index);
+  transition: all var(--sidebar-transition-duration) var(--sidebar-transition-easing);
+  will-change: transform, width;
+  overflow: hidden;
+}
+
+/* Estados del sidebar */
+.sidebar.desktop.expanded {
+  width: var(--sidebar-width-expanded);
+  transform: translateX(0);
+}
+
+.sidebar.desktop.collapsed {
+  width: var(--sidebar-width-collapsed);
+  transform: translateX(0);
+}
+
+.sidebar.mobile.open {
+  width: var(--sidebar-width-expanded);
+  transform: translateX(0);
+  box-shadow: var(--sidebar-shadow);
+}
+
+.sidebar.mobile.closed {
+  width: var(--sidebar-width-expanded);
+  transform: translateX(-100%);
+}
+
+/* Contenido del sidebar */
+.sidebar-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header del sidebar */
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--sidebar-text);
+  transition: all 0.2s var(--sidebar-transition-easing);
+}
+
+.logo-container:hover {
+  color: #ec4899;
+}
+
+.logo-wrapper {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  /* background: linear-gradient(135deg, #ec4899, #8b5cf6); */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all var(--sidebar-transition-duration) var(--sidebar-transition-easing);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.logo-text.hidden {
+  opacity: 0;
+  width: 0;
+  transform: translateX(-10px);
+}
+
+.logo-text.visible {
+  opacity: 1;
+  width: auto;
+  transform: translateX(0);
+}
+
+/* Container del menú */
+.menu-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+
+.menu-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-container::-webkit-scrollbar-thumb {
+  background: var(--sidebar-border);
+  border-radius: 2px;
+}
+
+.menu-container::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-text-secondary);
+}
+
+/* Botón de logout */
+.logout-button {
+  margin: 1rem;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.5rem;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s var(--sidebar-transition-easing);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.logout-button:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.logout-button.collapsed {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.logout-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.logout-text {
+  transition: all var(--sidebar-transition-duration) var(--sidebar-transition-easing);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.logout-text.hidden {
+  opacity: 0;
+  width: 0;
+  transform: translateX(-10px);
+}
+
+.logout-text.visible {
+  opacity: 1;
+  width: auto;
+  transform: translateX(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .sidebar.mobile {
+    box-shadow: var(--sidebar-shadow);
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-toggle {
+    display: none;
+  }
+
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* Optimizaciones de rendimiento */
+.sidebar * {
+  box-sizing: border-box;
+}
+
+/* Reducir repaints durante transiciones */
+.sidebar,
+.sidebar-toggle,
+.logo-text,
+.logout-text {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Mejorar rendering de texto */
+.logo-text,
+.logout-text {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
