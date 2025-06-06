@@ -149,7 +149,7 @@ export const navbarMenuConfig = [
         icon: FaCalendarWeek,
         label: "Agenda de Empleados",
         path: "/agenda-empleado",
-        requiredPermission: "verAgendaEmpleados",
+        requiredPermission: "verAgendaEmpleadosMenu",
       },
     ],
   },

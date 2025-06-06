@@ -19,7 +19,7 @@ export const useDebugLayout = () => {
     permissions: {
       verDashboard: hasPermission("verDashboard"),
       visualizarDashboardMenu: hasPermission("visualizarDashboardMenu"),
-      verAgendaEmpleados: hasPermission("verAgendaEmpleados"),
+      verAgendaEmpleados: hasPermission("verAgendaEmpleadosMenu"),
       verServiciosMenu: hasPermission("verServiciosMenu"),
       verVentasUnificadasMenu: hasPermission("verVentasUnificadasMenu"),
     },

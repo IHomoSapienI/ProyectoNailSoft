@@ -1752,7 +1752,7 @@ const GestionVentaServicio = () => {
 
             navigate("/citas-en-progreso")
           }}
-          className="btn-info-1 dark:card-gradient-4 text-foreground"
+          className="btn-info-2 dark:card-gradient-4 text-foreground"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Volver

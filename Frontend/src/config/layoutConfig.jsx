@@ -4,7 +4,7 @@ export const layoutConfig = {
   sidebarPermissions: [
     "verDashboard",
     "visualizarDashboardMenu",
-    "verAgendaEmpleados",
+    "verAgendaEmpleadosMenu",
     "visualizarCitaEnProgresoMenu",
     "verVentasUnificadasMenu",
     "verServiciosMenu",

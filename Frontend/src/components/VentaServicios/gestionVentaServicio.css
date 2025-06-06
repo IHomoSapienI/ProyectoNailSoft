@@ -36,7 +36,7 @@
   cursor: pointer;
 }
 
-.btn-info-1 {
+.btn-info-2 {
   background-color: #d3d8e1;
   position: relative;
   overflow: hidden;
@@ -45,7 +45,7 @@
   width: 4.5rem;
 }
 
-.btn-info-1::before{
+.btn-info-2::before{
   content: "";
   position: absolute;
   top: 0;
@@ -58,7 +58,7 @@
   transform: skewX(-30deg);
 }
 
-.btn-info-1:hover::before {
+.btn-info-2:hover::before {
   left: 100%;
   transition: all 0.5s ease;
 }

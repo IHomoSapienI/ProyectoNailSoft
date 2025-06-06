@@ -310,7 +310,10 @@ body.login-page-active {
   color: #000000;
   margin-bottom: 2rem;
   text-align: center;
+  width: 200%;
+  height: 100%;
 }
+
 
 /* Imagen del logo */
 .logo-image-login {

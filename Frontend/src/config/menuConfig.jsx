@@ -140,7 +140,7 @@ export const menuConfig = [
     path: "/baja-producto",
     icon: FaClipboardList,
     group: "Gestión de Compras",
-    permission:"verBajaProductosMenu"
+    permission:"verBajaProductoMenu"
   },
 
   // Configuración

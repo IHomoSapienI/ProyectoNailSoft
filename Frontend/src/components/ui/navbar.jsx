@@ -63,7 +63,7 @@ export function NavbarLogo() {
       </motion.div>
       <motion.img
         whileHover={{ scale: 1.1 }}
-        src="/logo1.png"
+        src="/logo1Navbar.webp"
         alt="NailsSoft Logo"
         className="h-10 w-10 rounded-full object-cover transition-transform"
       />

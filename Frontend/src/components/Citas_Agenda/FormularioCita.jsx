@@ -23,6 +23,7 @@ import {
   FaUserClock,
 } from "react-icons/fa"
 import { useLocation } from "react-router-dom"
+import { obtenerServiciosConDescuento } from "../Servicios/obtenerServicios"
 
 // Datos de respaldo en caso de fallo de API
 const DATOS_RESPALDO = {
@@ -276,7 +277,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
       const resultados = await Promise.allSettled([
         axios.get("https://gitbf.onrender.com/api/empleados", { headers }),
         axios.get("https://gitbf.onrender.com/api/clientes", { headers }),
-        axios.get("https://gitbf.onrender.com/api/servicios", { headers }),
+        obtenerServiciosConDescuento(),
       ])
 
       // Verificar si todas las peticiones fueron exitosas
@@ -284,15 +285,15 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
 
       if (todasExitosas) {
         // Extraer los datos de las respuestas exitosas
-        const [empleadosResponse, clientesResponse, serviciosResponse] = resultados.map(
-          (resultado) => resultado.value.data,
-        )
+        const empleadosResponse = resultados[0].value.data
+        const clientesResponse = resultados[1].value.data
+        const serviciosResponse = resultados[2].value // obtenerServiciosConDescuento() devuelve directamente los datos
 
         setEmpleados(empleadosResponse)
         setEmpleadosFiltrados(empleadosResponse)
         setClientes(clientesResponse)
 
-        const serviciosData = serviciosResponse.servicios || (Array.isArray(serviciosResponse) ? serviciosResponse : [])
+        const serviciosData = serviciosResponse || []
         setServicios(serviciosData)
 
         // Inicializar datos de la cita si existe
@@ -402,6 +403,10 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
             nombreServicio: servicio.nombreServicio,
             precio: servicio.precio,
             tiempo: servicio.tiempo,
+            tieneDescuento: servicio.tieneDescuento || false,
+            precioOriginal: servicio.precioOriginal || servicio.precio,
+            precioConDescuento: servicio.precioConDescuento || servicio.precio,
+            porcentajeDescuento: servicio.porcentajeDescuento || 0,
           },
         ])
       }
@@ -450,7 +455,10 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
   }, [isLoading, formData.fechacita, formData.nombreempleado, actualizarHorariosDisponibles]) // Solo se ejecuta cuando cambia isLoading (cuando termina de cargar)
 
   const precioTotal = useMemo(() => {
-    return serviciosSeleccionados.reduce((total, servicio) => total + (servicio.precio || 0), 0)
+    return serviciosSeleccionados.reduce((total, servicio) => {
+      const precio = servicio.tieneDescuento ? servicio.precioConDescuento : (servicio.precio || 0)
+      return total + precio
+    }, 0)
   }, [serviciosSeleccionados])
 
   const totalTiempo = useMemo(() => {
@@ -493,6 +501,10 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
             nombreServicio: servicioSeleccionado.nombreServicio,
             precio: servicioSeleccionado.precio,
             tiempo: servicioSeleccionado.tiempo,
+            tieneDescuento: servicioSeleccionado.tieneDescuento || false,
+            precioOriginal: servicioSeleccionado.precioOriginal || servicioSeleccionado.precio,
+            precioConDescuento: servicioSeleccionado.precioConDescuento || servicioSeleccionado.precio,
+            porcentajeDescuento: servicioSeleccionado.porcentajeDescuento || 0,
           },
         ])
         setNuevoServicio({ id: "", nombre: "" })
@@ -882,7 +894,17 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                         >
                           <span className="truncate mr-2 font-medium text-sm">{servicio.nombreServicio}</span>
                           <div className="flex items-center shrink-0">
-                            <span className="font-medium mr-3 text-pink-600 text-sm">${servicio.precio}</span>
+                            <div className="flex flex-col items-end mr-3">
+                              {servicio.tieneDescuento ? (
+                                <>
+                                  <span className="text-xs text-gray-400 line-through">${servicio.precioOriginal}</span>
+                                  <span className="font-medium text-pink-600">${servicio.precioConDescuento.toFixed(2)}</span>
+                                  <span className="text-xs text-green-600">({servicio.porcentajeDescuento}% OFF)</span>
+                                </>
+                              ) : (
+                                <span className="font-medium text-pink-600">${servicio.precio}</span>
+                              )}
+                            </div>
                             <button
                               type="button"
                               onClick={() => eliminarServicio(servicio._id)}
@@ -921,7 +943,7 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                         <option value="">Selecciona un servicio</option>
                         {servicios.map((servicio) => (
                           <option key={servicio._id} value={servicio._id}>
-                            {servicio.nombreServicio} - ${servicio.precio} ({servicio.tiempo} min)
+                            {servicio.nombreServicio} - ${servicio.tieneDescuento ? servicio.precioConDescuento.toFixed(2) : servicio.precio} ({servicio.tiempo} min) {servicio.tieneDescuento ? `(${servicio.porcentajeDescuento}% OFF)` : ''}
                           </option>
                         ))}
                       </select>
@@ -957,7 +979,17 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                             </div>
                           </div>
                           <div className="flex items-center shrink-0">
-                            <span className="font-medium mr-3 text-pink-600">${servicio.precio}</span>
+                            <div className="flex flex-col items-end mr-3">
+                              {servicio.tieneDescuento ? (
+                                <>
+                                  <span className="text-xs text-gray-400 line-through">${servicio.precioOriginal}</span>
+                                  <span className="font-medium text-pink-600">${servicio.precioConDescuento.toFixed(2)}</span>
+                                  <span className="text-xs text-green-600">({servicio.porcentajeDescuento}% OFF)</span>
+                                </>
+                              ) : (
+                                <span className="font-medium text-pink-600">${servicio.precio}</span>
+                              )}
+                            </div>
                             <button
                               type="button"
                               onClick={() => eliminarServicio(servicio._id)}
@@ -1339,7 +1371,16 @@ export default function FormularioCita({ cita, fechaSeleccionada, servicioSelecc
                           </div>
                           <div className="flex items-center">
                             <span className="text-gray-600 mr-2 text-xs">({servicio.tiempo} min)</span>
-                            <span className="font-medium text-pink-600">${servicio.precio}</span>
+                            <div className="flex flex-col items-end">
+                              {servicio.tieneDescuento ? (
+                                <>
+                                  <span className="text-xs text-gray-400 line-through">${servicio.precioOriginal}</span>
+                                  <span className="font-medium text-pink-600">${servicio.precioConDescuento.toFixed(2)}</span>
+                                </>
+                              ) : (
+                                <span className="font-medium text-pink-600">${servicio.precio}</span>
+                              )}
+                            </div>
                           </div>
                         </li>
                       ))}

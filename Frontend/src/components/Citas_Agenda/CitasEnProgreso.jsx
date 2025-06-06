@@ -823,7 +823,13 @@ const CitasEnProgreso = () => {
                       })}
                   </p>
                   <p className="text-sm text-foreground mb-2">
-                    <strong>Monto Total:</strong> ${cita.montototal?.toFixed(2) || "0.00"}
+                    <strong>Monto Total:</strong>{" "}
+                    ${Number(cita.montototal).toLocaleString("es-ES", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    },) || 0.00
+                    }
+                    {/* ${cita.montototal?.toFixed(2) || "0.00"} */}
                   </p>
 
                   <div className="flex justify-end gap-2">

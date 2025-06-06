@@ -68,7 +68,7 @@ export const Navbar = ({ children, variant = "main" }) => {
 export const NavbarLogo = () => {
   return (
     <Link to="/" className="flex items-center space-x-2">
-      <img src="/logo1.png" alt="Logo" className="h-10 w-auto" />
+      <img src="/logo1Navbar.webp" alt="Logo" className="h-10 w-auto" />
       <span className="text-xl font-bold text-pink-600 dark:text-pink-400">NailsSoft</span>
     </Link>
   )
