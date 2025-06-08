@@ -252,92 +252,100 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Botón para abrir menú
-                          GestureDetector(
-                            onTap: () {
-                              _scaffoldKey.currentState?.openDrawer();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE0115F),
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFE0115F).withOpacity(0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  _scaffoldKey.currentState?.openDrawer();
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
                                   ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(
-                                    Icons.menu,
-                                    color: Colors.white,
-                                    size: 20,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE0115F),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFE0115F).withOpacity(0.3),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'ABRIR MENÚ',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(
+                                        Icons.menu,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'MENÚ',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
                           
-                          const SizedBox(width: 16),
-                          
-                          // Botón para ir al dashboard
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/dashboard', arguments: widget.token);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFD4AF37),
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFD4AF37).withOpacity(0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/dashboard', arguments: widget.token);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
                                   ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(
-                                    Icons.dashboard,
-                                    color: Colors.white,
-                                    size: 20,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD4AF37),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFD4AF37).withOpacity(0.3),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'DASHBOARD',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 1,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(
+                                        Icons.dashboard,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'DASHBOARD',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),

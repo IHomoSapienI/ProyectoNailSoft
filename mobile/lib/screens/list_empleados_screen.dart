@@ -20,6 +20,14 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
   String _errorMessage = '';
   List<Empleado> _empleados = [];
 
+  // Variables para paginación
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
+  int _totalPages = 1;
+  int _totalItems = 0;
+  List<Empleado> _allEmpleados = [];
+  List<Empleado> _paginatedEmpleados = [];
+
   @override
   void initState() {
     super.initState();
@@ -63,16 +71,53 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
       print('Empleados cargados: ${empleados.length}');
       
       setState(() {
-        _empleados = empleados;
+        _allEmpleados = empleados;
+        _totalItems = empleados.length;
+        _totalPages = (_totalItems / _itemsPerPage).ceil();
+        _updatePaginatedData();
         _isLoading = false;
       });
     } catch (e) {
       print('Error al cargar empleados: $e');
       setState(() {
         _errorMessage = e.toString();
-        _empleados = [];
+        _allEmpleados = [];
+        _paginatedEmpleados = [];
+        _totalItems = 0;
+        _totalPages = 1;
         _isLoading = false;
       });
+    }
+  }
+
+  void _updatePaginatedData() {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+    
+    _paginatedEmpleados = _allEmpleados.sublist(
+      startIndex,
+      endIndex > _allEmpleados.length ? _allEmpleados.length : endIndex,
+    );
+  }
+
+  void _goToPage(int page) {
+    if (page >= 1 && page <= _totalPages) {
+      setState(() {
+        _currentPage = page;
+        _updatePaginatedData();
+      });
+    }
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 1) {
+      _goToPage(_currentPage - 1);
     }
   }
 
@@ -400,7 +445,7 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
                       color: Colors.black.withOpacity(0.7),
                       padding: const EdgeInsets.all(10),
                       child: const Text(
-                        '© Sebastian Alvarez Restrepo - Ficha 2821731 - Año 2024',
+                        '© Nailsoft 2024 - Todos los derechos reservados',
                         style: TextStyle(
                           fontSize: 12, 
                           fontWeight: FontWeight.bold,
@@ -416,169 +461,257 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showEmpleadoDialog(),
-        backgroundColor: const Color(0xFFE0115F),
-        child: const Icon(Icons.add, color: Colors.white),
-        elevation: 4,
-      ),
+      floatingActionButton: null,
     );
   }
   
   Widget _buildEmpleadosList() {
-    if (_empleados.isEmpty) {
-      return _buildEmptyView();
-    }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      itemCount: _empleados.length,
-      itemBuilder: (context, index) {
-        final empleado = _empleados[index];
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFD4AF37).withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Card(
-            elevation: 0,
-            color: Colors.black.withOpacity(0.7),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: const Color(0xFFD4AF37).withOpacity(0.3),
-                width: 1,
+  if (_allEmpleados.isEmpty) {
+    return _buildEmptyView();
+  }
+  
+  return Column(
+    children: [
+      // Información de paginación
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedEmpleados.length} de $_totalItems',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 12,
               ),
             ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFFD4AF37).withOpacity(0.5),
-                    width: 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    empleado.nombreempleado.isNotEmpty ? empleado.nombreempleado[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Color(0xFFD4AF37),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
+            Text(
+              'Página $_currentPage de $_totalPages',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 12,
               ),
-              title: Text(
-                '${empleado.nombreempleado} ${empleado.apellidoempleado}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.email, size: 14, color: Color(0xFFD4AF37)),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          empleado.correoempleado,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.phone, size: 14, color: Color(0xFFD4AF37)),
-                      const SizedBox(width: 4),
-                      Text(
-                        empleado.telefonoempleado,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        empleado.estadoempleado ? Icons.check_circle : Icons.cancel,
-                        size: 14,
-                        color: empleado.estadoempleado ? Colors.green : Colors.red,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        empleado.estadoempleado ? 'Activo' : 'Inactivo',
-                        style: TextStyle(
-                          color: empleado.estadoempleado ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+            ),
+          ],
+        ),
+      ),
+      
+      // Lista paginada
+      Expanded(
+        child: ListView.builder(
+          padding: const EdgeInsets.only(top: 16, bottom: 100),
+          itemCount: _paginatedEmpleados.length,
+          itemBuilder: (context, index) {
+            final empleado = _paginatedEmpleados[index];
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFD4AF37).withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
+              child: Card(
+                elevation: 0,
+                color: Colors.black.withOpacity(0.7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: const Color(0xFFD4AF37).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  leading: Container(
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: const Color(0xFFD4AF37).withOpacity(0.5),
                         width: 1,
                       ),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.edit, color: Color(0xFFD4AF37), size: 20),
-                      onPressed: () => _showEmpleadoDialog(empleado: empleado),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFE0115F).withOpacity(0.5),
-                        width: 1,
+                    child: Center(
+                      child: Text(
+                        empleado.nombreempleado.isNotEmpty ? empleado.nombreempleado[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          color: Color(0xFFD4AF37),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                        ),
                       ),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Color(0xFFE0115F), size: 20),
-                      onPressed: () => _deleteEmpleado(empleado.id),
+                  ),
+                  title: Text(
+                    '${empleado.nombreempleado} ${empleado.apellidoempleado}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
                     ),
                   ),
-                ],
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.email, size: 14, color: Color(0xFFD4AF37)),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              empleado.correoempleado,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, size: 14, color: Color(0xFFD4AF37)),
+                          const SizedBox(width: 4),
+                          Text(
+                            empleado.telefonoempleado,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            empleado.estadoempleado ? Icons.check_circle : Icons.cancel,
+                            size: 14,
+                            color: empleado.estadoempleado ? Colors.green : Colors.red,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            empleado.estadoempleado ? 'Activo' : 'Inactivo',
+                            style: TextStyle(
+                              color: empleado.estadoempleado ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: null,
+                ),
               ),
+            );
+          },
+        ),
+      ),
+      
+      // Controles de paginación
+      if (_totalPages > 1) _buildPaginationControls(),
+    ],
+  );
+}
+
+Widget _buildPaginationControls() {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.black.withOpacity(0.8),
+      border: Border(
+        top: BorderSide(
+          color: const Color(0xFFD4AF37).withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Botón anterior
+        ElevatedButton.icon(
+          onPressed: _currentPage > 1 ? _previousPage : null,
+          icon: const Icon(Icons.chevron_left),
+          label: const Text('Anterior'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _currentPage > 1 ? const Color(0xFFD4AF37) : Colors.grey,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+        
+        // Números de página
+        Row(
+          children: [
+            for (int i = 1; i <= _totalPages; i++)
+              if (i == 1 || i == _totalPages || (i >= _currentPage - 1 && i <= _currentPage + 1))
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: GestureDetector(
+                    onTap: () => _goToPage(i),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: i == _currentPage ? const Color(0xFFE0115F) : Colors.transparent,
+                        border: Border.all(
+                          color: i == _currentPage ? const Color(0xFFE0115F) : const Color(0xFFD4AF37),
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text(
+                          i.toString(),
+                          style: TextStyle(
+                            color: i == _currentPage ? Colors.white : const Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else if (i == _currentPage - 2 || i == _currentPage + 2)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  child: const Text(
+                    '...',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                ),
+          ],
+        ),
+        
+        // Botón siguiente
+        ElevatedButton.icon(
+          onPressed: _currentPage < _totalPages ? _nextPage : null,
+          icon: const Icon(Icons.chevron_right),
+          label: const Text('Siguiente'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _currentPage < _totalPages ? const Color(0xFFD4AF37) : Colors.grey,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
   
   Widget _buildLoadingIndicator() {
     return Center(

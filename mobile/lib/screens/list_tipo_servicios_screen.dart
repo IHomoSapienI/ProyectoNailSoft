@@ -482,7 +482,7 @@ class _TipoServiciosState extends State<TipoServicios> with SingleTickerProvider
                             );
                           }
                           return ListView.builder(
-                            padding: const EdgeInsets.only(top: 16, bottom: 80),
+                            padding: const EdgeInsets.only(top: 16, bottom: 100),
                             itemCount: tipoServicios.length,
                             itemBuilder: (context, index) {
                               final tipoServicio = tipoServicios[index];
@@ -509,7 +509,7 @@ class _TipoServiciosState extends State<TipoServicios> with SingleTickerProvider
                                     ),
                                   ),
                                   child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     leading: Container(
                                       width: 50,
                                       height: 50,
@@ -552,51 +552,7 @@ class _TipoServiciosState extends State<TipoServicios> with SingleTickerProvider
                                         ),
                                       ],
                                     ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFFD4AF37).withOpacity(0.5),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: IconButton(
-                                            icon: const Icon(Icons.edit, color: Color(0xFFD4AF37), size: 20),
-                                            onPressed: () {
-                                              _showServiceModal(
-                                                title: 'Editar Tipo Servicio',
-                                                initialNombre: tipoServicio.nombreTs,
-                                                initialEstado: tipoServicio.estado,
-                                                onConfirm: () {
-                                                  _editTipoServicio(
-                                                    tipoServicio.id,
-                                                    _nombreTsController.text,
-                                                    _selectedEstado,
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFFE0115F).withOpacity(0.5),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: IconButton(
-                                            icon: const Icon(Icons.delete, color: Color(0xFFE0115F), size: 20),
-                                            onPressed: () => _deleteTipoServicio(tipoServicio.id),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    trailing: null,
                                   ),
                                 ),
                               );
@@ -609,7 +565,7 @@ class _TipoServiciosState extends State<TipoServicios> with SingleTickerProvider
                       color: Colors.black.withOpacity(0.7),
                       padding: const EdgeInsets.all(10),
                       child: const Text(
-                        '© Sebastian Alvarez Restrepo - Ficha 2821731 - Año 2024',
+                        '© © Nailsoft 2024 - Todos los derechos reservados',
                         style: TextStyle(
                           fontSize: 12, 
                           fontWeight: FontWeight.bold,
@@ -625,19 +581,7 @@ class _TipoServiciosState extends State<TipoServicios> with SingleTickerProvider
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showServiceModal(
-            title: 'Registrar Tipo Servicio',
-            onConfirm: () {
-              _registerTipoServicio(_nombreTsController.text, _selectedEstado);
-            },
-          );
-        },
-        backgroundColor: const Color(0xFFE0115F),
-        child: const Icon(Icons.add, color: Colors.white),
-        elevation: 4,
-      ),
+      floatingActionButton: null,
     );
   }
 }

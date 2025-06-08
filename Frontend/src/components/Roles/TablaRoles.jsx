@@ -19,6 +19,7 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
+import axiosInstance   from "../../util/axiosConfig";
 // import "./tablaRol.css";
 import "../../styles/tablas.css"
 
@@ -38,53 +39,87 @@ export default function TablaRoles() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const obtenerRoles = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token");
-      const rolesResponse = await fetch(
-        "https://gitbf.onrender.com/api/roles",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!rolesResponse.ok)
-        throw new Error(`HTTP error! status: ${rolesResponse.status}`);
-      const rolesData = await rolesResponse.json();
-      setRoles(rolesData.roles || []);
+  // const obtenerRoles = async () => {
+  //   setIsLoading(true);
+  //   setError(null);
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const rolesResponse = await fetch(
+  //       "https://gitbf.onrender.com/api/roles",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     if (!rolesResponse.ok)
+  //       throw new Error(`HTTP error! status: ${rolesResponse.status}`);
+  //     const rolesData = await rolesResponse.json();
+  //     setRoles(rolesData.roles || []);
 
-      const permisosResponse = await fetch(
-        "https://gitbf.onrender.com/api/permisos",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!permisosResponse.ok)
-        throw new Error(`HTTP error! status: ${permisosResponse.status}`);
-      const permisosData = await permisosResponse.json();
-      const permisoMap = {};
-      permisosData.permisos.forEach((permiso) => {
-        permisoMap[permiso._id] = permiso.nombrePermiso;
-      });
-      setPermisoMap(permisoMap);
-    } catch (error) {
-      console.error("Error al obtener los datos:", error);
-      setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
-      Swal.fire({
-        title: "Error",
-        text: "No tienes permiso para estar aquí. Tu token no es válido.",
-        icon: "error",
-        confirmButtonColor: "#db2777",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     const permisosResponse = await fetch(
+  //       "https://gitbf.onrender.com/api/permisos",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     if (!permisosResponse.ok)
+  //       throw new Error(`HTTP error! status: ${permisosResponse.status}`);
+  //     const permisosData = await permisosResponse.json();
+  //     const permisoMap = {};
+  //     permisosData.permisos.forEach((permiso) => {
+  //       permisoMap[permiso._id] = permiso.nombrePermiso;
+  //     });
+  //     setPermisoMap(permisoMap);
+  //   } catch (error) {
+  //     console.error("Error al obtener los datos:", error);
+  //     setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: "No tienes permiso para estar aquí. Tu token no es válido.",
+  //       icon: "error",
+  //       confirmButtonColor: "#db2777",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+const obtenerRoles = async () => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const [rolesRes, permisosRes] = await Promise.all([
+      axiosInstance.get("/roles"),
+      axiosInstance.get("/permisos"),
+    ]);
+
+    const rolesData = rolesRes.data;
+    const permisosData = permisosRes.data;
+
+    setRoles(rolesData.roles || []);
+    const permisoMap = {};
+    permisosData.permisos.forEach((permiso) => {
+      permisoMap[permiso._id] = permiso.nombrePermiso;
+    });
+    setPermisoMap(permisoMap);
+  } catch (error) {
+    console.error("Error al obtener los datos:", error);
+    setError("No se pudieron cargar los datos. Por favor, intenta de nuevo.");
+    Swal.fire({
+      title: "Error",
+      text: "No tienes permiso para estar aquí. Tu token no es válido.",
+      icon: "error",
+      confirmButtonColor: "#db2777",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     obtenerRoles();

@@ -4,12 +4,16 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  width: 100%;
+  height: 100%;
   min-height: calc(100vh - 80px);
   background-color: #f9fafb;
 }
 
 .profile-card {
   width: 100%;
+  height: 100%;
+  max-height: 950px;
   max-width: 800px;
   background-color: white;
   border-radius: 1rem;

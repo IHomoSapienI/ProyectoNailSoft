@@ -18,11 +18,20 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
   final ApiVenta _apiVenta = ApiVenta();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+
+  // Variables para paginación
+  int _currentPage = 1;
+  final int _itemsPerPage = 5; // Menos items por página para ventas debido a su tamaño
+  int _totalPages = 1;
+  int _totalItems = 0;
+  List<Venta> _allVentas = [];
+  List<Venta> _paginatedVentas = [];
+  bool _isLoading = false;
   
   @override
   void initState() {
     super.initState();
-    _ventasFuture = _apiVenta.getVentas(widget.token);
+    _loadVentas();
     
     _animationController = AnimationController(
       vsync: this,
@@ -41,6 +50,63 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
+  }
+
+  Future<void> _loadVentas() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final ventas = await _apiVenta.getVentas(widget.token);
+      setState(() {
+        _allVentas = ventas;
+        _totalItems = ventas.length;
+        _totalPages = (_totalItems / _itemsPerPage).ceil();
+        _updatePaginatedData();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error al cargar ventas: $e');
+      setState(() {
+        _allVentas = [];
+        _paginatedVentas = [];
+        _totalItems = 0;
+        _totalPages = 1;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _updatePaginatedData() {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+    
+    _paginatedVentas = _allVentas.sublist(
+      startIndex,
+      endIndex > _allVentas.length ? _allVentas.length : endIndex,
+    );
+  }
+
+  void _goToPage(int page) {
+    if (page >= 1 && page <= _totalPages) {
+      setState(() {
+        _currentPage = page;
+        _updatePaginatedData();
+      });
+    }
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 1) {
+      _goToPage(_currentPage - 1);
+    }
   }
   
   @override
@@ -96,7 +162,7 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
               icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
               onPressed: () {
                 setState(() {
-                  _ventasFuture = _apiVenta.getVentas(widget.token);
+                  _loadVentas();
                 });
               },
             ),
@@ -156,50 +222,60 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
             SafeArea(
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: FutureBuilder<List<Venta>>(
-                  future: _ventasFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return _buildLoading();
-                    } else if (snapshot.hasError) {
-                      print("Error en FutureBuilder: ${snapshot.error}");
-                      return _buildError(snapshot.error.toString());
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return _buildEmpty();
-                    } else {
-                      return ListView.builder(
-                        padding: const EdgeInsets.only(top: 16, bottom: 80),
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          final venta = snapshot.data![index];
-                          return _buildVentaCard(venta);
-                        },
-                      );
-                    }
-                  },
+                child: Column(
+                  children: [
+                    if (_isLoading)
+                      Expanded(child: _buildLoading())
+                    else if (_allVentas.isEmpty)
+                      Expanded(child: _buildEmpty())
+                    else ...[
+                      // Información de paginación
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedVentas.length} de $_totalItems',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Página $_currentPage de $_totalPages',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Lista de ventas
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.only(top: 8, bottom: 100),
+                          itemCount: _paginatedVentas.length,
+                          itemBuilder: (context, index) {
+                            final venta = _paginatedVentas[index];
+                            return _buildVentaCard(venta);
+                          },
+                        ),
+                      ),
+                      
+                      // Controles de paginación
+                      if (_totalPages > 1) _buildPaginationControls(),
+                    ],
+                  ],
                 ),
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Función para agregar venta no implementada'),
-              backgroundColor: const Color(0xFFE0115F),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        },
-        backgroundColor: const Color(0xFFE0115F),
-        child: const Icon(Icons.add, color: Colors.white),
-        elevation: 4,
-      ),
+      floatingActionButton: null,
     );
   }
 
@@ -236,6 +312,7 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
             ),
           ),
           child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             leading: Container(
               padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
@@ -499,7 +576,7 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
           ElevatedButton.icon(
             onPressed: () {
               setState(() {
-                _ventasFuture = _apiVenta.getVentas(widget.token);
+                _loadVentas();
               });
             },
             icon: const Icon(Icons.refresh),
@@ -570,6 +647,32 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
           top: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
           left: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFD4AF37)),
+            onPressed: _currentPage > 1 ? _previousPage : null,
+          ),
+          Text(
+            '$_currentPage / $_totalPages',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward_ios, color: Color(0xFFD4AF37)),
+            onPressed: _currentPage < _totalPages ? _nextPage : null,
+          ),
+        ],
       ),
     );
   }

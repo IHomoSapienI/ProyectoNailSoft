@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           descTextStyle: const TextStyle(fontSize: 16),
           btnOkColor: const Color(0xFFE0115F),
           btnOkOnPress: () {
-            Navigator.pushReplacementNamed(context, '/landing', arguments: token);
+            Navigator.pushReplacementNamed(context, '/dashboard', arguments: token);
           },
         ).show();
       } else {
@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 child: Center(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -167,10 +167,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ],
                             ),
                             child: CircleAvatar(
-                              radius: 60,
+                              radius: 50,
                               backgroundColor: Colors.white,
                               child: Padding(
-                                padding: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.all(10.0),
                                 child: Image.asset(
                                   'images/logo1.png',
                                   fit: BoxFit.contain,
@@ -183,11 +183,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           
                           // Elegant title
                           const Text(
-                            "BIENVENIDA ESTEFANIA",
+                            "¡Bienvenido de nuevo!",
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
+                              letterSpacing: 1,
                               color: Colors.white,
                             ),
                           ),
@@ -352,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                               const SizedBox(width: 10),
                               const Text(
-                                '© 2024 Sebastián Álvarez',
+                                '© Nailsoft 2024 - Todos los derechos reservados',
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 12,

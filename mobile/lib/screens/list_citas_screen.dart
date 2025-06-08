@@ -640,7 +640,7 @@ class _ListCitasScreenState extends State<ListCitasScreen> {
         // Calendario
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: _buildCalendarioGrid(),
           ),
         ),
@@ -672,8 +672,8 @@ class _ListCitasScreenState extends State<ListCitasScreen> {
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
               childAspectRatio: 1.0,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
             ),
             itemCount: _obtenerDiasEnMes(_mesActual) + _obtenerPrimerDiaSemana(_mesActual),
             itemBuilder: (context, index) {
@@ -700,7 +700,7 @@ class _ListCitasScreenState extends State<ListCitasScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: tieneCitas ? colorCitas.withOpacity(0.2) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: esHoy 
                           ? const Color(0xFFD4AF37) 

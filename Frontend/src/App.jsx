@@ -13,6 +13,7 @@ import Navbar from "./components/NavBars/Navbar"
 import NavbarAuth from "./components/NavBars/NavbarAuth"
 import Footer from "./components/Footer/Footer"
 import { useLayoutType } from "./hooks/useLayoutType"
+import Unauthorized from "./components/Unauthorized"
 
 // Lazy imports
 const Index = lazy(() => import("./components/LandingI/Index"))
@@ -341,7 +342,7 @@ function App() {
             <Route
               path="/profile"
               element={
-                <PrivateRoute allowedRoles={["admin", "usuario", "cliente", "empleado"]}>
+                <PrivateRoute requiredPermissions={["verPerfil"]}>
                   <Layout>
                     <UserProfile />
                   </Layout>
@@ -363,7 +364,7 @@ function App() {
               path="/unauthorized"
               element={
                 <Layout>
-                  <h1>No tienes permiso para acceder a esta página :3</h1>
+                 <Unauthorized />
                 </Layout>
               }
             />
@@ -371,7 +372,7 @@ function App() {
             <Route
               path="/insumos"
               element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
+                <PrivateRoute requiredPermissions={["verInsumosMenu"]}>
                   <Layout>
                     <TablaInsumos />
                   </Layout>
@@ -381,7 +382,7 @@ function App() {
             <Route
               path="/baja-producto"
               element={
-                <PrivateRoute allowedRoles={["admin", "empleado"]}>
+                <PrivateRoute requiredPermissions={["verBajaProductoMenu"]}>
                   <Layout>
                     <TablaBajaInsumo />
                   </Layout>
@@ -391,7 +392,7 @@ function App() {
             <Route
               path="/ventas-unificadas"
               element={
-                <PrivateRoute allowedRoles={["admin", "empleado", "cliente"]}>
+                <PrivateRoute requiredPermissions={["verVentasUnificadasMenu"]}>
                   <Layout>
                     <TablaVentas />
                   </Layout>
@@ -401,7 +402,7 @@ function App() {
             <Route
               path="/tiposervicios"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verTipoDescuentoMenu"]}>
                   <Layout>
                     <TablaTipoServicios />
                   </Layout>
@@ -411,7 +412,7 @@ function App() {
             <Route
               path="/tiposervicioss"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verTipoServiciosMenu"]}>
                   <Layout>
                     <TablaTipoServicioss />
                   </Layout>
@@ -421,7 +422,7 @@ function App() {
             <Route
               path="/articles"
               element={
-                <PrivateRoute allowedRoles={["admin", "cliente", "usuario"]}>
+                <PrivateRoute requiredPermissions={["verCatalogoMenu"]}>
                   <Layout>
                     <ArticlesGrid />
                   </Layout>
@@ -441,7 +442,7 @@ function App() {
             <Route
               path="/proveedores"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verProveedoresMenu"]}>
                   <Layout>
                     <TablaProveedores />
                   </Layout>
@@ -451,7 +452,7 @@ function App() {
             <Route
               path="/categoriaProductos"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verCategoriaProductosMenu"]}>
                   <Layout>
                     <TablaCategorias />
                   </Layout>
@@ -461,7 +462,7 @@ function App() {
             <Route
               path="/productos"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verProductosMenu"]}>
                   <Layout>
                     <TablaProductos />
                   </Layout>
@@ -471,7 +472,7 @@ function App() {
             <Route
               path="/compras"
               element={
-                <PrivateRoute allowedRoles={["admin"]}>
+                <PrivateRoute requiredPermissions={["verComprasMenu"]}>
                   <Layout>
                     <TablaCompras />
                   </Layout>

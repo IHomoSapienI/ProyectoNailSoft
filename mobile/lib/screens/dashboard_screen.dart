@@ -245,6 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      drawer: _buildDrawer(context),
       appBar: AppBar(
         title: const Text(
           'DASHBOARD',
@@ -258,11 +259,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         centerTitle: true,
         backgroundColor: Colors.black,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFFD4AF37)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         actions: [
           IconButton(
@@ -276,6 +277,253 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         : _errorMessage.isNotEmpty 
           ? _buildErrorView()
           : _buildDashboard(),
+    );
+  }
+
+ Widget _buildDrawer(BuildContext context) {
+  return Drawer(
+    child: Container(
+      color: Colors.black,
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.black,
+              border: Border(
+                bottom: BorderSide(
+                  color: Color(0xFFD4AF37),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFD4AF37),
+                      width: 1,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        'images/logo1.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'MENÚ PRINCIPAL',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+              
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.design_services,
+                  title: 'Tipos de Servicio',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/tipoServicios', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                  useRedColor: true, // Usar color rojo
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.home_repair_service,
+                  title: 'Servicios',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/servicios', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.people,
+                  title: 'Usuarios',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/usuarios', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                  useRedColor: true, // Usar color rojo
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.shopping_cart,
+                  title: 'Ventas',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/ventas', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.person_pin,
+                  title: 'Empleados',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/empleados', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                  useRedColor: true, // Usar color rojo
+                ),
+                _buildDrawerItem(
+                  context,
+                  icon: Icons.calendar_today,
+                  title: 'Citas',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/citas', arguments: widget.token);
+                  },
+                  isHighlighted: true,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: const Color(0xFFD4AF37).withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFE0115F).withOpacity(0.7),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.logout,
+                      color: Color(0xFFE0115F),
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Cerrar Sesión',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '© Nailsoft 2024 - Todos los derechos reservado',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget _buildDrawerItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isHighlighted = false,
+    bool isCurrentPage = false,
+    bool useRedColor = false, // Nuevo parámetro para usar color rojo
+  }) {
+    // Definir el color a usar basado en el parámetro useRedColor
+    final Color primaryColor = useRedColor ? const Color(0xFFE0115F) : const Color(0xFFD4AF37);
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: isCurrentPage ? primaryColor.withOpacity(0.2) : null,
+        border: isCurrentPage 
+            ? Border.all(color: primaryColor.withOpacity(0.5), width: 1)
+            : null,
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isHighlighted 
+                ? primaryColor.withOpacity(0.2)
+                : Colors.transparent,
+            border: Border.all(
+              color: isCurrentPage 
+                  ? primaryColor
+                  : (isHighlighted 
+                      ? primaryColor.withOpacity(0.7)
+                      : Colors.white.withOpacity(0.3)),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: isCurrentPage 
+                ? primaryColor
+                : (isHighlighted 
+                    ? primaryColor
+                    : Colors.white),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isCurrentPage 
+                ? primaryColor
+                : Colors.white,
+            fontWeight: isCurrentPage ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        hoverColor: primaryColor.withOpacity(0.1),
+      ),
     );
   }
   
@@ -299,7 +547,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -421,7 +669,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de citas por empleado
               _buildSectionHeader('Citas por Empleado', Icons.person),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildCitasPorEmpleadoSection(),
               
@@ -430,7 +678,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de ventas por empleado
               _buildSectionHeader('Ventas por Empleado', Icons.monetization_on),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildVentasPorEmpleadoSection(),
               
@@ -439,7 +687,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de citas por estado
               _buildSectionHeader('Citas por Estado', Icons.pie_chart),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildCitasPorEstadoSection(),
               
@@ -448,7 +696,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de servicios más solicitados
               _buildSectionHeader('Servicios Más Solicitados', Icons.spa),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildServiciosMasSolicitadosSection(),
               
@@ -457,7 +705,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de últimas ventas
               _buildSectionHeader('Últimas Ventas', Icons.receipt_long),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildUltimasVentasSection(),
               
@@ -466,7 +714,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Sección de próximas citas
               _buildSectionHeader('Próximas Citas', Icons.schedule),
               
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               _buildProximasCitasSection(),
               
@@ -475,7 +723,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               // Pie de página
               Center(
                 child: Text(
-                  '© Sebastian Alvarez Restrepo - Ficha 2821731 - Año 2024',
+                  '© Nailsoft 2024 - Todos los derechos reservados ',
                   style: TextStyle(
                     fontSize: 12, 
                     fontWeight: FontWeight.bold,
@@ -502,6 +750,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     bool isPositive = true,
   }) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),

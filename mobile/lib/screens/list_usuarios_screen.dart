@@ -21,6 +21,14 @@ class _ListUsuariosScreenState extends State<ListUsuariosScreen> with SingleTick
   String _errorMessage = '';
   List<Usuario> _usuarios = [];
 
+  // Variables para paginación
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
+  int _totalPages = 1;
+  int _totalItems = 0;
+  List<Usuario> _allUsuarios = [];
+  List<Usuario> _paginatedUsuarios = [];
+
   @override
   void initState() {
     super.initState();
@@ -64,18 +72,53 @@ class _ListUsuariosScreenState extends State<ListUsuariosScreen> with SingleTick
       print('Usuarios cargados: ${usuarios.length}');
       
       setState(() {
-        _usuarios = usuarios;
-        _usuariosFuture = Future.value(usuarios);
+        _allUsuarios = usuarios;
+        _totalItems = usuarios.length;
+        _totalPages = (_totalItems / _itemsPerPage).ceil();
+        _updatePaginatedData();
         _isLoading = false;
       });
     } catch (e) {
       print('Error al cargar usuarios: $e');
       setState(() {
         _errorMessage = e.toString();
-        _usuarios = [];
-        _usuariosFuture = Future.value([]);
+        _allUsuarios = [];
+        _paginatedUsuarios = [];
+        _totalItems = 0;
+        _totalPages = 1;
         _isLoading = false;
       });
+    }
+  }
+
+  void _updatePaginatedData() {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+    
+    _paginatedUsuarios = _allUsuarios.sublist(
+      startIndex,
+      endIndex > _allUsuarios.length ? _allUsuarios.length : endIndex,
+    );
+  }
+
+  void _goToPage(int page) {
+    if (page >= 1 && page <= _totalPages) {
+      setState(() {
+        _currentPage = page;
+        _updatePaginatedData();
+      });
+    }
+  }
+
+  void _nextPage() {
+    if (_currentPage < _totalPages) {
+      _goToPage(_currentPage + 1);
+    }
+  }
+
+  void _previousPage() {
+    if (_currentPage > 1) {
+      _goToPage(_currentPage - 1);
     }
   }
 
@@ -388,7 +431,7 @@ class _ListUsuariosScreenState extends State<ListUsuariosScreen> with SingleTick
                       color: Colors.black.withOpacity(0.7),
                       padding: const EdgeInsets.all(10),
                       child: const Text(
-                        '© Sebastian Alvarez Restrepo - Ficha 2821731 - Año 2024',
+                        '© Nailsoft 2024 - Todos los derechos reservados',
                         style: TextStyle(
                           fontSize: 12, 
                           fontWeight: FontWeight.bold,
@@ -404,135 +447,129 @@ class _ListUsuariosScreenState extends State<ListUsuariosScreen> with SingleTick
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showUsuarioDialog(),
-        backgroundColor: const Color(0xFFE0115F),
-        child: const Icon(Icons.add, color: Colors.white),
-        elevation: 4,
-      ),
+      floatingActionButton: null,
     );
   }
   
   Widget _buildUserList() {
-    if (_usuarios.isEmpty) {
+    if (_paginatedUsuarios.isEmpty) {
       return _buildEmptyView();
     }
     
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      itemCount: _usuarios.length,
-      itemBuilder: (context, index) {
-        final usuario = _usuarios[index];
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFD4AF37).withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Card(
-            elevation: 0,
-            color: Colors.black.withOpacity(0.7),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: const Color(0xFFD4AF37).withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                width: 50,
-                height: 50,
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 16, bottom: 100),
+            itemCount: _paginatedUsuarios.length,
+            itemBuilder: (context, index) {
+              final usuario = _paginatedUsuarios[index];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFFD4AF37).withOpacity(0.5),
-                    width: 1,
-                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Center(
-                  child: Text(
-                    usuario.nombre.isNotEmpty ? usuario.nombre[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Color(0xFFD4AF37),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
+                child: Card(
+                  elevation: 0,
+                  color: Colors.black.withOpacity(0.7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: const Color(0xFFD4AF37).withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFD4AF37).withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          usuario.nombre.isNotEmpty ? usuario.nombre[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      usuario.nombre,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          usuario.email,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Rol: ${usuario.rolNombre}',
+                          style: const TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: null,
+                  ),
                 ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFD4AF37)),
+                onPressed: _currentPage > 1 ? _previousPage : null,
               ),
-              title: Text(
-                usuario.nombre,
+              Text(
+                'Página $_currentPage de $_totalPages',
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    usuario.email,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rol: ${usuario.rolNombre}',
-                    style: const TextStyle(
-                      color: Color(0xFFD4AF37),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, color: Color(0xFFD4AF37)),
+                onPressed: _currentPage < _totalPages ? _nextPage : null,
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFD4AF37).withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.edit, color: Color(0xFFD4AF37), size: 20),
-                      onPressed: () => _showUsuarioDialog(usuario: usuario),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFE0115F).withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Color(0xFFE0115F), size: 20),
-                      onPressed: () => _deleteUsuario(usuario.id),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ],
     );
   }
   

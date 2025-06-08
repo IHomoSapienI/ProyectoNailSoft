@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faExclamationTriangle, faTimes } from "@fortawesome/free-solid-svg-icons"
+import { faExclamationTriangle, faTimes, faBug } from "@fortawesome/free-solid-svg-icons"
 
 const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -12,13 +12,14 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
   })
 
   const [loading, setLoading] = useState(false)
+  const [debugMode, setDebugMode] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({
     cantidad: "",
     fechaBaja: "",
     observaciones: "",
   })
 
-  // Funciones de validación del lado del cliente
+  // Funciones de validación (mantenidas igual)
   const validarCantidad = (valor) => {
     if (isNaN(valor) || valor === "" || valor === null) {
       return "La cantidad debe ser un número válido"
@@ -56,7 +57,6 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
       return "La fecha no puede ser futura"
     }
 
-    // Validar que no sea muy antigua (más de 1 año)
     const unAñoAtras = new Date()
     unAñoAtras.setFullYear(unAñoAtras.getFullYear() - 1)
     unAñoAtras.setHours(0, 0, 0, 0)
@@ -83,26 +83,19 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
       return "Las observaciones no pueden exceder los 300 caracteres"
     }
 
-    // Permitir más caracteres para observaciones
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s.,;:()\-¿?¡!]+$/.test(textoTrimmed)) {
-      return "Las observaciones contienen caracteres no válidos"
-    }
-
     return ""
   }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    const newValue = value
 
-    // Validación en tiempo real
     let errorMessage = ""
     if (name === "cantidad") {
-      errorMessage = validarCantidad(newValue)
+      errorMessage = validarCantidad(value)
     } else if (name === "fechaBaja") {
-      errorMessage = validarFecha(newValue)
+      errorMessage = validarFecha(value)
     } else if (name === "observaciones") {
-      errorMessage = validarObservaciones(newValue)
+      errorMessage = validarObservaciones(value)
     }
 
     setFieldErrors({
@@ -112,7 +105,7 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
 
     setFormData({
       ...formData,
-      [name]: newValue,
+      [name]: value,
     })
   }
 
@@ -124,7 +117,6 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
     }
 
     setFieldErrors(errors)
-
     return !Object.values(errors).some((error) => error !== "")
   }
 
@@ -137,20 +129,25 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
 
     setLoading(true)
 
-    // Crear objeto con los datos de la baja
+    // CORREGIDO: Estructura de datos que coincide con lo que espera el backend
     const datosBaja = {
-      insumoId: insumo._id,
+      // Cambiar de 'insumoId' a 'productoId' si es necesario
+      productoId: insumo._id,
+      // Asegurar que el nombre del producto se incluya
+      producto: insumo.nombreInsumo,
       fechaBaja: formData.fechaBaja,
       cantidad: Number(formData.cantidad),
       observaciones: formData.observaciones.trim(),
     }
+
+    console.log("🚀 Datos a enviar:", datosBaja)
+    console.log("📦 Insumo completo:", insumo)
 
     // Enviar datos al componente padre
     onSubmit(datosBaja)
     setLoading(false)
   }
 
-  // Calcular stock restante después de la baja
   const stockRestante = (insumo?.stock || 0) - Number(formData.cantidad || 0)
 
   return (
@@ -160,11 +157,36 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
         Dar de Baja Insumo
       </h2>
 
+      {/* Panel de Debug */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+        <button
+          type="button"
+          onClick={() => setDebugMode(!debugMode)}
+          className="flex items-center text-yellow-800 font-medium"
+        >
+          <FontAwesomeIcon icon={faBug} className="mr-2" />
+          {debugMode ? "Ocultar" : "Mostrar"} Info de Debug
+        </button>
+
+        {debugMode && (
+          <div className="mt-3 bg-gray-100 p-3 rounded text-xs">
+            <h4 className="font-bold mb-2">Información del Insumo:</h4>
+            <pre>{JSON.stringify(insumo, null, 2)}</pre>
+            <h4 className="font-bold mb-2 mt-4">Datos del Formulario:</h4>
+            <pre>{JSON.stringify(formData, null, 2)}</pre>
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Información del Insumo (Solo lectura) */}
+        {/* Información del Insumo */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-semibold text-gray-800 mb-3">📦 Información del Insumo</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="form-group">
+              <label className="form-label">ID del Insumo</label>
+              <input type="text" value={insumo?._id || ""} className="form-input w-full bg-gray-100 text-xs" readOnly />
+            </div>
             <div className="form-group">
               <label className="form-label">Nombre del Insumo</label>
               <input
@@ -174,7 +196,6 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
                 readOnly
               />
             </div>
-
             <div className="form-group">
               <label className="form-label">Stock Actual</label>
               <input
@@ -204,33 +225,25 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
               required
             />
             {fieldErrors.fechaBaja && <p className="text-red-500 text-sm mt-1">{fieldErrors.fechaBaja}</p>}
-            <p className="text-xs text-gray-500 mt-1">La fecha debe ser actual o pasada</p>
           </div>
 
           <div className="form-group">
             <label htmlFor="cantidad" className="form-label">
               Cantidad a dar de baja <span className="text-pink-500">*</span>
             </label>
-            <div className="relative">
-              <input
-                type="number"
-                id="cantidad"
-                name="cantidad"
-                value={formData.cantidad}
-                onChange={handleInputChange}
-                min="1"
-                max={insumo?.stock || 1}
-                step="1"
-                className={`form-input w-full ${fieldErrors.cantidad ? "border-red-500" : ""}`}
-                placeholder="Cantidad"
-                required
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <span className="text-gray-400 text-sm">unidades</span>
-              </div>
-            </div>
+            <input
+              type="number"
+              id="cantidad"
+              name="cantidad"
+              value={formData.cantidad}
+              onChange={handleInputChange}
+              min="1"
+              max={insumo?.stock || 1}
+              step="1"
+              className={`form-input w-full ${fieldErrors.cantidad ? "border-red-500" : ""}`}
+              required
+            />
             {fieldErrors.cantidad && <p className="text-red-500 text-sm mt-1">{fieldErrors.cantidad}</p>}
-            <p className="text-xs text-gray-500 mt-1">Máximo disponible: {insumo?.stock || 0} unidades</p>
           </div>
         </div>
 
@@ -251,9 +264,6 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
             required
           />
           {fieldErrors.observaciones && <p className="text-red-500 text-sm mt-1">{fieldErrors.observaciones}</p>}
-          <p className="text-xs text-gray-500 mt-1">
-            Describa detalladamente el motivo de la baja (mínimo 10 caracteres)
-          </p>
         </div>
 
         {/* Resumen de la operación */}
@@ -275,11 +285,6 @@ const FormularioBajaInsumo = ({ insumo, onClose, onSubmit }) => {
               </span>
             </div>
           </div>
-          {stockRestante <= 0 && (
-            <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-xs">
-              ⚠️ <strong>Advertencia:</strong> Esta baja dejará el insumo sin stock disponible.
-            </div>
-          )}
         </div>
 
         <div className="btn-container mt-6 flex justify-end space-x-4">

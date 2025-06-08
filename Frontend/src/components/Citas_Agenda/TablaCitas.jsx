@@ -28,12 +28,11 @@ import {
   faSync,
   faClock,
   faUser,
-  faDollarSign,
   faMapMarkerAlt,
-  faExclamationTriangle,
   faBug,
   faTag,
   faPercent,
+  faBookOpen,
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 
@@ -589,24 +588,74 @@ const TablaCitas = () => {
     abrirDetallesCita(event.cita)
   }
 
-  // Componente personalizado para mostrar días con indicadores
+  // Componente personalizado para mostrar días con indicadores - IGUAL QUE EN AGENDA EMPLEADO
   const CustomDateCellWrapper = ({ children, value }) => {
     const fechaStr = moment(value).format("YYYY-MM-DD")
-    const citasEnEstaFecha = citasOriginales.filter((cita) => {
+    const hoy = moment().format("YYYY-MM-DD")
+    const esHoy = fechaStr === hoy
+    const esPasado = moment(value).isBefore(moment(), "day")
+    const esFuturo = moment(value).isAfter(moment(), "day")
+
+    let citasEnEstaFecha = citasOriginales.filter((cita) => {
       const fechaCita = moment(cita.fechacita).format("YYYY-MM-DD")
       return fechaCita === fechaStr
     })
 
+    // Aplicar filtros para el conteo
+    if (filtroEstado) {
+      citasEnEstaFecha = citasEnEstaFecha.filter((cita) => cita.estadocita === filtroEstado)
+    }
+
+    if (filtroEmpleado) {
+      citasEnEstaFecha = citasEnEstaFecha.filter(
+        (cita) => cita.nombreempleado && cita.nombreempleado._id === filtroEmpleado,
+      )
+    }
+
+    if (busqueda) {
+      const busquedaLower = busqueda.toLowerCase()
+      citasEnEstaFecha = citasEnEstaFecha.filter((cita) => {
+        const nombreCliente = obtenerNombreCliente(cita).toLowerCase()
+        const nombreEmpleado = obtenerNombreEmpleado(cita).toLowerCase()
+        return nombreCliente.includes(busquedaLower) || nombreEmpleado.includes(busquedaLower)
+      })
+    }
+
     const tieneCitas = citasEnEstaFecha.length > 0
 
+    // Contar citas por estado
+    const citasPendientes = citasEnEstaFecha.filter((c) => c.estadocita === "Pendiente").length
+    const citasConfirmadas = citasEnEstaFecha.filter((c) => c.estadocita === "Confirmada").length
+    const citasEnProgreso = citasEnEstaFecha.filter((c) => c.estadocita === "En Progreso").length
+    const citasCompletadas = citasEnEstaFecha.filter((c) => c.estadocita === "Completada").length
+
     return (
-      <div className={`custom-date-cell ${tieneCitas ? "has-appointments" : ""}`}>
+      <div
+        className={`tabla-citas-date-cell ${tieneCitas ? "has-appointments" : ""} ${esHoy ? "is-today" : ""} ${esPasado ? "is-past" : ""} ${esFuturo ? "is-future" : ""}`}
+      >
         {children}
         {tieneCitas && (
-          <div className="appointment-indicator">
-            <span className="appointment-count">{citasEnEstaFecha.length}</span>
+          <div className="tabla-citas-appointment-indicators">
+            <div className="tabla-citas-appointment-summary">
+              <span className="tabla-citas-total-count">{citasEnEstaFecha.length}</span>
+            </div>
+            <div className="tabla-citas-status-dots">
+              {citasPendientes > 0 && (
+                <div className="tabla-citas-status-dot pending" title={`${citasPendientes} Pendiente(s)`}></div>
+              )}
+              {citasConfirmadas > 0 && (
+                <div className="tabla-citas-status-dot confirmed" title={`${citasConfirmadas} Confirmada(s)`}></div>
+              )}
+              {citasEnProgreso > 0 && (
+                <div className="tabla-citas-status-dot in-progress" title={`${citasEnProgreso} En Progreso`}></div>
+              )}
+              {citasCompletadas > 0 && (
+                <div className="tabla-citas-status-dot completed" title={`${citasCompletadas} Completada(s)`}></div>
+              )}
+            </div>
           </div>
         )}
+        {esHoy && <div className="tabla-citas-today-marker">HOY</div>}
       </div>
     )
   }
@@ -700,7 +749,6 @@ const TablaCitas = () => {
               <FontAwesomeIcon icon={faSync} className="tabla-citas-btn-icon" />
               <span>Actualizar</span>
             </button>
-            
           </div>
 
           <div className="tabla-citas-filters">
@@ -767,9 +815,32 @@ const TablaCitas = () => {
             </div>
           </div>
 
+          {/* Leyenda de estados - NUEVA SECCIÓN */}
+          <div className="tabla-citas-legend">
+            <div className="tabla-citas-legend-item">
+              <div className="tabla-citas-legend-dot pending"></div>
+              <span>Pendiente</span>
+            </div>
+            <div className="tabla-citas-legend-item">
+              <div className="tabla-citas-legend-dot confirmed"></div>
+              <span>Confirmada</span>
+            </div>
+            <div className="tabla-citas-legend-item">
+              <div className="tabla-citas-legend-dot in-progress"></div>
+              <span>En Progreso</span>
+            </div>
+            <div className="tabla-citas-legend-item">
+              <div className="tabla-citas-legend-dot completed"></div>
+              <span>Completada</span>
+            </div>
+          </div>
+
           <div className="tabla-citas-info-box">
             <FontAwesomeIcon icon={faInfoCircle} className="tabla-citas-info-icon" />
-            <span>Haz clic en cualquier día para ver las citas programadas</span>
+            <span>
+              Haz clic en cualquier día para ver las citas programadas. Los puntos de colores indican el estado de las
+              citas.
+            </span>
           </div>
         </div>
 
@@ -785,12 +856,13 @@ const TablaCitas = () => {
             <div className="tabla-citas-calendar">
               <Calendar
                 localizer={localizer}
-                events={[]} // No mostramos eventos en el calendario
+                events={citas} // No mostramos eventos en el calendario
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: 600 }}
                 selectable
                 onSelectSlot={manejarSeleccionFecha}
+                onSelectEvent={manejarSeleccionCita}
                 defaultView="month"
                 views={["month"]}
                 defaultDate={fechaSeleccionada || new Date()}
@@ -816,7 +888,7 @@ const TablaCitas = () => {
           isOpen={debugModalIsOpen}
           onRequestClose={cerrarDebugModal}
           className="react-modal-content-large"
-          overlayClassName="react-modal-overlay"
+          overlayClassName="react-modal-overlay z-[9999]"
           contentLabel="Información de Debug"
         >
           <div className="p-6">
@@ -882,176 +954,302 @@ const TablaCitas = () => {
           </div>
         </Modal>
 
-        {/* Modal para citas del día */}
+        {/* Modal para citas del día - VERSIÓN COMPACTA */}
         <Modal
           isOpen={citasDiaModalIsOpen}
           onRequestClose={cerrarCitasDelDia}
-          className="react-modal-content-large"
-          overlayClassName="react-modal-overlay"
+          className="fixed inset-0 flex items-center justify-center z-[10000] p-2"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[9999]"
           contentLabel="Citas del Día"
         >
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                <FontAwesomeIcon icon={faCalendarAlt} className="mr-3 text-pink-600" />
-                Citas del {fechaSeleccionada && moment(fechaSeleccionada).format("DD [de] MMMM [de] YYYY")}
-              </h2>
-              <button onClick={cerrarCitasDelDia} className="text-gray-500 hover:text-gray-700 transition-colors">
-                <FontAwesomeIcon icon={faTimes} size="lg" />
-              </button>
-            </div>
-
-            {citasDelDia.length === 0 ? (
-              <div className="text-center py-12">
-                <FontAwesomeIcon icon={faCalendarAlt} size="3x" className="text-gray-300 mb-4" />
-                <p className="text-gray-500 text-lg">No hay citas programadas para este día</p>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            {/* Header compacto */}
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faBookOpen} className="text-white text-sm" />
+                  <div>
+                    <h2 className="text-sm font-bold text-white">
+                      {fechaSeleccionada && moment(fechaSeleccionada).format("DD MMM YYYY")}
+                    </h2>
+                    <p className="text-purple-100 text-xs">Agenda del día</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => {
-                    cerrarCitasDelDia()
-                    abrirFormulario(fechaSeleccionada)
-                  }}
-                  className="tabla-citas-btn tabla-citas-btn-primary mt-4"
+                  onClick={cerrarCitasDelDia}
+                  className="text-white hover:text-gray-200 transition-colors p-1 hover:bg-white hover:bg-opacity-20 rounded"
                 >
-                  <FontAwesomeIcon icon={faCalendarPlus} className="tabla-citas-btn-icon" />
-                  <span>Crear Nueva Cita</span>
+                  <FontAwesomeIcon icon={faTimes} />
                 </button>
               </div>
-            ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {citasDelDia
-                  .sort((a, b) => (a.horacita || "").localeCompare(b.horacita || ""))
-                  .map((cita, index) => {
-                    const nombreCliente = obtenerNombreCliente(cita)
-                    const nombreEmpleado = obtenerNombreEmpleado(cita)
-                    const tieneProblemasCliente = nombreCliente === "Cliente no disponible"
-                    const tieneProblemasEmpleado = nombreEmpleado === "Empleado no disponible"
+            </div>
 
-                    // Calcular precios con descuentos
-                    const precios = calcularPreciosConDescuento(cita)
-
-                    return (
-                      <div
-                        key={cita._id}
-                        className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
-                          tieneProblemasCliente || tieneProblemasEmpleado
-                            ? "border-orange-200 bg-orange-50"
-                            : "border-gray-200"
-                        }`}
-                        onClick={() => {
-                          cerrarCitasDelDia()
-                          abrirDetallesCita(cita)
-                        }}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <FontAwesomeIcon icon={faClock} className="text-pink-600" />
-                              <span className="font-semibold text-lg">{cita.horacita || "Sin hora"}</span>
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium border ${getEstadoColor(cita.estadocita)}`}
-                              >
-                                {cita.estadocita}
-                              </span>
-                              {(tieneProblemasCliente || tieneProblemasEmpleado) && (
-                                <FontAwesomeIcon
-                                  icon={faExclamationTriangle}
-                                  className="text-orange-500"
-                                  title="Datos incompletos"
-                                />
-                              )}
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <FontAwesomeIcon icon={faUser} className="text-gray-500" />
-                                  <span className={`font-medium ${tieneProblemasCliente ? "text-orange-600" : ""}`}>
-                                    {nombreCliente}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-500" />
-                                  <span className={`text-gray-600 ${tieneProblemasEmpleado ? "text-orange-600" : ""}`}>
-                                    {nombreEmpleado}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <FontAwesomeIcon icon={faDollarSign} className="text-green-600" />
-                                  <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">Precio original:</span>
-                                      <span
-                                        className={
-                                          precios.tieneDescuentos ? "text-gray-400 line-through" : "text-gray-700"
-                                        }
-                                      >
-                                        ${precios.subtotal.toFixed(2)}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">Precio final:</span>
-                                      <span className="font-bold text-green-600">
-                                        ${(precios.total || cita.montototal || 0).toFixed(2)}
-                                      </span>
-                                    </div>
-                                    {precios.tieneDescuentos && (
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <FontAwesomeIcon icon={faTag} className="text-green-500 text-xs" />
-                                        <span className="text-xs text-green-600">
-                                          Ahorro: ${precios.descuentoTotal.toFixed(2)} (
-                                          {precios.porcentajeDescuento.toFixed(1)}%)
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="text-sm text-gray-600">
-                                  {cita.servicios && cita.servicios.length > 0
-                                    ? cita.servicios.map((s) => s.nombreServicio || s.nombreservicio).join(", ")
-                                    : "Sin servicios"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              cerrarCitasDelDia()
-                              abrirFormulario(new Date(cita.fechacita), cita)
-                            }}
-                            className="ml-4 p-2 text-gray-400 hover:text-pink-600 transition-colors"
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
+            {/* Estadísticas compactas */}
+            {citasDelDia.length > 0 && (
+              <div className="bg-gray-50 px-3 py-2 border-b">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-gray-700">
+                      {citasDelDia.length} cita{citasDelDia.length !== 1 ? "s" : ""}
+                    </span>
+                    <div className="flex gap-1">
+                      {citasDelDia.filter((c) => c.estadocita === "Pendiente").length > 0 && (
+                        <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded border">
+                          {citasDelDia.filter((c) => c.estadocita === "Pendiente").length}P
+                        </span>
+                      )}
+                      {citasDelDia.filter((c) => c.estadocita === "Confirmada").length > 0 && (
+                        <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded border">
+                          {citasDelDia.filter((c) => c.estadocita === "Confirmada").length}C
+                        </span>
+                      )}
+                      {citasDelDia.filter((c) => c.estadocita === "En Progreso").length > 0 && (
+                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded border">
+                          {citasDelDia.filter((c) => c.estadocita === "En Progreso").length}EP
+                        </span>
+                      )}
+                      {citasDelDia.filter((c) => c.estadocita === "Completada").length > 0 && (
+                        <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded border">
+                          {citasDelDia.filter((c) => c.estadocita === "Completada").length}✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      cerrarCitasDelDia()
+                      abrirFormulario(fechaSeleccionada)
+                    }}
+                    className="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faCalendarPlus} className="mr-1" />
+                    Nueva
+                  </button>
+                </div>
               </div>
             )}
 
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-              <span className="text-sm text-gray-500">
-                {citasDelDia.length} cita{citasDelDia.length !== 1 ? "s" : ""} programada
-                {citasDelDia.length !== 1 ? "s" : ""}
-              </span>
-              <button
-                onClick={() => {
-                  cerrarCitasDelDia()
-                  abrirFormulario(fechaSeleccionada)
-                }}
-                className="tabla-citas-btn tabla-citas-btn-primary"
-              >
-                <FontAwesomeIcon icon={faCalendarPlus} className="tabla-citas-btn-icon" />
-                <span>Nueva Cita</span>
-              </button>
+            {/* Contenido principal compacto */}
+            <div className="p-3">
+              {citasDelDia.length === 0 ? (
+                <div className="text-center py-8">
+                  <FontAwesomeIcon icon={faCalendarAlt} size="2x" className="text-gray-300 mb-3" />
+                  <p className="text-gray-500 mb-4">No hay citas programadas</p>
+                  <button
+                    onClick={() => {
+                      cerrarCitasDelDia()
+                      abrirFormulario(fechaSeleccionada)
+                    }}
+                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faCalendarPlus} className="mr-2" />
+                    Crear Cita
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
+                  {/* Página Izquierda */}
+                  <div className="space-y-2 pr-2 border-r border-gray-200">
+                    <div className="text-center py-1 bg-purple-50 rounded text-xs font-medium text-purple-700">
+                      📖 Página 1
+                    </div>
+                    {citasDelDia
+                      .sort((a, b) => (a.horacita || "").localeCompare(b.horacita || ""))
+                      .filter((_, index) => index % 2 === 0)
+                      .map((cita) => {
+                        const nombreCliente = obtenerNombreCliente(cita)
+                        const nombreEmpleado = obtenerNombreEmpleado(cita)
+                        const precios = calcularPreciosConDescuento(cita)
+
+                        return (
+                          <div key={cita._id} className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                            {/* Header mini */}
+                            <div className="bg-gray-50 px-2 py-1 border-b flex justify-between items-center">
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faClock} className="text-purple-600 text-xs" />
+                                <span className="font-bold text-xs">{cita.horacita || "Sin hora"}</span>
+                                <span
+                                  className={`px-1 py-0.5 rounded text-xs font-medium ${getEstadoColor(cita.estadocita)}`}
+                                >
+                                  {cita.estadocita === "Pendiente"
+                                    ? "P"
+                                    : cita.estadocita === "Confirmada"
+                                      ? "C"
+                                      : cita.estadocita === "En Progreso"
+                                        ? "EP"
+                                        : cita.estadocita === "Completada"
+                                          ? "✓"
+                                          : cita.estadocita.charAt(0)}
+                                </span>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    cerrarCitasDelDia()
+                                    abrirDetallesCita(cita)
+                                  }}
+                                  className="p-0.5 text-blue-600 hover:text-blue-700 transition-colors"
+                                  title="Ver detalles"
+                                >
+                                  <FontAwesomeIcon icon={faInfoCircle} className="text-xs" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    cerrarCitasDelDia()
+                                    abrirFormulario(new Date(cita.fechacita), cita)
+                                  }}
+                                  className="p-0.5 text-gray-400 hover:text-purple-600 transition-colors"
+                                  title="Editar"
+                                >
+                                  <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Contenido mini */}
+                            <div className="p-2 space-y-1">
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faUser} className="text-gray-400 text-xs w-2" />
+                                <span className="font-medium text-xs truncate">{nombreCliente}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400 text-xs w-2" />
+                                <span className="text-gray-600 text-xs truncate">{nombreEmpleado}</span>
+                              </div>
+                              <div className="flex items-start gap-1">
+                                <FontAwesomeIcon icon={faTag} className="text-gray-400 text-xs w-2 mt-0.5" />
+                                <span className="text-gray-600 text-xs leading-tight">
+                                  {cita.servicios && cita.servicios.length > 0
+                                    ? cita.servicios.map((s) => s.nombreServicio || s.nombreservicio).join(", ")
+                                    : "Sin servicios"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                                <span className="text-xs text-gray-500">Total:</span>
+                                <span className="font-bold text-xs text-gray-700">
+                                  $
+                                  {Number(precios.total || cita.montototal || 0).toLocaleString("es-ES", {
+                                    minimumFractionDigits: 0,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+
+                  {/* Página Derecha */}
+                  <div className="space-y-2 pl-2">
+                    <div className="text-center py-1 bg-pink-50 rounded text-xs font-medium text-pink-700">
+                      📖 Página 2
+                    </div>
+                    {citasDelDia
+                      .sort((a, b) => (a.horacita || "").localeCompare(b.horacita || ""))
+                      .filter((_, index) => index % 2 === 1)
+                      .map((cita) => {
+                        const nombreCliente = obtenerNombreCliente(cita)
+                        const nombreEmpleado = obtenerNombreEmpleado(cita)
+                        const precios = calcularPreciosConDescuento(cita)
+
+                        return (
+                          <div key={cita._id} className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                            {/* Header mini */}
+                            <div className="bg-gray-50 px-2 py-1 border-b flex justify-between items-center">
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faClock} className="text-pink-600 text-xs" />
+                                <span className="font-bold text-xs">{cita.horacita || "Sin hora"}</span>
+                                <span
+                                  className={`px-1 py-0.5 rounded text-xs font-medium ${getEstadoColor(cita.estadocita)}`}
+                                >
+                                  {cita.estadocita === "Pendiente"
+                                    ? "P"
+                                    : cita.estadocita === "Confirmada"
+                                      ? "C"
+                                      : cita.estadocita === "En Progreso"
+                                        ? "EP"
+                                        : cita.estadocita === "Completada"
+                                          ? "✓"
+                                          : cita.estadocita.charAt(0)}
+                                </span>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => {
+                                    cerrarCitasDelDia()
+                                    abrirDetallesCita(cita)
+                                  }}
+                                  className="p-0.5 text-blue-600 hover:text-blue-700 transition-colors"
+                                  title="Ver detalles"
+                                >
+                                  <FontAwesomeIcon icon={faInfoCircle} className="text-xs" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    cerrarCitasDelDia()
+                                    abrirFormulario(new Date(cita.fechacita), cita)
+                                  }}
+                                  className="p-0.5 text-gray-400 hover:text-pink-600 transition-colors"
+                                  title="Editar"
+                                >
+                                  <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Contenido mini */}
+                            <div className="p-2 space-y-1">
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faUser} className="text-gray-400 text-xs w-2" />
+                                <span className="font-medium text-xs truncate">{nombreCliente}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-400 text-xs w-2" />
+                                <span className="text-gray-600 text-xs truncate">{nombreEmpleado}</span>
+                              </div>
+                              <div className="flex items-start gap-1">
+                                <FontAwesomeIcon icon={faTag} className="text-gray-400 text-xs w-2 mt-0.5" />
+                                <span className="text-gray-600 text-xs leading-tight">
+                                  {cita.servicios && cita.servicios.length > 0
+                                    ? cita.servicios.map((s) => s.nombreServicio || s.nombreservicio).join(", ")
+                                    : "Sin servicios"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center pt-1 border-t border-gray-100">
+                                <span className="text-xs text-gray-500">Total:</span>
+                                <span className="font-bold text-xs text-gray-700">
+                                  $
+                                  {Number(precios.total || cita.montototal || 0).toLocaleString("es-ES", {
+                                    minimumFractionDigits: 0,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Footer compacto */}
+            {citasDelDia.length > 0 && (
+              <div className="bg-gray-50 px-3 py-2 border-t">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-600">Total del día</span>
+                  <span className="font-bold text-gray-800">
+                    $
+                    {citasDelDia
+                      .reduce((sum, cita) => {
+                        const precios = calcularPreciosConDescuento(cita)
+                        return sum + precios.total
+                      }, 0)
+                      .toLocaleString("es-ES", { minimumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </Modal>
 
@@ -1060,7 +1258,7 @@ const TablaCitas = () => {
           isOpen={formModalIsOpen}
           onRequestClose={cerrarFormulario}
           className="react-modal-content"
-          overlayClassName="react-modal-overlay"
+          overlayClassName="react-modal-overlay z-[9999]"
           contentLabel="Formulario de Cita"
         >
           <div className="p-6">
@@ -1084,7 +1282,7 @@ const TablaCitas = () => {
           isOpen={detalleModalIsOpen}
           onRequestClose={cerrarDetallesCita}
           className="react-modal-content"
-          overlayClassName="react-modal-overlay"
+          overlayClassName="react-modal-overlay z-[9999]"
           contentLabel="Detalles de Cita"
         >
           <div className="p-6">
@@ -1155,26 +1353,30 @@ const TablaCitas = () => {
                                   : "text-gray-700"
                               }
                             >
-                              ${calcularPreciosConDescuento(citaSeleccionada).subtotal.toFixed(2)}
+                              $
+                              {Number(calcularPreciosConDescuento(citaSeleccionada).subtotal).toLocaleString("es-ES", {
+                                minimumFractionDigits: 2,
+                              })}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">Precio final:</span>
                             <span className="text-lg font-bold text-green-600">
                               $
-                              {(
-                                calcularPreciosConDescuento(citaSeleccionada).total ||
-                                citaSeleccionada.montototal ||
-                                0
-                              ).toFixed(2)}
+                              {Number(
+                                calcularPreciosConDescuento(citaSeleccionada).total || citaSeleccionada.montototal || 0,
+                              ).toLocaleString("es-ES", { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                           {calcularPreciosConDescuento(citaSeleccionada).tieneDescuentos && (
                             <div className="flex items-center gap-1 mt-1">
                               <FontAwesomeIcon icon={faTag} className="text-green-500 text-xs" />
                               <span className="text-xs text-green-600">
-                                Ahorro: ${calcularPreciosConDescuento(citaSeleccionada).descuentoTotal.toFixed(2)} ($
-                                {calcularPreciosConDescuento(citaSeleccionada).porcentajeDescuento.toFixed(1)}%)
+                                Ahorro: $
+                                {Number(calcularPreciosConDescuento(citaSeleccionada).descuentoTotal).toLocaleString(
+                                  "es-ES",
+                                  { minimumFractionDigits: 2 },
+                                )}
                               </span>
                             </div>
                           )}

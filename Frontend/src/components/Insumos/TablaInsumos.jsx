@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import Modal from "react-modal";
-import FormularioInsumo from "./FormularioInsumo";
-import FormularioBajaInsumo from "./FormularioBajaInsumo";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+"use client"
+
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Modal from "react-modal"
+import FormularioInsumo from "./FormularioInsumo"
+import FormularioBajaInsumo from "./FormularioBajaInsumo"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faPlus,
   faEdit,
@@ -14,153 +16,228 @@ import {
   faSync,
   faPrint,
   faToggleOn,
-  faToggleOff
-} from "@fortawesome/free-solid-svg-icons";
-import Swal from "sweetalert2";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-// import "./tablaInsumos.css";
-import "../../styles/tablas.css";
+  faToggleOff,
+} from "@fortawesome/free-solid-svg-icons"
+import Swal from "sweetalert2"
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
+import "../../styles/tablas.css"
 
 // Configura el contenedor del modal
-Modal.setAppElement("#root");
+Modal.setAppElement("#root")
 
 const TablaInsumos = () => {
-  const [insumos, setInsumos] = useState([]);
-  const [insumoSeleccionado, setInsumoSeleccionado] = useState(null);
-  const [formModalIsOpen, setFormModalIsOpen] = useState(false);
-  const [bajaModalIsOpen, setBajaModalIsOpen] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const insumosPorPagina = 5;
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [exportando, setExportando] = useState(false);
+  const [insumos, setInsumos] = useState([])
+  const [insumoSeleccionado, setInsumoSeleccionado] = useState(null)
+  const [formModalIsOpen, setFormModalIsOpen] = useState(false)
+  const [bajaModalIsOpen, setBajaModalIsOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState("")
+  const [paginaActual, setPaginaActual] = useState(1)
+  const insumosPorPagina = 5
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [exportando, setExportando] = useState(false)
 
   useEffect(() => {
-    obtenerInsumos();
-  }, []);
+    obtenerInsumos()
+  }, [])
 
   const obtenerInsumos = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       if (!token) {
         await Swal.fire({
           title: "Error",
           text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        });
-        return;
+        })
+        return
       }
 
-      const respuesta = await axios.get(
-        "https://gitbf.onrender.com/api/insumos",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setInsumos(respuesta.data || []);
+      const respuesta = await axios.get("https://gitbf.onrender.com/api/insumos", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      setInsumos(Array.isArray(respuesta.data) ? respuesta.data : [])
     } catch (error) {
-      console.error("Error al obtener los insumos:", error);
-      setError(
-        "No se pudieron cargar los insumos. Por favor, intenta de nuevo."
-      );
+      console.error("Error al obtener los insumos:", error)
+      setError("No se pudieron cargar los insumos. Por favor, intenta de nuevo.")
       Swal.fire({
         title: "Error",
         text: "No tienes permiso para estar aquí. Tu token no es válido.",
         icon: "error",
         confirmButtonColor: "#db2777",
-      });
+      })
+      setInsumos([])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const abrirFormulario = (insumo) => {
-    setInsumoSeleccionado(insumo);
-    setFormModalIsOpen(true);
-  };
+    setInsumoSeleccionado(insumo)
+    setFormModalIsOpen(true)
+  }
 
   const cerrarFormulario = () => {
-    setFormModalIsOpen(false);
-    setInsumoSeleccionado(null);
-  };
+    setFormModalIsOpen(false)
+    setInsumoSeleccionado(null)
+  }
 
   const abrirModalBaja = (insumo) => {
-    setInsumoSeleccionado(insumo);
-    setBajaModalIsOpen(true);
-  };
+    setInsumoSeleccionado(insumo)
+    setBajaModalIsOpen(true)
+  }
 
   const cerrarModalBaja = () => {
-    setBajaModalIsOpen(false);
-    setInsumoSeleccionado(null);
-  };
+    setBajaModalIsOpen(false)
+    setInsumoSeleccionado(null)
+  }
 
+  // FUNCIÓN CORREGIDA para manejar la baja de insumos
   const manejarBajaInsumo = async (datos) => {
     try {
-      const token = localStorage.getItem("token");
+      console.log("🔄 Iniciando proceso de baja...")
+      console.log("📋 Datos recibidos:", datos)
+
+      const token = localStorage.getItem("token")
       if (!token) {
-        await Swal.fire({
-          title: "Error",
-          text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
-          icon: "error",
-          confirmButtonColor: "#db2777",
-        });
-        return;
+        throw new Error("No se encontró el token de autenticación")
       }
 
-      // Crear la baja de producto
-      await axios.post("https://gitbf.onrender.com/api/baja-productos", datos, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      Swal.fire({
+        title: "Procesando",
+        text: "Dando de baja el insumo...",
+        icon: "info",
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading()
         },
-      });
+      })
 
-      // Actualizar el stock del insumo
+      const datosParaEnviar = {
+        productoId: datos.productoId || datos.insumoId,
+        producto: datos.producto || insumoSeleccionado?.nombreInsumo,
+        fechaBaja: datos.fechaBaja,
+        cantidad: Number(datos.cantidad),
+        observaciones: datos.observaciones,
+        tipo: "insumo",
+        usuario: localStorage.getItem("userId") || "sistema",
+      }
+
+      console.log("🚀 Enviando datos:", datosParaEnviar)
+
+      try {
+        const response = await axios.post("https://gitbf.onrender.com/api/baja-productos", datosParaEnviar, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        })
+
+        console.log("✅ Respuesta de baja exitosa:", response.data)
+      } catch (bajaError) {
+        console.error("❌ Error específico en baja:", bajaError)
+
+        if (bajaError.response && bajaError.response.status === 400) {
+          console.log("🔄 Intentando con estructura alternativa...")
+
+          const datosAlternativos = {
+            insumoId: datos.productoId || datos.insumoId,
+            nombreInsumo: datos.producto || insumoSeleccionado?.nombreInsumo,
+            fechaBaja: datos.fechaBaja,
+            cantidad: Number(datos.cantidad),
+            motivo: datos.observaciones,
+          }
+
+          console.log("🚀 Enviando datos alternativos:", datosAlternativos)
+
+          await axios.post("https://gitbf.onrender.com/api/baja-productos", datosAlternativos, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+        } else {
+          throw bajaError
+        }
+      }
+
+      console.log("🔄 Actualizando stock del insumo...")
       const insumoActualizado = {
         ...insumoSeleccionado,
         stock: insumoSeleccionado.stock - datos.cantidad,
-      };
+      }
 
-      await axios.put(
-        `https://gitbf.onrender.com/api/insumos/${insumoSeleccionado._id}`,
-        insumoActualizado,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.put(`https://gitbf.onrender.com/api/insumos/${insumoSeleccionado._id}`, insumoActualizado, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-      // Actualizar la lista de insumos
-      obtenerInsumos();
-      cerrarModalBaja();
+      console.log("✅ Stock actualizado correctamente")
+
+      obtenerInsumos()
+      cerrarModalBaja()
+
       Swal.fire({
-        title: "Éxito",
-        text: "Insumo dado de baja correctamente",
+        title: "¡Éxito!",
+        text: "El insumo ha sido dado de baja correctamente",
         icon: "success",
         confirmButtonColor: "#db2777",
-      });
+      })
     } catch (error) {
-      console.error("Error al dar de baja el insumo:", error);
+      console.error("❌ Error completo al dar de baja:", error)
+
+      let mensajeError = "No se pudo dar de baja el insumo"
+
+      if (error.response) {
+        const status = error.response.status
+        const data = error.response.data
+
+        switch (status) {
+          case 400:
+            mensajeError = `Error de validación: ${data.message || "Los datos enviados no son válidos"}`
+            break
+          case 401:
+            mensajeError = "Su sesión ha expirado. Por favor, inicie sesión nuevamente"
+            break
+          case 403:
+            mensajeError = "No tiene permisos para realizar esta operación"
+            break
+          case 404:
+            mensajeError = "El insumo no fue encontrado"
+            break
+          case 500:
+            mensajeError = "Error interno del servidor. Intente nuevamente"
+            break
+          default:
+            mensajeError = data.message || `Error ${status}: ${error.response.statusText}`
+        }
+      } else if (error.request) {
+        mensajeError = "No se pudo conectar con el servidor. Verifique su conexión"
+      }
+
       Swal.fire({
         title: "Error",
-        text: "No se pudo dar de baja el insumo",
+        text: mensajeError,
         icon: "error",
         confirmButtonColor: "#db2777",
-      });
+      })
     }
-  };
+  }
 
   const manejarInsumoActualizado = () => {
-    obtenerInsumos();
-    cerrarFormulario();
-  };
+    obtenerInsumos()
+    cerrarFormulario()
+  }
 
   const manejarEliminarInsumo = async (id) => {
     const result = await Swal.fire({
@@ -172,48 +249,48 @@ const TablaInsumos = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminarlo!",
       cancelButtonText: "Cancelar",
-    });
+    })
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token")
         if (!token) {
           await Swal.fire({
             title: "Error",
             text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
             icon: "error",
             confirmButtonColor: "#db2777",
-          });
-          return;
+          })
+          return
         }
 
         await axios.delete(`https://gitbf.onrender.com/api/insumos/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-        obtenerInsumos();
+        })
+        obtenerInsumos()
         Swal.fire({
           title: "Eliminado!",
           text: "El insumo ha sido eliminado.",
           icon: "success",
           confirmButtonColor: "#db2777",
-        });
+        })
       } catch (error) {
-        console.error("Error al eliminar el insumo:", error);
+        console.error("Error al eliminar el insumo:", error)
         Swal.fire({
           title: "Error",
           text: "No se pudo eliminar el insumo.",
           icon: "error",
           confirmButtonColor: "#db2777",
-        });
+        })
       }
     }
-  };
+  }
 
   const manejarToggleEstado = async (id, estadoActual) => {
-    const nuevoEstado = !estadoActual;
-    const accion = nuevoEstado ? "activar" : "desactivar";
+    const nuevoEstado = !estadoActual
+    const accion = nuevoEstado ? "activar" : "desactivar"
 
     const result = await Swal.fire({
       title: `¿Estás seguro?`,
@@ -224,152 +301,132 @@ const TablaInsumos = () => {
       cancelButtonColor: "#6c757d",
       confirmButtonText: `Sí, ${accion}!`,
       cancelButtonText: "Cancelar",
-    });
+    })
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token")
         if (!token) {
           await Swal.fire({
             title: "Error",
             text: "No se encontró el token de autenticación. Por favor, inicia sesión.",
             icon: "error",
             confirmButtonColor: "#db2777",
-          });
-          return;
+          })
+          return
         }
 
         const insumoActualizado = {
           ...insumos.find((insumo) => insumo._id === id),
           estado: nuevoEstado,
-        };
+        }
 
-        await axios.put(
-          `https://gitbf.onrender.com/api/insumos/${id}`,
-          insumoActualizado,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await axios.put(`https://gitbf.onrender.com/api/insumos/${id}`, insumoActualizado, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
 
-        // Actualizar el estado local
-        setInsumos(
-          insumos.map((insumo) =>
-            insumo._id === id ? { ...insumo, estado: nuevoEstado } : insumo
-          )
-        );
+        setInsumos(insumos.map((insumo) => (insumo._id === id ? { ...insumo, estado: nuevoEstado } : insumo)))
 
         Swal.fire({
           icon: "success",
           title: `${nuevoEstado ? "Activado" : "Desactivado"}!`,
-          text: `El insumo ha sido ${
-            nuevoEstado ? "activado" : "desactivado"
-          }.`,
+          text: `El insumo ha sido ${nuevoEstado ? "activado" : "desactivado"}.`,
           confirmButtonColor: "#db2777",
-        });
+        })
       } catch (error) {
-        console.error(`Error al ${accion} el insumo:`, error);
+        console.error(`Error al ${accion} el insumo:`, error)
         Swal.fire({
           icon: "error",
           title: "Error",
           text: `No se pudo ${accion} el insumo`,
           confirmButtonColor: "#db2777",
-        });
+        })
       }
     }
-  };
+  }
 
-  // Funciones de búsqueda
   const handleBusquedaChange = (e) => {
-    setBusqueda(e.target.value);
-  };
+    setBusqueda(e.target.value)
+  }
 
   const insumosFiltrados = insumos.filter((insumo) =>
-    insumo.nombreInsumo.toLowerCase().includes(busqueda.toLowerCase())
-  );
+    insumo.nombreInsumo?.toLowerCase().includes(busqueda.toLowerCase()),
+  )
 
-  // Funciones de paginación
-  const indiceUltimoInsumo = paginaActual * insumosPorPagina;
-  const indicePrimerInsumo = indiceUltimoInsumo - insumosPorPagina;
-  const insumosActuales = insumosFiltrados.slice(
-    indicePrimerInsumo,
-    indiceUltimoInsumo
-  );
+  const indiceUltimoInsumo = paginaActual * insumosPorPagina
+  const indicePrimerInsumo = indiceUltimoInsumo - insumosPorPagina
+  const insumosActuales = insumosFiltrados.slice(indicePrimerInsumo, indiceUltimoInsumo)
 
   const cambiarPagina = (numeroPagina) => {
-    setPaginaActual(numeroPagina);
-  };
+    setPaginaActual(numeroPagina)
+  }
 
-  const paginasTotales = Math.ceil(insumosFiltrados.length / insumosPorPagina);
+  const paginasTotales = Math.ceil(insumosFiltrados.length / insumosPorPagina)
 
   const paginaAnterior = () => {
-    if (paginaActual > 1) setPaginaActual(paginaActual - 1);
-  };
+    if (paginaActual > 1) setPaginaActual(paginaActual - 1)
+  }
 
   const paginaSiguiente = () => {
-    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1);
-  };
+    if (paginaActual < paginasTotales) setPaginaActual(paginaActual + 1)
+  }
 
-  // Función para exportar a Excel
   const exportarExcel = async () => {
     try {
-      setExportando(true);
+      setExportando(true)
 
-      // Mostrar notificación de inicio de descarga
       const toast = Swal.mixin({
         toast: true,
         position: "top-end",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,
-      });
+      })
 
       toast.fire({
         icon: "info",
         title: "Preparando la descarga...",
-      });
+      })
 
       const datosExportar = insumos.map((insumo) => ({
         "Nombre del Insumo": insumo.nombreInsumo,
         Stock: insumo.stock,
         Precio: `$${insumo.precio}`,
         Estado: insumo.estado ? "Disponible" : "No disponible",
-      }));
+      }))
 
-      const ws = XLSX.utils.json_to_sheet(datosExportar);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Insumos");
+      const ws = XLSX.utils.json_to_sheet(datosExportar)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, "Insumos")
 
-      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" })
       const data = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
+      })
 
-      saveAs(data, "Insumos.xlsx");
+      saveAs(data, "Insumos.xlsx")
 
-      // Mostrar notificación de éxito
       toast.fire({
         icon: "success",
         title: "Archivo descargado correctamente",
-      });
+      })
     } catch (error) {
-      console.error("Error al exportar a Excel:", error);
+      console.error("Error al exportar a Excel:", error)
       Swal.fire({
         title: "Error",
         text: "No se pudo exportar a Excel",
         icon: "error",
         confirmButtonColor: "#db2777",
-      });
+      })
     } finally {
-      setExportando(false);
+      setExportando(false)
     }
-  };
+  }
 
-  // Función para imprimir
   const imprimirTabla = () => {
-    const printWindow = window.open("", "_blank");
+    const printWindow = window.open("", "_blank")
 
     printWindow.document.write(`
       <html>
@@ -446,14 +503,12 @@ const TablaInsumos = () => {
                   <td>${insumo.stock}</td>
                   <td>$${insumo.precio}</td>
                   <td>
-                    <span class="estado ${
-                      insumo.estado ? "disponible" : "no-disponible"
-                    }">
+                    <span class="estado ${insumo.estado ? "disponible" : "no-disponible"}">
                       ${insumo.estado ? "Disponible" : "No disponible"}
                     </span>
                   </td>
                 </tr>
-              `
+              `,
                 )
                 .join("")}
             </tbody>
@@ -464,17 +519,15 @@ const TablaInsumos = () => {
           </div>
         </body>
       </html>
-    `);
+    `)
 
-    printWindow.document.close();
-    printWindow.focus();
+    printWindow.document.close()
+    printWindow.focus()
 
-    // Esperar a que los estilos se carguen
     setTimeout(() => {
-      printWindow.print();
-      // printWindow.close()
-    }, 500);
-  };
+      printWindow.print()
+    }, 500)
+  }
 
   if (isLoading) {
     return (
@@ -484,16 +537,13 @@ const TablaInsumos = () => {
           <p className="mt-4 text-foreground">Cargando insumos...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
       <div className="p-6">
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -505,23 +555,20 @@ const TablaInsumos = () => {
           Reintentar
         </button>
       </div>
-    );
+    )
   }
 
   return (
-    // Eliminado transition-all duration-500 para evitar transiciones globales
     <div className="content">
-      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
-        Gestión de Insumos
-      </h2>
+      <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">Gestión de Insumos</h2>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 px-4">
         <div className="flex space-x-2">
           <button
             className="btn-add"
             onClick={() => {
-              setFormModalIsOpen(true);
-              setInsumoSeleccionado(null);
+              setFormModalIsOpen(true)
+              setInsumoSeleccionado(null)
             }}
             title="Agregar nuevo insumo"
           >
@@ -568,7 +615,6 @@ const TablaInsumos = () => {
         <table className="universal-tabla-moderna w-full">
           <thead className="bg-pink-200 text-black dark:card-gradient-4">
             <tr className="text-foreground">
-              {/* Cambiado dark:hover:bg-gray-500/50 por dark:bg-gray-500/50 para evitar efectos hover */}
               <th className="dark:bg-gray-500/50" style={{ width: "20%" }}>
                 Nombre del Insumo
               </th>
@@ -596,16 +642,13 @@ const TablaInsumos = () => {
                   <td>
                     <span
                       className={`universal-estado-badge ${
-                        insumo.estado 
-                        ? "activo bg-emerald-300/70 dark:bg-emerald-500"
-                          : "inactivo bg-red-500/80"
+                        insumo.estado ? "activo bg-emerald-300/70 dark:bg-emerald-500" : "inactivo bg-red-500/80"
                       }`}
                     >
                       {insumo.estado ? "Disponible" : "No disponible"}
                     </span>
                   </td>
                   <td>
-                    {/* Modificado para usar clases similares a TablaPermisos */}
                     <div className="flex justify-center space-x-2">
                       <button
                         className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
@@ -614,11 +657,7 @@ const TablaInsumos = () => {
                       >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
-                      <button
-                        className="btn-info-1"
-                        onClick={() => abrirModalBaja(insumo)}
-                        title="Dar de baja"
-                      >
+                      <button className="btn-info-1" onClick={() => abrirModalBaja(insumo)} title="Dar de baja">
                         <FontAwesomeIcon icon={faArrowDown} />
                       </button>
                       <button
@@ -629,20 +668,13 @@ const TablaInsumos = () => {
                         <FontAwesomeIcon icon={faTrash} />
                       </button>
                       <button
-                        className={`btn-toggle-1
-                                              ${
-                                                insumo.estado
-                                                  ? "bg-emerald-400/70  dark:bg-emerald-700 "
-                                                  : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
-                                              }`}
-                        onClick={() =>
-                          manejarToggleEstado(insumo._id, insumo.estado)
-                        }
-                        title={
+                        className={`btn-toggle-1 ${
                           insumo.estado
-                            ? "Desactivar usuario"
-                            : "Activar usuario"
-                        }
+                            ? "bg-emerald-400/70 dark:bg-emerald-700"
+                            : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
+                        }`}
+                        onClick={() => manejarToggleEstado(insumo._id, insumo.estado)}
+                        title={insumo.estado ? "Desactivar insumo" : "Activar insumo"}
                       >
                         <FontAwesomeIcon
                           icon={insumo.estado ? faToggleOn : faToggleOff}
@@ -680,9 +712,7 @@ const TablaInsumos = () => {
               <button
                 key={index}
                 onClick={() => cambiarPagina(index + 1)}
-                className={`pagination-number ${
-                  paginaActual === index + 1 ? "active" : ""
-                }`}
+                className={`pagination-number ${paginaActual === index + 1 ? "active" : ""}`}
               >
                 {index + 1}
               </button>
@@ -692,9 +722,7 @@ const TablaInsumos = () => {
           <button
             onClick={paginaSiguiente}
             disabled={paginaActual === paginasTotales}
-            className={`pagination-btn ${
-              paginaActual === paginasTotales ? "disabled" : ""
-            }`}
+            className={`pagination-btn ${paginaActual === paginasTotales ? "disabled" : ""}`}
           >
             &gt;
           </button>
@@ -740,18 +768,12 @@ const TablaInsumos = () => {
           >
             &times;
           </button>
-          <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">
-            Dar de Baja Insumo
-          </h2>
-          <FormularioBajaInsumo
-            insumo={insumoSeleccionado}
-            onClose={cerrarModalBaja}
-            onSubmit={manejarBajaInsumo}
-          />
+          <h2 className="text-2xl font-semibold mb-4 text-center text-pink-600">Dar de Baja Insumo</h2>
+          <FormularioBajaInsumo insumo={insumoSeleccionado} onClose={cerrarModalBaja} onSubmit={manejarBajaInsumo} />
         </div>
       </Modal>
     </div>
-  );
-};
+  )
+}
 
-export default TablaInsumos;
+export default TablaInsumos

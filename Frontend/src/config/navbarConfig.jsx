@@ -225,19 +225,19 @@ export const navbarMenuConfig = [
     ],
   },
   // Menús para perfil (todos los usuarios autenticados)
-  {
-    icon: FaUserCircle,
-    label: "Mi Perfil",
-    requiredAuth: true,
-    items: [
-      {
-        icon: FaUserCircle,
-        label: "Ver Perfil",
-        path: "/profile",
-        requiredAuth: true,
-      },
-    ],
-  },
+  // {
+  //   icon: FaUserCircle,
+  //   label: "Mi Perfil",
+  //   requiredAuth: true,
+  //   items: [
+  //     {
+  //       icon: FaUserCircle,
+  //       label: "Ver Perfil",
+  //       path: "/profile",
+  //       requiredAuth: true,
+  //     },
+  //   ],
+  // },
 ]
 
 // Función para filtrar menús basado en permisos y roles
