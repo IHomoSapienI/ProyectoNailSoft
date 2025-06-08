@@ -45,10 +45,27 @@ const DashboardStats = () => {
         const clientesResponse = await axios.get("https://gitbf.onrender.com/api/clientes", { headers })
         const clientes = clientesResponse.data || []
 
+        // Debug: Mostrar estructura de clientes
+        console.log("=== DEBUG CLIENTES ===")
+        console.log("Total clientes obtenidos:", clientes.length)
+        if (clientes.length > 0) {
+          console.log("Estructura del primer cliente:", clientes[0])
+          console.log("Campos de fecha disponibles:", {
+            fechacreacion: clientes[0].fechacreacion,
+            createdAt: clientes[0].createdAt,
+            fechaCreacion: clientes[0].fechaCreacion,
+            _id: clientes[0]._id,
+          })
+        }
+
         // Calcular estadísticas
         const ahora = new Date()
         const inicioMesActual = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
         const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1)
+
+        console.log("Fechas de referencia:")
+        console.log("Inicio mes actual:", inicioMesActual.toISOString())
+        console.log("Inicio mes anterior:", inicioMesAnterior.toISOString())
 
         // Filtrar citas por mes actual y anterior
         const citasMesActual = citas.filter((cita) => new Date(cita.fechacita) >= inicioMesActual)
@@ -116,20 +133,65 @@ const DashboardStats = () => {
         const cambioPorcentajeCitas =
           numCitasMesAnterior === 0 ? 100 : ((numCitasMesActual - numCitasMesAnterior) / numCitasMesAnterior) * 100
 
-        // Calcular clientes nuevos
+        // ===== LÓGICA CORREGIDA PARA CLIENTES NUEVOS =====
+
+        // Función para obtener fecha de creación del cliente
+        const getClientCreationDate = (cliente) => {
+          // Intentar diferentes campos de fecha en orden de prioridad
+          const possibleDateFields = [
+            cliente.fechacreacion,
+            cliente.createdAt,
+            cliente.fechaCreacion,
+            cliente.fecha_creacion,
+            cliente.created_at,
+          ]
+
+          for (const dateField of possibleDateFields) {
+            if (dateField) {
+              const date = new Date(dateField)
+              // Verificar que la fecha es válida
+              if (!isNaN(date.getTime())) {
+                return date
+              }
+            }
+          }
+
+          // Si no hay fecha válida, usar fecha actual como fallback
+          console.warn("Cliente sin fecha de creación válida:", cliente._id)
+          return new Date()
+        }
+
+        // Filtrar y contar clientes nuevos del mes actual
         const clientesNuevosMesActual = clientes.filter((cliente) => {
-          const fechaCreacion = new Date(cliente.fechacreacion || cliente.createdAt)
-          return fechaCreacion >= inicioMesActual
+          const fechaCreacion = getClientCreationDate(cliente)
+          const esDelMesActual = fechaCreacion >= inicioMesActual
+
+          if (esDelMesActual) {
+            console.log("Cliente nuevo del mes actual:", {
+              id: cliente._id,
+              nombre: cliente.nombrecliente,
+              fecha: fechaCreacion.toISOString(),
+            })
+          }
+
+          return esDelMesActual
         }).length
 
+        // Filtrar y contar clientes nuevos del mes anterior
         const clientesNuevosMesAnterior = clientes.filter((cliente) => {
-          const fechaCreacion = new Date(cliente.fechacreacion || cliente.createdAt)
+          const fechaCreacion = getClientCreationDate(cliente)
           return fechaCreacion >= inicioMesAnterior && fechaCreacion < inicioMesActual
         }).length
 
+        console.log("=== RESUMEN CLIENTES NUEVOS ===")
+        console.log("Clientes nuevos mes actual:", clientesNuevosMesActual)
+        console.log("Clientes nuevos mes anterior:", clientesNuevosMesAnterior)
+
         const cambioPorcentajeClientes =
           clientesNuevosMesAnterior === 0
-            ? 100
+            ? clientesNuevosMesActual > 0
+              ? 100
+              : 0
             : ((clientesNuevosMesActual - clientesNuevosMesAnterior) / clientesNuevosMesAnterior) * 100
 
         // Calcular servicios vendidos
@@ -329,7 +391,9 @@ const DashboardStats = () => {
           <Card className={`overflow-hidden border-none shadow-md ${stat.className} hover-glow`}>
             <CardHeader className="pb-2 dark:text-black">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-black">{stat.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground dark:text-black">
+                  {stat.title}
+                </CardTitle>
                 <div className="rounded-full bg-primary/20 p-1.5 dark:text-primary">{stat.icon}</div>
               </div>
             </CardHeader>
@@ -372,4 +436,3 @@ const DashboardStats = () => {
 }
 
 export default DashboardStats
-
