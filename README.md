@@ -6,7 +6,7 @@
 [![Ver en Firebase](https://img.shields.io/badge/Ver%20App%20en-Firebase-orange?style=for-the-badge&logo=firebase)](https://nailsoft-7d03c.web.app/login)
 
 
-NailSoft es un sistema integral para gestionar servic[ios mediante citas para diseño de uñas, permitiendo la selección de múltiples servicios, registro de ventas y compras de ](https://nailsoft-7d03c.web.app/login)insumos para el Spa "S&B".
+NailSoft es un sistema integral para gestionar servicios mediante citas para diseño de uñas, permitiendo la selección de múltiples servicios, registro de ventas y compras de insumos para el Spa "S&B".
 
 
 ![Logo NailSoft](https://gitbf.onrender.com/uploads/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20DISTINTA.png) <!-- Reemplaza con la URL de tu logo -->
@@ -14,9 +14,12 @@ NailSoft es un sistema integral para gestionar servic[ios mediante citas para di
 ## Desarrollado por Equipo SENA NailSoft
 
 - Sebastian Alvarez Restrepo
+
 - Cristian Camilo Torres Arboleda
-- Frank Javier Oronó Paternina
+
 - Luis Mario Correa Gil
+
+- Frank Javier Oronó Paternina
 
 ## Tecnologías Utilizadas
 
