@@ -93,7 +93,7 @@ Usuario: Registro e inicio de sesión
 Altamente Escalable Gracias a los Permisos Dinamicos no dependemos de roles Estaticos
 
 
-🌟 Características Destacadas
+## 🌟 Características Destacadas
 ✅ Seguridad basada en estándares ISO 27001
 
 🛡️ Gestión de permisos dinámicos según roles de usuario
@@ -119,9 +119,14 @@ Altamente Escalable Gracias a los Permisos Dinamicos no dependemos de roles Esta
 ## 📦 Despliegue
 El servidor backend está alojado en Render, y todas las APIs están desplegadas para su uso en producción. En caso de fallos, se recomienda hacer mantenimiento al backend y actualizar el repositorio, El Frontend esta desplegado en Firebase .
 
-## Estado del Proyecto
-✅ Versión: 1.0.0
-🚧 Estado: En desarrollo activo
+## 📈 Estado del Proyecto
+Versión actual: 1.0.0
+
+Estado: 🛠️ En desarrollo activo
+
+Desempeño Lighthouse: ⭐️ +90 en todas las métricas
+
+
 
 
 ## 🖼️ Galería de Vistas
