@@ -19,12 +19,13 @@ const permisoSchema = Joi.object({
     .min(10)
     .max(80)
     .required()
-    .pattern(/^[a-zA-Z0-9\s]+$/)
+    // .pattern(/^[a-zA-Z0-9\s]+$/)
+    .pattern(/^[a-zA-Z0-9\sáéíóúÁÉÍÓÚüÜñÑ()"'¡!¿?,.:;\-]+$/)
     .messages({
         'string.empty': 'El campo descripcion es obligatorio.',
         'string.min': 'El campo descripcion debe tener al menos 10 caracteres.',
         'string.max': 'El campo descripcion debe tener como máximo 100 caracteres.',
-        'string.pattern.base': 'El campo descripcion solo puede contener letras, números y espacios.',
+        'string.pattern.base': 'El campo descripcion solo puede contener letras, números, espacios y caracteres especiales como tildes áéíóú()"\',.:;¡!¿?-.',
     }),
     activo: Joi.boolean().required(),
     categoria: Joi.string().required(),

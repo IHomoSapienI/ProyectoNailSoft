@@ -1,7 +1,7 @@
 # Api_Backend_Front
 # NailSoft - Sistema de Gestión para Spa "S&B"
 
-## 🌐 Aplicación Web
+## 🌐 Ver Aplicación Web 
 
 [![Ver en Firebase](https://img.shields.io/badge/Ver%20App%20en-Firebase-orange?style=for-the-badge&logo=firebase)](https://nailsoft-7d03c.web.app/login)
 
@@ -49,27 +49,21 @@ NailSoft es un sistema integral para gestionar servic[ios mediante citas para di
 
 ### Pasos para Instalación
 
-1. Clonar el repositorio:
-```bash
+# 1. Clonar el repositorio
 git clone https://github.com/IHomoSapienI/ProyectoNailSoft.git
 cd ProyectoNailSoft
 
-```shellscript
+# 2. Ejecutar backend
 cd backend
+npm install
+cp .env.example .env # o crea el archivo manualmente
 node index.js
-```
 
-3. Instalar dependencias del frontend:
-
-
-```shellscript
+# 3. Ejecutar frontend
 cd ../frontend
 npm install
-```
+npm run dev
 
-4. Configurar variables de entorno:
-
-1. Crear archivo `.env` en la carpeta backend siguiendo el ejemplo de `.env.example`
 
 
 
@@ -86,26 +80,63 @@ npm run dev
 
 ## Vistas Disponibles
 
-El sistema cuenta con diferentes interfaces según el rol del usuario:
+👥 Roles del Sistema
 
-- **Administrador**: Gestión completa del sistema
-- **Empleado**: Gestión de citas y servicios
-- **Cliente**: Reserva de citas y selección de servicios, reportes Cliente
-- **Usuario**: Registro e inicio de sesión
+Administrador: Gestión completa (usuarios, servicios, reportes, etc.)
+
+Empleado: Gestión de citas y servicios prestados
+
+Cliente: Reserva de citas y visualización de servicios
+
+Usuario: Registro e inicio de sesión
+
+Altamente Escalable Gracias a los Permisos Dinamicos no dependemos de roles Estaticos
 
 
-## Características Principales
+🌟 Características Destacadas
+✅ Seguridad basada en estándares ISO 27001
 
-- ✅ Seguridad confiable bajo los estándares ISO 27001
-- 💅 Diseño atractivo orientado principalmente al público femenino
-- 🌓 Modo día/noche para mejor visualización
-- ⚡ Velocidad y eficacia en los procesos
-- 🔒 Confiabilidad en el manejo de datos
-- 📊 Reportes estadísticos intuitivos de los procesos más importantes
-- 📱 Versión móvil para monitoreo remoto por parte del administrador
-- 🚀 Uso de tecnologías rápidas y escalables
-- 👨‍💻 Buenas prácticas de codificación y estructura de proyecto
+🛡️ Gestión de permisos dinámicos según roles de usuario
+
+🧱 Arquitectura escalable para facilitar el mantenimiento y crecimiento
+
+💅 Diseño atractivo, pensado especialmente para el público femenino
+
+🌗 Modo Día/Noche para mejor experiencia visual
+
+⚡ Desempeño optimizado: calificación superior a 90 en Google Lighthouse
+
+🔒 Confiabilidad en el manejo de datos
+
+📊 Reportes estadísticos visuales y funcionales
+
+📱 100% Responsive para visualización de los usuarios en móvil
+
+📱 Versión móvil para monitoreo remoto del administrador
+
+👨‍💻 Buenas prácticas de desarrollo y estructura de proyecto
+
+📦 Despliegue
+El servidor backend está alojado en Render, y todas las APIs están desplegadas para su uso en producción. En caso de fallos, se recomienda hacer mantenimiento al backend y actualizar el repositorio, El Frontend esta desplegado en Firebase .
 
 ## Estado del Proyecto
 ✅ Versión: 1.0.0
 🚧 Estado: En desarrollo activo
+
+
+## 🖼️ Galería de Vistas
+
+![Imagen de Metricas LighHouse de Google](image.png)
+
+![Diseño Light del Panel de Administrador](image-1.png) 
+
+![Diseño Dark del panel de Administrador](image-2.png)
+
+![Landing Vista Cliente](image-3.png)
+
+![Panel Reportes vista Cliente](image-4.png)
+
+![Galeria de Servicios Vista Cliente](image-5.png)
+
+![Vista de Agendamiento Cliente](image-6.png)
+

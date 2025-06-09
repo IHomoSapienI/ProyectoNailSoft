@@ -102,10 +102,44 @@ const eliminarEmpleado = async (req, res) => {
     }
 };
 
+// Cambiar estado de un empleado
+const cambiarEstadoEmpleado = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Verificar si el empleado existe
+        const empleado = await Empleado.findById(id);
+        if (!empleado) {
+            return res.status(404).json({ message: 'Empleado no encontrado' });
+        }
+
+        // Cambiar el estado (toggle)
+        const nuevoEstado = !empleado.estadoempleado;
+        
+        const empleadoActualizado = await Empleado.findByIdAndUpdate(
+            id,
+            { estadoempleado: nuevoEstado },
+            { new: true }
+        );
+
+        res.status(200).json({ 
+            message: `Empleado ${nuevoEstado ? 'activado' : 'desactivado'} con éxito`,
+            empleado: empleadoActualizado
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Error al cambiar el estado del empleado', 
+            error 
+        });
+    }
+};
+
+// Modificar el exports para incluir la nueva función
 module.exports = {
     crearEmpleado,
     obtenerEmpleados,
     obtenerEmpleadoPorId,
     actualizarEmpleado,
-    eliminarEmpleado
+    eliminarEmpleado,
+    cambiarEstadoEmpleado
 };

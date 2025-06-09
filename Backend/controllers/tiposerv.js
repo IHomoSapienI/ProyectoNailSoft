@@ -1,6 +1,6 @@
 const { response } = require("express")
 const Tiposervicio = require("../modules/tiposerv.js")
-
+const {tipoDescuentoSchema, tipoDescuentoUpdateSchema} = require("../validators/tipodescuento.validator.js")
 // Obtener todos los descuentos
 const tiposerviciosGet = async (req, res = response) => {
   try {
@@ -27,80 +27,147 @@ const tiposerviciosGet = async (req, res = response) => {
 
 // Crear un nuevo descuento
 const tiposerviciosPost = async (req, res = response) => {
-  const { nombreTs, activo, descuento = 0, esPromocional = false } = req.body // Extraer datos del cuerpo de la solicitud
-
-  // Validar los datos recibidos
-  if (!nombreTs || activo === undefined) {
+  
+  const {error, value} = tipoDescuentoSchema.validate(req.body)
+  if (error){
     return res.status(400).json({
-      msg: "Nombre y estado activo del tipo de descuenno son obligatorios.",
-    })
+      msg: "Error en la validación de los datos",
+      errors: error.details.map(err=>err.message)
+    });
   }
 
-  // Validar que el descuento sea un número entre 0 y 100
-  if (descuento < 0 || descuento > 100) {
-    return res.status(400).json({
-      msg: "El descuento debe ser un valor entre 0 y 100.",
-    })
-  }
+  const {nombreTs, activo, descuento = 0, esPromocional = false} = value // Extraer datos del cuerpo de la solicitud
 
-  // Crear una nueva instancia del modelo descuento
   const tiposervicio = new Tiposervicio({ nombreTs, activo, descuento, esPromocional })
-
   try {
-    // Guardar el nuevo permiso en la base de datos
-    await tiposervicio.save()
+    await tiposervicio.save() // Guardar el nuevo tipo de servicio en la base de datos
     res.status(201).json({
-      msg: "tiposervicio creado correctamente",
-      tiposervicio,
-    })
-  } catch (error) {
-    console.log(error)
-    res.status(500).json({
-      msg: "Error al crear el tipo de servicio",
-    })
-  }
+      msg: "Tipo de servicio creado correctamente",
+      tiposervicio,});}
+      catch(err){
+        console.error(err);
+        res.status(500).json({
+          msg: "Error al crear el tipo de servicio",
+        });
+      }
+  
+  
+  // const { nombreTs, activo, descuento = 0, esPromocional = false } = req.body // Extraer datos del cuerpo de la solicitud
+
+  // // Validar los datos recibidos
+  // if (!nombreTs || activo === undefined) {
+  //   return res.status(400).json({
+  //     msg: "Nombre y estado activo del tipo de descuenno son obligatorios.",
+  //   })
+  // }
+
+  // // Validar que el descuento sea un número entre 0 y 100
+  // if (descuento < 0 || descuento > 100) {
+  //   return res.status(400).json({
+  //     msg: "El descuento debe ser un valor entre 0 y 100.",
+  //   })
+  // }
+
+  // // Crear una nueva instancia del modelo descuento
+  // const tiposervicio = new Tiposervicio({ nombreTs, activo, descuento, esPromocional })
+
+  // try {
+  //   // Guardar el nuevo permiso en la base de datos
+  //   await tiposervicio.save()
+  //   res.status(201).json({
+  //     msg: "tiposervicio creado correctamente",
+  //     tiposervicio,
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  //   res.status(500).json({
+  //     msg: "Error al crear el tipo de servicio",
+  //   })
+  // }
 }
 
 // Actualizar un tipo de servicio
 const tiposerviciosPut = async (req, res = response) => {
-  const { id } = req.params
-  const { nombreTs, activo, descuento, esPromocional } = req.body
+  
+  const {id} = req.params;
 
-  try {
-    // Verificar si el tipo de servicio existe
-    const tiposervicio = await Tiposervicio.findById(id)
-    if (!tiposervicio) {
+  const {error, value} = tipoDescuentoUpdateSchema.validate(req.body,{abortEarly: false});
+
+  if (error){
+    return res.status(400).json({
+      msg: "Error en la validación de los datos",
+      errors: error.details.map(err=>err.message)
+    })
+  }
+
+  try{
+    const tiposervicio = await Tiposervicio.findByIdAndUpdate(id);
+
+    if(!tiposervicio){
       return res.status(404).json({
         msg: "Tipo de servicio no encontrado",
       })
     }
 
-    // Validar que el descuento sea un número entre 0 y 100
-    if (descuento !== undefined && (descuento < 0 || descuento > 100)) {
-      return res.status(400).json({
-        msg: "El descuento debe ser un valor entre 0 y 100.",
-      })
-    }
-
-    // Actualizar los campos
-    if (nombreTs !== undefined) tiposervicio.nombreTs = nombreTs
-    if (activo !== undefined) tiposervicio.activo = activo
-    if (descuento !== undefined) tiposervicio.descuento = descuento
-    if (esPromocional !== undefined) tiposervicio.esPromocional = esPromocional
-
+    if (value.nombreTs !== undefined) tiposervicio.nombreTs = value.nombreTs
+    if (value.activo !== undefined) tiposervicio.activo = value.activo
+    if (value.descuento !== undefined) tiposervicio.descuento = value.descuento
+    if (value.esPromocional !== undefined) tiposervicio.esPromocional = value.esPromocional
     // Guardar los cambios
-    await tiposervicio.save()
-
+    await tiposervicio.save();
     res.json({
       msg: "Tipo de servicio actualizado correctamente",
       tiposervicio,
-    })
-  } catch (error) {
-    console.log(error)
+    });
+  }
+  catch (err){
+    console.error(err);
     res.status(500).json({
       msg: "Error al actualizar el tipo de servicio",
-    })
+    });
   }
+    
+
+
+  
+  // const { id } = req.params
+  // const { nombreTs, activo, descuento, esPromocional } = req.body
+
+  // try {
+  //   // Verificar si el tipo de servicio existe
+  //   const tiposervicio = await Tiposervicio.findById(id)
+  //   if (!tiposervicio) {
+  //     return res.status(404).json({
+  //       msg: "Tipo de servicio no encontrado",
+  //     })
+  //   }
+
+  //   // Validar que el descuento sea un número entre 0 y 100
+  //   if (descuento !== undefined && (descuento < 0 || descuento > 100)) {
+  //     return res.status(400).json({
+  //       msg: "El descuento debe ser un valor entre 0 y 100.",
+  //     })
+  //   }
+
+  //   // Actualizar los campos
+  //   if (nombreTs !== undefined) tiposervicio.nombreTs = nombreTs
+  //   if (activo !== undefined) tiposervicio.activo = activo
+  //   if (descuento !== undefined) tiposervicio.descuento = descuento
+  //   if (esPromocional !== undefined) tiposervicio.esPromocional = esPromocional
+
+  //   // Guardar los cambios
+  //   await tiposervicio.save()
+
+  //   res.json({
+  //     msg: "Tipo de servicio actualizado correctamente",
+  //     tiposervicio,
+  //   })
+  // } catch (error) {
+  //   console.log(error)
+  //   res.status(500).json({
+  //     msg: "Error al actualizar el tipo de servicio",
+  //   })
+  // }
 }
 
 // Eliminar un tipo de servicio

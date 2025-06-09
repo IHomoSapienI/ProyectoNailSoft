@@ -282,8 +282,8 @@ const crearVenta = async (req, res = response) => {
       })
       .populate("productos.producto", "nombreProducto categoria stock")
       .populate("servicios.servicio", "nombreServicio categoria")
-      .populate("descuentos.servicioId", "nombreServicio");
-
+      .populate("descuentos.servicioId", "nombreServicio")
+      .exec();
     res.status(201).json({
       msg: "Venta creada correctamente",
       venta: ventaCompleta,
@@ -1010,5 +1010,6 @@ module.exports = {
   agregarServiciosVenta,
   obtenerVentasPorCliente,
   obtenerVentasPorCita,
-  validarVenta
+  validarVenta,
+  obtenerSiguienteCodigoVenta
 };

@@ -14,7 +14,7 @@ const router = Router();
 // router.delete('/:id', verificarPermisos (['eliminarCita']),eliminarCita);
 
 
-router.post('/',  crearCita);
+router.post('/',   crearCita);
 router.get('/', obtenerCitas);
 router.get('/cliente', obtenerCitasPorCliente);
 router.get('/:id',  obtenerCitaPorId);

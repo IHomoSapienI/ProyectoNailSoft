@@ -6,7 +6,7 @@ const PermisoSchema = Schema({
         type: String,
         required: [true, 'El nombre es obligatorio'],
         unique: true,
-        minlength: [3, 'El nombre del permiso debe tener al menos 3 caracteres'], // Validación opcional
+        minlength: [5, 'El nombre del permiso debe tener al menos 5 caracteres'], // Validación opcional
     },
 
     descripcion: {
@@ -22,7 +22,7 @@ const PermisoSchema = Schema({
 
     categoria: { // Campo opcional para categorizar permisos
         type: String,
-        enum: ['usuarios', 'roles', 'permisos','configuración', 'reportes', 'compras', 'servicios', 'ventaServicios', 'productos', 'ventaProductos','citas','empleados','clientes','insumos','proveedores', 'categoriaProductos'], // Ejemplo de categorías
+        enum: ['usuarios', 'roles', 'permisos','configuración', 'reportes', 'compras', 'servicios',  'productos', 'citas','empleados','clientes','insumos','proveedores', 'categoriaProductos', 'bajaProductos', 'ventas', 'vistasSidebar'], // Ejemplo de categorías
     },
 
     nivel: { // Campo opcional para el nivel de permiso

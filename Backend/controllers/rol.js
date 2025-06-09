@@ -169,7 +169,8 @@ const rolesPut = async (req, res = response) => {
   }
 
   try{
-    const rolExistente = await Rol.findBy(id);
+    const rolExistente = await Rol.findById(id);
+    console.log("ID recibido para actualizar:", id)
     if(!rolExistente){
       return res.status(404).json({
         msg: "Rol no encontrado",

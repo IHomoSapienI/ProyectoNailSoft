@@ -114,10 +114,44 @@ const eliminarCliente = async (req, res) => {
     }
 };
 
+// Cambiar estado de un cliente
+const cambiarEstadoCliente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Verificar si el cliente existe
+        const cliente = await Cliente.findById(id);
+        if (!cliente) {
+            return res.status(404).json({ message: 'Cliente no encontrado' });
+        }
+
+        // Cambiar el estado (toggle)
+        const nuevoEstado = !cliente.estadocliente;
+        
+        const clienteActualizado = await Cliente.findByIdAndUpdate(
+            id,
+            { estadocliente: nuevoEstado },
+            { new: true }
+        );
+
+        res.status(200).json({ 
+            message: `Cliente ${nuevoEstado ? 'activado' : 'desactivado'} con éxito`,
+            cliente: clienteActualizado
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Error al cambiar el estado del cliente', 
+            error 
+        });
+    }
+};
+
+// Modificar el exports para incluir la nueva función
 module.exports = {
     crearCliente,
     obtenerClientes,
     obtenerClientePorId,
     actualizarCliente,
-    eliminarCliente
+    eliminarCliente,
+    cambiarEstadoCliente
 };

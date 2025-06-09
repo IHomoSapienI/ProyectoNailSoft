@@ -7,6 +7,7 @@ const {
   serviciosDelete,
   serviciosExportExcel,
   serviciosToggleEstado,
+  validarNombreServicio,
 } = require("../controllers/servicio")
 const multer = require("multer")
 const path = require("path")
@@ -45,6 +46,9 @@ router.use("/uploads", express.static("uploads"))
 
 // Rutas
 router.get("/", verificarPermisos(["verServicios"]), serviciosGet)
+router.get("/validar-nombre", verificarPermisos(["verServicios"]), validarNombreServicio);
+
+
 router.post("/", upload.single("imagen"), verificarPermisos(["crearServicios"]), serviciosPost)
 router.put("/:id", upload.single("imagen"), verificarPermisos(["actualizarServicios"]), serviciosPut) // Actualizar un servicio
 router.delete("/:id", verificarPermisos(["eliminarServicios"]), serviciosDelete)

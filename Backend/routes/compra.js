@@ -14,36 +14,19 @@ const router = express.Router();
 
 router.use(validarJWT);
 
-// // Ruta para crear una nueva compra
-// router.post('/', verificarPermisos(['crearCompras']), crearCompra);
+// Ruta para crear una nueva compra
+router.post('/', verificarPermisos(['crearCompras']), crearCompra);
 
-// // Ruta para obtener todas las compras
-// router.get('/', verificarPermisos(['verCompras']), obtenerCompras);
+// Ruta para obtener todas las compras
+router.get('/', verificarPermisos(['verCompras']), obtenerCompras);
 
-// // Ruta para obtener una compra por ID
-// router.get('/:id', verificarPermisos(['verCompras']), obtenerCompraPorId);
+// Ruta para obtener una compra por ID
+router.get('/:id', verificarPermisos(['verCompras']), obtenerCompraPorId);
 
-// // Ruta para actualizar una compra
-// router.put('/:id', verificarPermisos(['actualizarCompras']), actualizarCompra);
+// Ruta para actualizar una compra
+router.put('/:id', verificarPermisos(['actualizarCompras']), actualizarCompra);
 
 // Ruta para eliminar una compra
 router.delete('/:id', verificarPermisos(['eliminarCompras']), eliminarCompra);
-
-
-// Ruta para crear una nueva compra
-router.post('/',  crearCompra);
-
-// Ruta para obtener todas las compras
-router.get('/',  obtenerCompras);
-
-// Ruta para obtener una compra por ID
-router.get('/:id',  obtenerCompraPorId);
-
-// Ruta para actualizar una compra
-router.put('/:id',  actualizarCompra);
-
-// Ruta para eliminar una compra
-// router.delete('/:id',  eliminarCompra);
-
 
 module.exports = router;

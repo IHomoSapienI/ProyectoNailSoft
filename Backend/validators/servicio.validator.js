@@ -16,14 +16,13 @@ const servicioSchema = Joi.object({
         .min(5)
         .max(50)
         .required()
-        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s]+$/) // evita más de 2 letras consecutivas repetidas
+        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s&.,¡!¿?()]+$/) // evita más de 2 letras consecutivas repetidas
         .custom((value, helpers) => {
 
             // ❌ Validar que el nombre no contenga solo números
             if (/^\d+$/.test(value)) {
                 return helpers.error('any.invalid', { message: 'El nombre del servicio no puede ser solo números.' });
             }
-
             // ❌ Validar que no sea una cadena completamente repetida
             const repeated = (str) => {
                 const len = str.length;
@@ -48,7 +47,7 @@ const servicioSchema = Joi.object({
         .min(5)
         .max(100)
         .required()
-        .pattern(/^(?!.*(.)\1{2,})[a-zA-Z\s]+$/) // evita más de 2 letras consecutivas repetidas
+        .pattern(/^[\p{L}\p{N}\s.,!?¡¿()&'"%-]+$/u)  // evita más de 2 letras consecutivas repetidas
         .custom((value, helpers) => {
 
             // ❌ Validar que la descripción no contenga solo números
@@ -74,18 +73,28 @@ const servicioSchema = Joi.object({
 
             return value;
         }, 'Validación personalizada'),
+
+
+        
         precio: Joi.number()
     .integer()
     .min(1)
     .max(999999)
     .required()
-    .messages({
-      'number.base': 'El precio debe ser un número.',
-      'number.integer': 'El precio debe ser un número entero.',
-      'number.min': 'El precio no puede ser menor que 1.',
-      'number.max': 'El precio no puede ser mayor que 999999.',
-      'any.required': 'El precio es obligatorio.'
-    }),
+    .custom((value, helpers) => {
+    if (value.toString().toLowerCase().includes('e')) {
+      return helpers.error('number.noExponential');
+    }
+    return value;
+  })
+  .messages({
+    'number.base': 'El precio debe ser un número.',
+    'number.integer': 'El precio debe ser un número entero.',
+    'number.min': 'El precio no puede ser menor que 1.',
+    'number.max': 'El precio no puede ser mayor que 999999.',
+    'any.required': 'El precio es obligatorio.',
+    'number.noExponential': 'El precio no puede estar en notación científica.'
+  }),
 
   tiempo: Joi.number()
     .integer()
@@ -111,7 +120,18 @@ const servicioSchema = Joi.object({
         'string.empty': 'El campo tipoServicio es obligatorio.',
         'array.base': 'El campo tipoServicio debe ser un arreglo de IDs de tipo de servicio.',
         'any.invalid': 'Uno o más IDs de tipo de servicio no son válidos.', }),
-
+tipoServicio2: Joi.alternatives()
+    .try(
+        Joi.string().custom(objectValidator, 'ID de tipo de servicio válido'),
+        Joi.array().items(
+            Joi.string().custom(objectValidator, 'ID de tipo de servicio válido')
+        )
+    )
+    .required()
+    .messages({
+        'string.empty': 'El campo tipoServicio es obligatorio.',
+        'array.base': 'El campo tipoServicio debe ser un arreglo de IDs de tipo de servicio.',
+        'any.invalid': 'Uno o más IDs de tipo de servicio no son válidos.', }),
     imagenUrl: Joi.string()
   .trim()
   .pattern(/\.(jpg|jpeg|png|gif|webp)$/i)

@@ -1,6 +1,7 @@
 const { response } = require("express")
 const TiposervicioTs = require("../modules/tiposervicios.js")
-
+const {tipoServicioSchema , tipoServicioUpdateSchema} = require("../validators/tiposervicio.validator.js")
+//                         return true;
 
 
 // Obtener todos los tipos de servicios
@@ -32,62 +33,135 @@ res.json({
 // Crear un nuevo tipo de servicio
 
 const tiposerviciostsPost = async (req, res = response) => { 
-    const { nombreTipoServicio, activo } = req.body // Extraer datos del cuerpo de la solicitud
-    console.log("🔎 Datos recibidos:", { nombreTipoServicio, activo });
-    // Validar los datos recibidos
-    if (!nombreTipoServicio || activo === undefined) {
-        return res.status(400).json({
-            msg: "Nombre y estado activo del tipo de servicio son obligatorios.",
-        })
-    }
+    try{
+        const {error, value} = tipoServicioSchema.validate(req.body,{abortEarly:false});
 
-    // Crear una nueva instancia del modelo Tiposervicio
-    const tiposerviciots = new TiposervicioTs({ nombreTipoServicio, activo })
-    try {
+        if (error){
+            return res.status(400).json({
+                msg: "Error en la validación de los datos",
+                error: error.details.map((err) => err.message),
+            })
+        }
+        const { nombreTipoServicio, activo } = value // Extraer datos del cuerpo de la solicitud
+        console.log("🔎 Datos recibidos:", { nombreTipoServicio, activo });
+
+        const tiposerviciots = new TiposervicioTs({ nombreTipoServicio, activo })
         // Guardar el nuevo tipo de servicio en la base de datos
-        await tiposerviciots.save()
+        await tiposerviciots.save();
+
         res.status(201).json({
-            msg: "Tipo de servicio creado correctamente",
+            msg: "Tipo servicio creado correctamente",
             tiposerviciots,
         })
-    } catch (error) {
+    }
+    catch (error){
         console.log(error)
         res.status(500).json({
             msg: "Error al crear el tipo de servicio",
         })
     }
+    
+    
+    
+    // const { nombreTipoServicio, activo } = req.body // Extraer datos del cuerpo de la solicitud
+    // console.log("🔎 Datos recibidos:", { nombreTipoServicio, activo });
+    // // Validar los datos recibidos
+    // if (!nombreTipoServicio || activo === undefined) {
+    //     return res.status(400).json({
+    //         msg: "Nombre y estado activo del tipo de servicio son obligatorios.",
+    //     })
+    // }
+
+    // // Crear una nueva instancia del modelo Tiposervicio
+    // const tiposerviciots = new TiposervicioTs({ nombreTipoServicio, activo })
+    // try {
+    //     // Guardar el nuevo tipo de servicio en la base de datos
+    //     await tiposerviciots.save()
+    //     res.status(201).json({
+    //         msg: "Tipo de servicio creado correctamente",
+    //         tiposerviciots,
+    //     })
+    // } catch (error) {
+    //     console.log(error)
+    //     res.status(500).json({
+    //         msg: "Error al crear el tipo de servicio",
+    //     })
+    // }
 }   
 
 // Actualizar un tipo de servicio
 const tiposerviciostsPut = async (req, res = response) => {
-    const {id} = req.params
-    const { nombreTipoServicio, activo } = req.body // Extraer datos del cuerpo de la solicitud
+    
+    const {id} = req.params;
+    try{
+        const {error, value} = tipoServicioUpdateSchema.validate(req.body,{abortEarly:false});
 
-    try {
-        // Validar que el tipo de servicio existe
-        const tiposerviciots = await TiposervicioTs.findById(id)
+        if (error){
+            return res.status(400).json({
+                msg: "Error en la validación de los datos",
+                error: error.details.map((err) => err.message),
+            })
+        }
+        const { nombreTipoServicio, activo } = value // Extraer datos del cuerpo de la solicitud
+        console.log("🔎 Datos recibidos:", { nombreTipoServicio, activo });
+
+        const tiposerviciots = await TiposervicioTs.findByIdAndUpdate(id, { nombreTipoServicio, activo }, { new: true })
+
         if (!tiposerviciots) {
             return res.status(404).json({
                 msg: "Tipo de servicio no encontrado",
             })
         }
 
-        // Actualizar el tipo de servicio
-        tiposerviciots.nombreTipoServicio = nombreTipoServicio
-        tiposerviciots.activo = activo
+        if(value.nombreTipoServicio !== undefined){
+            tiposerviciots.nombreTipoServicio = value.nombreTipoServicio;
+        }
+        if(value.activo !== undefined){
+            tiposerviciots.activo = value.activo;
+         }   
+         await tiposerviciots.save();
 
-        // Guardar los cambios en la base de datos
-        await tiposerviciots.save()
         res.json({
             msg: "Tipo de servicio actualizado correctamente",
             tiposerviciots,
         })
-    } catch (error) {
-        console.log(error)
+    }
+    catch (error) {
+        console.log(error);
         res.status(500).json({
             msg: "Error al actualizar el tipo de servicio",
-        })
+        });
     }
+    
+    
+    // const {id} = req.params
+    // const { nombreTipoServicio, activo } = req.body // Extraer datos del cuerpo de la solicitud
+
+    // try {
+    //     // Validar que el tipo de servicio existe
+    //     const tiposerviciots = await TiposervicioTs.findById(id)
+    //     if (!tiposerviciots) {
+    //         return res.status(404).json({
+    //             msg: "Tipo de servicio no encontrado",
+    //         })
+    //     }
+
+    //     // Actualizar el tipo de servicio
+    //     tiposerviciots.nombreTipoServicio = nombreTipoServicio
+    //     tiposerviciots.activo = activo
+
+    //     // Guardar los cambios en la base de datos
+    //     await tiposerviciots.save()
+    //     res.json({
+    //         msg: "Tipo de servicio actualizado correctamente",
+    //         tiposerviciots,
+    //     })
+    // } catch (error) {
+    //     console.log(error)
+    //     res.status(500).json({
+    //         msg: "Error al actualizar el tipo de servicio",
+    //     })
+    // }
 }
 
 // Eliminar un tipo de servicio

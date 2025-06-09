@@ -5,7 +5,8 @@ const {
     obtenerClientes,
     obtenerClientePorId,
     actualizarCliente,
-    eliminarCliente
+    eliminarCliente,
+    cambiarEstadoCliente
 } = require('../controllers/cliente');
 //const { validarJWT } = require('../middlewares/verificartoken'); // Asegúrate de que la ruta sea correcta
 //const verificarPermisos = require('../middlewares/verificarPermisos'); 
@@ -40,6 +41,9 @@ router.put('/:id', actualizarCliente);
 
 // Ruta para eliminar un cliente por ID
 router.delete('/:id', eliminarCliente);
+
+// Ruta para cambiar el estado de un cliente
+router.patch('/:id/toggle-estado', cambiarEstadoCliente);
 
 
 module.exports = router;
