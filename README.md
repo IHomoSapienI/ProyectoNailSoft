@@ -116,7 +116,7 @@ Altamente Escalable Gracias a los Permisos Dinamicos no dependemos de roles Esta
 
 👨‍💻 Buenas prácticas de desarrollo y estructura de proyecto
 
-📦 Despliegue
+## 📦 Despliegue
 El servidor backend está alojado en Render, y todas las APIs están desplegadas para su uso en producción. En caso de fallos, se recomienda hacer mantenimiento al backend y actualizar el repositorio, El Frontend esta desplegado en Firebase .
 
 ## Estado del Proyecto
@@ -126,17 +126,24 @@ El servidor backend está alojado en Render, y todas las APIs están desplegadas
 
 ## 🖼️ Galería de Vistas
 
+## Metricas de LightHouse 
 ![Imagen de Metricas LighHouse de Google](image.png)
 
+## DIseño Light para panel de Administrador
 ![Diseño Light del Panel de Administrador](image-1.png) 
 
+## Diseño Dark del panel de Administrador
 ![Diseño Dark del panel de Administrador](image-2.png)
 
+## Landing Vista Cliente 
 ![Landing Vista Cliente](image-3.png)
 
+## Panel Reportes vista Cliente
 ![Panel Reportes vista Cliente](image-4.png)
 
+## Galeria de Servicios Vista Cliente
 ![Galeria de Servicios Vista Cliente](image-5.png)
 
+## Vista de Agendamiento Cliente
 ![Vista de Agendamiento Cliente](image-6.png)
 
