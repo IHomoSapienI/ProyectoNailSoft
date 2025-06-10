@@ -380,39 +380,36 @@ export default function TablaPermisos() {
   const visiblePages = 5;
   const pages = [];
 
+  let current = Math.max(1, Math.min(paginaActual, paginasTotales));
+
   if (paginasTotales <= visiblePages) {
     for (let i = 1; i <= paginasTotales; i++) {
       pages.push(i);
     }
   } else {
-    if (paginaActual <= 3) {
+    if (current <= 3) {
       pages.push(1, 2, 3, 4, '...', paginasTotales);
-    } else if (paginaActual >= paginasTotales - 2) {
+    } else if (current >= paginasTotales - 2) {
       pages.push(1, '...', paginasTotales - 3, paginasTotales - 2, paginasTotales - 1, paginasTotales);
     } else {
-      pages.push(1, '...', paginaActual - 1, paginaActual, paginaActual + 1, '...', paginasTotales);
+      pages.push(1, '...', current - 1, current, current + 1, '...', paginasTotales);
     }
   }
 
   return pages.map((num, index) =>
     num === '...' ? (
-      <span key={index} className="px-2 text-gray-400">…</span>
+      <span key={`ellipsis-${index}`} className="px-2 text-gray-400">…</span>
     ) : (
       <button
-        key={num}
-        onClick={() => cambiarPagina(num)}
-        className={`pagination-number ${
-          paginaActual === num ? "active" : ""
-        }`}
+        key={`page-${num}`}
+        onClick={() => typeof num === 'number' && cambiarPagina(num)}
+        className={`pagination-number ${paginaActual === num ? "active" : ""}`}
       >
         {num}
       </button>
     )
   );
 };
-
-
-
 
 
   // Traducir nivel a español

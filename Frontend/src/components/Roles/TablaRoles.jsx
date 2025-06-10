@@ -556,8 +556,8 @@ const obtenerRoles = async () => {
                         }
                         title={
                           rol.estadoRol
-                            ? "Desactivar usuario"
-                            : "Activar usuario"
+                            ? "Desactivar Rol"
+                            : "Activar Rol"
                         }
                       >
                         <FontAwesomeIcon
