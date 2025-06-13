@@ -53,17 +53,17 @@ const TablaProveedores = () => {
         return
       }
 
-      console.log("🔍 Obteniendo proveedores...")
+      // console.log("🔍 Obteniendo proveedores...")
       const respuesta = await axios.get("https://gitbf.onrender.com/api/proveedores", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
 
-      console.log("📡 Respuesta completa:", respuesta)
-      console.log("📊 Datos recibidos:", respuesta.data)
-      console.log("📊 Tipo de datos:", typeof respuesta.data)
-      console.log("📊 Es array:", Array.isArray(respuesta.data))
+      // console.log("📡 Respuesta completa:", respuesta)
+      // console.log("📊 Datos recibidos:", respuesta.data)
+      // console.log("📊 Tipo de datos:", typeof respuesta.data)
+      // console.log("📊 Es array:", Array.isArray(respuesta.data))
 
       // Manejar la estructura de respuesta del backend
       let proveedoresArray = []
@@ -84,8 +84,8 @@ const TablaProveedores = () => {
         }
       }
 
-      console.log("✅ Proveedores procesados:", proveedoresArray)
-      console.log("📊 Cantidad de proveedores:", proveedoresArray.length)
+      // console.log("✅ Proveedores procesados:", proveedoresArray)
+      // console.log("📊 Cantidad de proveedores:", proveedoresArray.length)
 
       setProveedores(proveedoresArray)
     } catch (error) {
@@ -226,12 +226,12 @@ const TablaProveedores = () => {
           throw new Error("Proveedor no encontrado")
         }
 
-        console.log("🔄 Cambiando estado del proveedor:", {
-          id,
-          estadoActual,
-          nuevoEstado,
-          proveedor: proveedorEncontrado,
-        })
+        // console.log("🔄 Cambiando estado del proveedor:", {
+        //   id,
+        //   estadoActual,
+        //   nuevoEstado,
+        //   proveedor: proveedorEncontrado,
+        // })
 
         // Intentar primero con endpoint específico para cambiar estado
         let response
@@ -248,7 +248,7 @@ const TablaProveedores = () => {
             },
           )
         } catch (patchError) {
-          console.log("⚠️ Endpoint PATCH no disponible, intentando con PUT:", patchError.response?.status)
+          // console.log("⚠️ Endpoint PATCH no disponible, intentando con PUT:", patchError.response?.status)
 
           // Opción 2: Endpoint PUT con objeto completo
           const proveedorActualizado = {
@@ -256,7 +256,7 @@ const TablaProveedores = () => {
             estado: nuevoEstado,
           }
 
-          console.log("📤 Enviando datos completos:", proveedorActualizado)
+          // console.log("📤 Enviando datos completos:", proveedorActualizado)
 
           response = await axios.put(`https://gitbf.onrender.com/api/proveedores/${id}`, proveedorActualizado, {
             headers: {
@@ -266,7 +266,7 @@ const TablaProveedores = () => {
           })
         }
 
-        console.log("✅ Respuesta del servidor:", response.data)
+        // console.log("✅ Respuesta del servidor:", response.data)
 
         // Actualizar el estado local de forma segura
         setProveedores((prevProveedores) =>

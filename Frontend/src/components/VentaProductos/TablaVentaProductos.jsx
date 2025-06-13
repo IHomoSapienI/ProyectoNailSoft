@@ -61,7 +61,7 @@ const TablaVentaProductos = () => {
                 await Swal.fire('Agregado!', 'La venta ha sido agregada.', 'success');
             }
 
-            console.log('Respuesta del servidor:', response.data);
+            // console.log('Respuesta del servidor:', response.data);
             await fetchVentas();
             setModalAbierto(false);
         } catch (error) {
@@ -85,13 +85,13 @@ const TablaVentaProductos = () => {
         if (result.isConfirmed) {
             try {
                 const token = localStorage.getItem('token'); // Obtener el token
-                console.log("Token para eliminación:", token); // Verifica que el token sea correcto
+                // console.log("Token para eliminación:", token); // Verifica que el token sea correcto
                 const response = await axios.delete(`https://gitbf.onrender.com/api/ventaproductos/${idVenta}`, {
                     headers: {
                         'Authorization': `Bearer ${token}` // Enviar el token en el encabezado
                     }
                 });
-                console.log("Respuesta de eliminación:", response.data); // Mostrar la respuesta del servidor
+                // console.log("Respuesta de eliminación:", response.data); // Mostrar la respuesta del servidor
                 fetchVentas();
                 Swal.fire('Eliminado!', 'La venta ha sido eliminada.', 'success');
             } catch (error) {

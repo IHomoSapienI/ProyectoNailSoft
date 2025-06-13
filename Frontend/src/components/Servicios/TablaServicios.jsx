@@ -122,10 +122,10 @@ const TablaServicios = () => {
       }
 
       const serviciosConDescuento = await obtenerServiciosConDescuento();
-      console.log(
-        "Servicios obtenidos con descuentos aplicados:",
-        serviciosConDescuento
-      );
+      // console.log(
+      //   "Servicios obtenidos con descuentos aplicados:",
+      //   serviciosConDescuento
+      // );
       dispatch({
         type: ACTIONS.FETCH_SUCCESS,
         payload: serviciosConDescuento || [],
@@ -462,7 +462,7 @@ const TablaServicios = () => {
     );
   if (state.error)
     return <div className="alert alert-error">{state.error}</div>;
-console.log(serviciosActuales)
+// console.log(serviciosActuales)
   return (
     <div className="content">
       <h2 className="text-3xl font-semibold mb-6 text-foreground px-4 pt-4">
@@ -539,7 +539,7 @@ console.log(serviciosActuales)
           <tbody className="dark:bg-zinc-900/80 text-foreground">
             {serviciosActuales.length > 0 ? (
               serviciosActuales.map((servicio) => {
-                console.log("tipoServicio:", servicio.tipoServicio);
+                // console.log("tipoServicio:", servicio.tipoServicio);
                 // Calcular precio con descuento si el tipo de servicio tiene descuento
                 const tieneDescuento = servicio.tipoServicio?.descuento > 0;
                 const precioOriginal = Number.parseFloat(servicio.precio);

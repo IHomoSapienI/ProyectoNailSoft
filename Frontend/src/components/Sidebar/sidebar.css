@@ -93,14 +93,14 @@
   margin: 0;
 }
 
-.menu-container {
+/* .menu-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
   
-}
+} */
 
 .menu-group {
   margin-bottom: 0.5rem;
@@ -398,19 +398,21 @@ body.sidebar-expanded .main-content {
     top: 0;
     z-index: 1000;
     transition: width 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); */
-    background: black;
-    color: white;
+    /* background: black;
+    color: white; */
   }
 }
 
 .sidebar-container.collapsed .logo-wrapper {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
 }
 
 .sidebar-container.collapsed .logo-container {
   justify-content: center;
   padding: 0.5rem;
+  width: 80px;
+height: 80px;
 }
 
 
@@ -484,7 +486,7 @@ body.sidebar-expanded .main-content {
 /* Toggle desktop */
 .sidebar-toggle {
   position: fixed;
-  top: 50%;
+  top: 9%;
   transform: translateY(-50%);
   z-index: calc(var(--sidebar-z-index) + 1);
   background: var(--sidebar-bg);
@@ -555,7 +557,8 @@ body.sidebar-expanded .main-content {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* overflow: hidden; */
+  width: auto;
 }
 
 /* Header del sidebar */
@@ -625,13 +628,13 @@ body.sidebar-expanded .main-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 0;
-  scrollbar-width: thin;
+  padding: 0;
+  scrollbar-width:none;
   scrollbar-color: var(--sidebar-border) transparent;
 }
 
-.menu-container::-webkit-scrollbar {
-  width: 4px;
+/* .menu-container::-webkit-scrollbar {
+  width: 1px;
 }
 
 .menu-container::-webkit-scrollbar-track {
@@ -645,12 +648,12 @@ body.sidebar-expanded .main-content {
 
 .menu-container::-webkit-scrollbar-thumb:hover {
   background: var(--sidebar-text-secondary);
-}
+} */
 
 /* Botón de logout */
 .logout-button {
-  margin: 1rem;
-  padding: 0.75rem;
+  /* margin: 1rem;
+  padding: 0.75rem; */
   background: transparent;
   border: 1px solid var(--sidebar-border);
   border-radius: 0.5rem;
@@ -666,8 +669,9 @@ body.sidebar-expanded .main-content {
 }
 
 .logout-button:hover {
-  background: #fef2f2;
+  /* background: #fef2f2; */
   border-color: #ef4444;
+  
   transform: translateY(-1px);
 }
 

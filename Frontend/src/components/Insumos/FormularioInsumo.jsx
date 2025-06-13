@@ -314,7 +314,7 @@ const FormularioInsumo = ({ insumo, onClose, onSuccess }) => {
 
           <div className="form-group">
             <label htmlFor="precio" className="form-label">
-              Precio <span className="text-pink-500">*</span>
+              Precio <span className="text-pink-500 ml-[5px]">*</span>
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>

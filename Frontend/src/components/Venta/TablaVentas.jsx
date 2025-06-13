@@ -50,7 +50,7 @@ const TablaVentas = () => {
           },
         }
       );
-      console.log("Ventas obtenidas:", response.data.ventas?.length || 0);
+      // console.log("Ventas obtenidas:", response.data.ventas?.length || 0);
       setVentas(response.data.ventas || []);
     } catch (error) {
       console.error("Error al obtener las ventas:", error);
@@ -252,10 +252,10 @@ const TablaVentas = () => {
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
-              console.log(
-                "Respuesta de liberación de horario:",
-                liberarResponse.data
-              );
+              // console.log(
+              //   "Respuesta de liberación de horario:",
+              //   liberarResponse.data
+              // );
 
               // Como respaldo, también actualizar directamente la disponibilidad del empleado
               try {
@@ -276,9 +276,9 @@ const TablaVentas = () => {
                   },
                   { headers: { Authorization: `Bearer ${token}` } }
                 );
-                console.log(
-                  "Disponibilidad del empleado actualizada directamente"
-                );
+                // console.log(
+                //   "Disponibilidad del empleado actualizada directamente"
+                // );
               } catch (dispError) {
                 console.error(
                   "Error al actualizar disponibilidad directamente:",
@@ -286,9 +286,9 @@ const TablaVentas = () => {
                 );
               }
 
-              console.log(
-                "Horario liberado correctamente al finalizar venta desde tabla"
-              );
+              // console.log(
+              //   "Horario liberado correctamente al finalizar venta desde tabla"
+              // );
             } catch (horarioError) {
               console.error("Error al liberar horario:", horarioError);
 
@@ -311,9 +311,9 @@ const TablaVentas = () => {
                   },
                   { headers: { Authorization: `Bearer ${token}` } }
                 );
-                console.log(
-                  "Disponibilidad del empleado actualizada como respaldo"
-                );
+                // console.log(
+                //   "Disponibilidad del empleado actualizada como respaldo"
+                // );
               } catch (dispError) {
                 console.error(
                   "Error en método alternativo de liberación:",
@@ -329,9 +329,9 @@ const TablaVentas = () => {
               }
             }
 
-            console.log(
-              "Horario liberado correctamente al finalizar venta desde tabla"
-            );
+            // console.log(
+            //   "Horario liberado correctamente al finalizar venta desde tabla"
+            // );
           } catch (citaError) {
             console.error(
               "Error al actualizar cita o liberar horario:",
@@ -373,7 +373,7 @@ const TablaVentas = () => {
 
       if (response.data && response.data.venta) {
         const ventaCompleta = response.data.venta;
-console.log("Fecha cruda de cita:", ventaCompleta?.cita?.fechacita);
+// console.log("Fecha cruda de cita:", ventaCompleta?.cita?.fechacita);
         // Procesar servicios para asegurar que la información de descuento esté correcta
         if (ventaCompleta.servicios && ventaCompleta.servicios.length > 0) {
           try {

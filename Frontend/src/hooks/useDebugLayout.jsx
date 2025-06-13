@@ -30,7 +30,7 @@ export const useDebugLayout = () => {
   }
 
   // Log para debug
-  console.log("🔍 Debug Layout Info:", debugInfo)
+  // console.log("🔍 Debug Layout Info:", debugInfo)
 
   return debugInfo
 }

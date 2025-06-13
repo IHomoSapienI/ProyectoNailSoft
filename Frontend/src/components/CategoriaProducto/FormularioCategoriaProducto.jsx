@@ -160,7 +160,7 @@ const FormularioCategoriaProducto = ({ categoriaId, onClose }) => {
         })
         Swal.fire("¡Éxito!", "Categoría creada con éxito", "success")
       }
-      console.log("Formulario enviado, actualizando categorías...")
+      // console.log("Formulario enviado, actualizando categorías...")
       onClose() // Cerrar el formulario y actualizar la tabla
     } catch (error) {
       console.error("Error al guardar la categoría:", error)

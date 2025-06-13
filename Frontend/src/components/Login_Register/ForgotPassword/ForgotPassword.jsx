@@ -247,11 +247,11 @@ export default function ForgotPassword() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className={`form-input-register ${errors.email ? "input-error" : ""}`}
+                  className={`form-input-forgot ${errors.email ? "input-error" : ""}`}
                   placeholder=" "
                   maxLength={80}
                 />
-                <label htmlFor="email" className="input-label-register">
+                <label htmlFor="email" className="input-label-forgot">
                   Correo electrónico *
                 </label>
                 {errors.email && <span className="field-error">{errors.email}</span>}

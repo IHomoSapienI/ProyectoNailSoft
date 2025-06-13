@@ -54,7 +54,7 @@ export const menuConfig = [
     path: "/tiposervicios",
     icon: BiSolidDiscount,
     group: "Gestión de Servicios",
-    permission:"verTipoDescuentosMenu"
+    permission:"verTipoDescuentoMenu"
   },
   {
     label: "Tipo de Servicios",

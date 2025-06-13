@@ -284,19 +284,6 @@ class _ListServicesScreenState extends State<ListServicesScreen> with SingleTick
     ).show();
   }
 
-  Widget _buildCornerDecoration() {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-          left: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPaginationControls() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -322,7 +309,7 @@ class _ListServicesScreenState extends State<ListServicesScreen> with SingleTick
 
   Widget _buildServiceCard(Servicio servicio) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
@@ -343,38 +330,49 @@ class _ListServicesScreenState extends State<ListServicesScreen> with SingleTick
             width: 1,
           ),
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          leading: _buildLeadingImageOrIcon(servicio.imagenUrl),
-          title: Text(
-            servicio.nombreServicio,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
             children: [
-              const SizedBox(height: 4),
-              Text(
-                servicio.descripcion,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Precio: \$${servicio.precio.toStringAsFixed(2)} - Duración: ${servicio.tiempo} min',
-                style: const TextStyle(
-                  color: Color(0xFFD4AF37),
-                  fontWeight: FontWeight.w500,
+              _buildLeadingImageOrIcon(servicio.imagenUrl),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      servicio.nombreServicio,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      servicio.descripcion,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Precio: \$${servicio.precio.toStringAsFixed(2)} - Duración: ${servicio.tiempo} min',
+                      style: const TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          trailing: null,
         ),
       ),
     );
@@ -417,7 +415,7 @@ class _ListServicesScreenState extends State<ListServicesScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'SERVICIOS',
@@ -429,151 +427,106 @@ class _ListServicesScreenState extends State<ListServicesScreen> with SingleTick
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFD4AF37).withOpacity(0.7),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withOpacity(0.7),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
-              onPressed: () {
-                setState(() {
-                  _refreshServicios();
-                });
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
+            onPressed: () {
+              setState(() {
+                _refreshServicios();
+              });
+            },
           ),
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.black,
+          image: DecorationImage(
+            image: AssetImage('images/logo1.png'),
+            opacity: 0.05,
+            repeat: ImageRepeat.repeat,
+            colorFilter: ColorFilter.mode(
+              const Color(0xFFD4AF37),
+              BlendMode.srcIn,
+            ),
+          ),
         ),
-        child: Stack(
-          children: [
-            // Background pattern
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.05,
-                child: Image.asset(
-                  'images/logo1.png',
-                  repeat: ImageRepeat.repeat,
-                  color: const Color(0xFFD4AF37), // Gold color
-                ),
-              ),
-            ),
-            
-            // Decorative corner elements
-            Positioned(
-              top: 20,
-              left: 20,
-              child: _buildCornerDecoration(),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 1.57, // 90 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 3.14, // 180 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Transform.rotate(
-                angle: 4.71, // 270 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            
-            // Main content
-            SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    if (_allServicios.isNotEmpty) ...[
-                      // Información de paginación
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedServicios.length} de $_totalItems',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              'Página $_currentPage de $_totalPages',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              if (_allServicios.isNotEmpty) ...[
+                // Información de paginación
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedServicios.length} de $_totalItems',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      
-                      // Lista de servicios
-                      Expanded(
-                        child: _paginatedServicios.isEmpty
-                            ? _buildEmptyView()
-                            : ListView.builder(
-                                padding: const EdgeInsets.only(top: 8, bottom: 100),
-                                itemCount: _paginatedServicios.length,
-                                itemBuilder: (context, index) {
-                                  final servicio = _paginatedServicios[index];
-                                  return _buildServiceCard(servicio);
-                                },
-                              ),
+                      Text(
+                        'Página $_currentPage de $_totalPages',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
                       ),
-                      
-                      // Controles de paginación
-                      if (_totalPages > 1) _buildPaginationControls(),
-                    ] else
-                      Expanded(child: _buildEmptyView()),
-                  ],
+                    ],
+                  ),
+                ),
+                
+                // Lista de servicios
+                Expanded(
+                  child: _paginatedServicios.isEmpty
+                      ? _buildEmptyView()
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          itemCount: _paginatedServicios.length,
+                          itemBuilder: (context, index) {
+                            final servicio = _paginatedServicios[index];
+                            return _buildServiceCard(servicio);
+                          },
+                        ),
+                ),
+                
+                // Controles de paginación
+                if (_totalPages > 1) _buildPaginationControls(),
+              ] else
+                Expanded(child: _buildEmptyView()),
+            
+              // Footer
+              Container(
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  '© Nailsoft 2024 - Todos los derechos reservados',
+                  style: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD4AF37),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      floatingActionButton: null,
     );
   }
 

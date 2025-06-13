@@ -166,7 +166,7 @@ const handleLogin = async (e) => {
       "https://gitbf.onrender.com/api/auth/login",
       { email, password }
     );
- console.log("Respuesta completa del backend:", response.data); // 👈 Verifica esto
+//  console.log("Respuesta completa del backend:", response.data); // 👈 Verifica esto
     const { token, role, permisos,user } = response.data;
     // const permisos = user.permisos || [];
 
@@ -184,7 +184,7 @@ const handleLogin = async (e) => {
       permisos: permisos || [], // Asegúrate de que permisos sea un array
     });
 
-    console.log("Permisos recibidos:", permisos);
+    // console.log("Permisos recibidos:", permisos);
 
    
 
@@ -318,7 +318,7 @@ const handleLogin = async (e) => {
               className="logo-container-login"
             >
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SPA%20Y%20BELLEZA%20MARCA%20DE%20AGUA%20BLANCA-VFG4JvBoS4w0THbQFEavbRqsd9HDxv.png"
+                src="https://gitbf.onrender.com/uploads/LogoLogin.webp"
                 alt="SPA Y BELLEZA"
                 className="logo-image-login"
               />

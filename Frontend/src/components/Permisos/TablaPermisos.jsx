@@ -51,6 +51,7 @@ export default function TablaPermisos() {
     { value: "clientes", label: "Clientes" },
     { value: "compras", label: "Compras" },
     { value: "configuración", label: "Configuración" },
+    { value: "descuentos", label: "Descuentos" },
     { value: "empleados", label: "Empleados" },
     { value: "insumos", label: "Insumos" },
     { value: "permisos", label: "Permisos" },
@@ -60,10 +61,12 @@ export default function TablaPermisos() {
     { value: "roles", label: "Roles" },
     { value: "tipoServicios", label: "Tipo de Servicios" },
     { value: "servicios", label: "Servicios" },
+    { value: "tipoDeServicios", label: "Tipo de Servicios" },
     { value: "usuarios", label: "Usuarios" },
     { value: "ventas", label: "Ventas" },
     { value: "vistasSidebar", label: "Vistas del Sidebar" },
   ];
+    
 
   const obtenerPermisos = async () => {
     try {

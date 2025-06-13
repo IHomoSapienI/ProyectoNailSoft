@@ -325,12 +325,12 @@ export default function Register() {
       }
     } catch (error) {
       console.error("Registration error:", error)
-        console.log("Detalles del error de Axios:", {
-    message: error.message,
-    status: error?.response?.status,
-    data: error?.response?.data,
-    headers: error?.response?.headers,
-  });
+  //       console.log("Detalles del error de Axios:", {
+  //   message: error.message,
+  //   status: error?.response?.status,
+  //   data: error?.response?.data,
+  //   headers: error?.response?.headers,
+  // });
 
 
       let errorMessage = "Error al registrar. Por favor intente nuevamente."

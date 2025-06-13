@@ -8,6 +8,8 @@ export const layoutConfig = {
     "visualizarCitaEnProgresoMenu",
     "verVentasUnificadasMenu",
     "verServiciosMenu",
+    "verTipoDescuentoMenu",
+    "verTipoServiciosMenu",
     "verEmpleadosMenu",
     "verClientesMenu",
     "verCitasMenu",

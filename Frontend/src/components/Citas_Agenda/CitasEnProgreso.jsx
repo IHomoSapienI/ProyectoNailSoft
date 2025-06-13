@@ -33,7 +33,7 @@ const CitasEnProgreso = () => {
       // Obtener citas confirmadas, en progreso, pendientes y canceladas
       try {
         const citasResponse = await axios.get(`${API_URL}/citas`, { headers })
-        console.log("Respuesta completa de citas:", citasResponse.data)
+        // console.log("Respuesta completa de citas:", citasResponse.data)
 
         const citasData = citasResponse.data.citas || []
 
@@ -52,14 +52,14 @@ const CitasEnProgreso = () => {
         // Log de citas canceladas para depuración
         const citasCanceladasIniciales = citasValidas.filter((cita) => cita.estadocita === "Cancelada")
         if (citasCanceladasIniciales.length > 0) {
-          console.log("Citas canceladas encontradas:", citasCanceladasIniciales.length)
+          // console.log("Citas canceladas encontradas:", citasCanceladasIniciales.length)
           citasCanceladasIniciales.forEach((cita, index) => {
-            console.log(`Cita cancelada #${index + 1}:`, {
-              id: cita._id,
-              cliente: cita.nombrecliente?.nombrecliente,
-              motivo: cita.motivo || "No especificado",
-              fechaCancelacion: cita.fechacancelacion || "No registrada",
-            })
+            // console.log(`Cita cancelada #${index + 1}:`, {
+            //   id: cita._id,
+            //   cliente: cita.nombrecliente?.nombrecliente,
+            //   motivo: cita.motivo || "No especificado",
+            //   fechaCancelacion: cita.fechacancelacion || "No registrada",
+            // })
           })
         }
 
@@ -85,9 +85,9 @@ const CitasEnProgreso = () => {
             // Crear un objeto Date para mostrar en la interfaz
             citaCorregida._fechaObjeto = new Date(`${fechaBase}T${citaCorregida.horacita}`)
 
-            console.log(
-              `Cita ${citaCorregida._id}: Corrigiendo fecha de ${citaCorregida._fechaOriginal} a ${citaCorregida._fechaCorrecta}`,
-            )
+            // console.log(
+            //   `Cita ${citaCorregida._id}: Corrigiendo fecha de ${citaCorregida._fechaOriginal} a ${citaCorregida._fechaCorrecta}`,
+            // )
           }
 
           return citaCorregida
@@ -125,7 +125,7 @@ const CitasEnProgreso = () => {
         const ventasActivas = ventasData.filter((venta) => venta && venta.estado === true)
         setVentas(ventasActivas)
 
-        console.log("Ventas cargadas correctamente:", ventasActivas.length)
+        // console.log("Ventas cargadas correctamente:", ventasActivas.length)
       } catch (ventasError) {
         console.error("Error al cargar ventas:", ventasError)
         setVentas([]) // Establecer un array vacío para evitar errores
@@ -257,27 +257,27 @@ const CitasEnProgreso = () => {
       if (citaResponse.data && citaResponse.data.cita) {
         // Intentar obtener servicios con descuentos y guardarlos en localStorage
         try {
-          console.log("Importando función obtenerServiciosConDescuento...")
+          // console.log("Importando función obtenerServiciosConDescuento...")
           const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
-          console.log("Obteniendo servicios con descuentos...")
+          // console.log("Obteniendo servicios con descuentos...")
           const serviciosConDescuento = await obtenerServiciosConDescuento()
-          console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
+          // console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
 
           // Si la cita tiene servicios, guardarlos con información de descuento
           if (citaResponse.data.cita.servicios && citaResponse.data.cita.servicios.length > 0) {
-            console.log("Servicios en la cita:", citaResponse.data.cita.servicios)
+            // console.log("Servicios en la cita:", citaResponse.data.cita.servicios)
 
             const serviciosFormateados = await Promise.all(
               citaResponse.data.cita.servicios.map(async (servicio) => {
                 // Determinar el ID del servicio
                 const servicioId = servicio.servicio || servicio._id
-                console.log(`Procesando servicio ID: ${servicioId}`)
+                // console.log(`Procesando servicio ID: ${servicioId}`)
 
                 // Buscar el servicio completo en la lista de servicios con descuento
                 const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
 
                 if (servicioCompleto) {
-                  console.log(`Servicio encontrado en lista con descuentos: ${servicioCompleto.nombreServicio}`)
+                  // console.log(`Servicio encontrado en lista con descuentos: ${servicioCompleto.nombreServicio}`)
                   return {
                     servicio: servicioId,
                     nombreServicio: servicioCompleto.nombreServicio,
@@ -290,12 +290,12 @@ const CitasEnProgreso = () => {
                   }
                 } else {
                   // Si no lo encontramos en la lista, intentar validar el ID
-                  console.log(`Servicio no encontrado en lista, validando ID: ${servicioId}`)
+                  // console.log(`Servicio no encontrado en lista, validando ID: ${servicioId}`)
                   const { validarIdServicio } = await import("../Servicios/obtenerServicios")
                   const idValidado = await validarIdServicio(servicioId)
 
                   if (idValidado !== servicioId) {
-                    console.log(`ID validado diferente: ${idValidado}, buscando nuevamente`)
+                    // console.log(`ID validado diferente: ${idValidado}, buscando nuevamente`)
                     const servicioValidado = serviciosConDescuento.find((s) => s._id === idValidado)
 
                     if (servicioValidado) {
@@ -327,9 +327,9 @@ const CitasEnProgreso = () => {
               }),
             )
 
-            console.log("Servicios formateados con descuentos:", serviciosFormateados)
+            // console.log("Servicios formateados con descuentos:", serviciosFormateados)
             localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
-            console.log("Servicios con descuento guardados en localStorage antes de iniciar venta")
+            // console.log("Servicios con descuento guardados en localStorage antes de iniciar venta")
           }
         } catch (error) {
           console.error("Error al preparar servicios con descuento:", error)
@@ -356,7 +356,7 @@ const CitasEnProgreso = () => {
             // Actualizar el estado de la cita a "En Progreso" antes de navegar
             try {
               await axios.put(`${API_URL}/citas/${citaId}`, { estadocita: "En Progreso" }, { headers })
-              console.log("Cita marcada como En Progreso")
+              // console.log("Cita marcada como En Progreso")
 
               // Actualizar la lista de citas en la UI
               setCitas((prevCitas) =>
@@ -487,8 +487,8 @@ const CitasEnProgreso = () => {
 
   // Mostrar detalles de cancelación de una cita
   async function mostrarDetallesCancelacion(cita) {
-    console.log("Mostrando detalles de cancelación para cita:", cita._id)
-    console.log("Datos iniciales de la cita:", JSON.stringify(cita, null, 2))
+    // console.log("Mostrando detalles de cancelación para cita:", cita._id)
+    // console.log("Datos iniciales de la cita:", JSON.stringify(cita, null, 2))
 
     try {
       // Intentar obtener datos de respaldo del localStorage
@@ -497,7 +497,7 @@ const CitasEnProgreso = () => {
         const respaldoStr = localStorage.getItem(`cancelacion_${cita._id}`)
         if (respaldoStr) {
           datosRespaldo = JSON.parse(respaldoStr)
-          console.log("Datos de respaldo encontrados en localStorage:", datosRespaldo)
+          // console.log("Datos de respaldo encontrados en localStorage:", datosRespaldo)
         }
       } catch (e) {
         console.error("Error al leer datos de respaldo:", e)
@@ -517,30 +517,30 @@ const CitasEnProgreso = () => {
 
       try {
         // Intentar obtener datos actualizados del servidor
-        console.log(`Obteniendo datos actualizados para cita ${cita._id}...`)
+        // console.log(`Obteniendo datos actualizados para cita ${cita._id}...`)
         const response = await axios.get(`${API_URL}/citas/${cita._id}`, { headers })
-        console.log("Respuesta completa del servidor:", response.data)
+        // console.log("Respuesta completa del servidor:", response.data)
 
         // Extraer la cita de la respuesta según su estructura
         if (response.data && response.data.cita) {
           citaActualizada = response.data.cita
-          console.log("Usando datos de response.data.cita")
+          // console.log("Usando datos de response.data.cita")
         } else if (response.data) {
           citaActualizada = response.data
-          console.log("Usando datos de response.data directamente")
+          // console.log("Usando datos de response.data directamente")
         }
 
         // Verificar si tenemos datos de cancelación en la respuesta
         if (citaActualizada) {
-          console.log("Datos de cancelación en respuesta:", {
-            motivo: citaActualizada.motivo,
-            fechacancelacion: citaActualizada.fechacancelacion,
-          })
+          // console.log("Datos de cancelación en respuesta:", {
+          //   motivo: citaActualizada.motivo,
+          //   fechacancelacion: citaActualizada.fechacancelacion,
+          // })
 
           // Usar los datos actualizados si existen
           if (citaActualizada.motivo) {
             motivoCancelacion = citaActualizada.motivo
-            console.log("Usando motivo del servidor:", motivoCancelacion)
+            // console.log("Usando motivo del servidor:", motivoCancelacion)
           }
 
           if (citaActualizada.fechacancelacion) {
@@ -553,7 +553,7 @@ const CitasEnProgreso = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               })
-              console.log("Usando fecha de cancelación del servidor:", fechaCancelacionFormateada)
+              // console.log("Usando fecha de cancelación del servidor:", fechaCancelacionFormateada)
             } catch (dateError) {
               console.error("Error al formatear fecha del servidor:", dateError)
               fechaCancelacionFormateada = String(citaActualizada.fechacancelacion)
@@ -567,12 +567,12 @@ const CitasEnProgreso = () => {
 
       // Si no pudimos obtener datos actualizados, usar los datos locales
       if (motivoCancelacion === "No especificado" && cita.motivo) {
-        console.log("Usando motivo de datos locales:", cita.motivo)
+        // console.log("Usando motivo de datos locales:", cita.motivo)
         motivoCancelacion = cita.motivo
       }
 
       if (fechaCancelacionFormateada === "No registrada" && cita.fechacancelacion) {
-        console.log("Usando fecha de cancelación de datos locales:", cita.fechacancelacion)
+        // console.log("Usando fecha de cancelación de datos locales:", cita.fechacancelacion)
         try {
           const fechaCancelacion = new Date(cita.fechacancelacion)
           fechaCancelacionFormateada = fechaCancelacion.toLocaleDateString("es-ES", {
@@ -590,12 +590,12 @@ const CitasEnProgreso = () => {
 
       // Si aún no tenemos datos, usar los datos de respaldo
       if (motivoCancelacion === "No especificado" && datosRespaldo?.motivo) {
-        console.log("Usando motivo de datos de respaldo:", datosRespaldo.motivo)
+        // console.log("Usando motivo de datos de respaldo:", datosRespaldo.motivo)
         motivoCancelacion = datosRespaldo.motivo
       }
 
       if (fechaCancelacionFormateada === "No registrada" && datosRespaldo?.fechacancelacion) {
-        console.log("Usando fecha de cancelación de datos de respaldo:", datosRespaldo.fechacancelacion)
+        // console.log("Usando fecha de cancelación de datos de respaldo:", datosRespaldo.fechacancelacion)
         try {
           const fechaCancelacion = new Date(datosRespaldo.fechacancelacion)
           fechaCancelacionFormateada = fechaCancelacion.toLocaleDateString("es-ES", {

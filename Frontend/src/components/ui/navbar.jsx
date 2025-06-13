@@ -396,7 +396,7 @@ export function AvatarMenu({ userName = "", onLogout }) {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{userName || "Usuario"}</span>
-                <span className="text-xs text-gray-500">{localStorage.getItem("userEmail") || "Bienvenido"}</span>
+                <span className="truncate text-xs text-gray-500">{localStorage.getItem("userEmail") || "Bienvenido"}</span>
               </div>
             </div>
 

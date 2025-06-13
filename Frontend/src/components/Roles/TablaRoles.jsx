@@ -621,7 +621,7 @@ const obtenerRoles = async () => {
       <Modal
         isOpen={modalRolIsOpen}
         onRequestClose={manejarCerrarModal}
-        className="modal-content"
+        className="modal-content-rol-form"
         overlayClassName="modal-overlay"
       >
         <div className="relative">
@@ -643,17 +643,17 @@ const obtenerRoles = async () => {
       <Modal
         isOpen={modalDetallesIsOpen}
         onRequestClose={manejarCerrarModalDetalles}
-        className="modal-content"
+        className="modal-content-rol-form"
         overlayClassName="modal-overlay"
       >
-        <div className="relative">
+        <div className="relative h-[90vh]">
           <button
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl"
             onClick={manejarCerrarModalDetalles}
           >
             &times;
           </button>
-          <div className="p-6">
+          <div className="p-6 modal-p">
             <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
               Detalles del Rol
             </h2>
@@ -686,8 +686,8 @@ const obtenerRoles = async () => {
                   <h3 className="text-lg font-medium text-gray-800 mb-3">
                     Permisos asignados:
                   </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-                    <ul className="space-y-2">
+                  <div className="bg-gray-50 p-4 rounded-lg max-h-[90vh] overflow-y-auto">
+                    <ul className="space-y-2 max-h-[90vh]">
                       {rolSeleccionado.permisoRol.map((permiso) => (
                         <li key={permiso._id} className="flex items-center">
                           <span className="h-2 w-2 bg-pink-500 rounded-full mr-2"></span>
@@ -708,7 +708,7 @@ const obtenerRoles = async () => {
               </div>
             )}
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 fixed justify-end ">
               <button
                 onClick={manejarCerrarModalDetalles}
                 className="btn-secondary"
@@ -724,7 +724,7 @@ const obtenerRoles = async () => {
       <Modal
         isOpen={modalPermisoIsOpen}
         onRequestClose={manejarCerrarModalPermiso}
-        className="modal-content"
+        className="modal-content-rol-form"
         overlayClassName="modal-overlay"
       >
         <div className="relative">

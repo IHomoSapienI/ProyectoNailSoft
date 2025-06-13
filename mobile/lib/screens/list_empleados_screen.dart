@@ -316,23 +316,10 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
     );
   }
 
-  Widget _buildCornerDecoration() {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-          left: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'EMPLEADOS',
@@ -344,124 +331,61 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFD4AF37).withOpacity(0.7),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withOpacity(0.7),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
-              onPressed: _loadEmpleados,
-            ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
+            onPressed: _loadEmpleados,
           ),
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.black,
+          image: DecorationImage(
+            image: AssetImage('images/logo1.png'),
+            opacity: 0.05,
+            repeat: ImageRepeat.repeat,
+            colorFilter: ColorFilter.mode(
+              const Color(0xFFD4AF37),
+              BlendMode.srcIn,
+            ),
+          ),
         ),
-        child: Stack(
-          children: [
-            // Background pattern
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.05,
-                child: Image.asset(
-                  'images/logo1.png',
-                  repeat: ImageRepeat.repeat,
-                  color: const Color(0xFFD4AF37), // Gold color
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              Expanded(
+                child: _isLoading 
+                ? _buildLoadingIndicator()
+                : _errorMessage.isNotEmpty 
+                  ? _buildErrorView()
+                  : _buildEmpleadosList(),
+              ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  '© Nailsoft 2024 - Todos los derechos reservados',
+                  style: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD4AF37),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-            
-            // Decorative corner elements
-            Positioned(
-              top: 20,
-              left: 20,
-              child: _buildCornerDecoration(),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 1.57, // 90 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 3.14, // 180 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Transform.rotate(
-                angle: 4.71, // 270 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            
-            // Main content
-            SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: _isLoading 
-                      ? _buildLoadingIndicator()
-                      : _errorMessage.isNotEmpty 
-                        ? _buildErrorView()
-                        : _buildEmpleadosList(),
-                    ),
-                    Container(
-                      color: Colors.black.withOpacity(0.7),
-                      padding: const EdgeInsets.all(10),
-                      child: const Text(
-                        '© Nailsoft 2024 - Todos los derechos reservados',
-                        style: TextStyle(
-                          fontSize: 12, 
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD4AF37),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      floatingActionButton: null,
     );
   }
   
@@ -478,11 +402,14 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedEmpleados.length} de $_totalItems',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 12,
+            Flexible(
+              child: Text(
+                'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedEmpleados.length} de $_totalItems',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
@@ -499,12 +426,12 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
       // Lista paginada
       Expanded(
         child: ListView.builder(
-          padding: const EdgeInsets.only(top: 16, bottom: 100),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           itemCount: _paginatedEmpleados.length,
           itemBuilder: (context, index) {
             final empleado = _paginatedEmpleados[index];
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
@@ -525,91 +452,101 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
                     width: 1,
                   ),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  leading: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFFD4AF37).withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        empleado.nombreempleado.isNotEmpty ? empleado.nombreempleado[0].toUpperCase() : '?',
-                        style: const TextStyle(
-                          color: Color(0xFFD4AF37),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFFD4AF37).withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            empleado.nombreempleado.isNotEmpty ? empleado.nombreempleado[0].toUpperCase() : '?',
+                            style: const TextStyle(
+                              color: Color(0xFFD4AF37),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  title: Text(
-                    '${empleado.nombreempleado} ${empleado.apellidoempleado}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.email, size: 14, color: Color(0xFFD4AF37)),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              empleado.correoempleado,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${empleado.nombreempleado} ${empleado.apellidoempleado}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.phone, size: 14, color: Color(0xFFD4AF37)),
-                          const SizedBox(width: 4),
-                          Text(
-                            empleado.telefonoempleado,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.email, size: 12, color: Color(0xFFD4AF37)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    empleado.correoempleado,
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            empleado.estadoempleado ? Icons.check_circle : Icons.cancel,
-                            size: 14,
-                            color: empleado.estadoempleado ? Colors.green : Colors.red,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            empleado.estadoempleado ? 'Activo' : 'Inactivo',
-                            style: TextStyle(
-                              color: empleado.estadoempleado ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.w500,
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, size: 12, color: Color(0xFFD4AF37)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  empleado.telefonoempleado,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  empleado.estadoempleado ? Icons.check_circle : Icons.cancel,
+                                  size: 12,
+                                  color: empleado.estadoempleado ? Colors.green : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  empleado.estadoempleado ? 'Activo' : 'Inactivo',
+                                  style: TextStyle(
+                                    color: empleado.estadoempleado ? Colors.green : Colors.red,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  trailing: null,
                 ),
               ),
             );
@@ -625,88 +562,21 @@ class _ListEmpleadosScreenState extends State<ListEmpleadosScreen> with SingleTi
 
 Widget _buildPaginationControls() {
   return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.8),
-      border: Border(
-        top: BorderSide(
-          color: const Color(0xFFD4AF37).withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-    ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Botón anterior
-        ElevatedButton.icon(
+        IconButton(
           onPressed: _currentPage > 1 ? _previousPage : null,
-          icon: const Icon(Icons.chevron_left),
-          label: const Text('Anterior'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _currentPage > 1 ? const Color(0xFFD4AF37) : Colors.grey,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
+          icon: Icon(Icons.arrow_back_ios, color: _currentPage > 1 ? const Color(0xFFD4AF37) : Colors.grey),
         ),
-        
-        // Números de página
-        Row(
-          children: [
-            for (int i = 1; i <= _totalPages; i++)
-              if (i == 1 || i == _totalPages || (i >= _currentPage - 1 && i <= _currentPage + 1))
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: GestureDetector(
-                    onTap: () => _goToPage(i),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: i == _currentPage ? const Color(0xFFE0115F) : Colors.transparent,
-                        border: Border.all(
-                          color: i == _currentPage ? const Color(0xFFE0115F) : const Color(0xFFD4AF37),
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Center(
-                        child: Text(
-                          i.toString(),
-                          style: TextStyle(
-                            color: i == _currentPage ? Colors.white : const Color(0xFFD4AF37),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              else if (i == _currentPage - 2 || i == _currentPage + 2)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: const Text(
-                    '...',
-                    style: TextStyle(color: Colors.white54),
-                  ),
-                ),
-          ],
+        Text(
+          '$_currentPage/$_totalPages',
+          style: const TextStyle(color: Colors.white),
         ),
-        
-        // Botón siguiente
-        ElevatedButton.icon(
+        IconButton(
           onPressed: _currentPage < _totalPages ? _nextPage : null,
-          icon: const Icon(Icons.chevron_right),
-          label: const Text('Siguiente'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _currentPage < _totalPages ? const Color(0xFFD4AF37) : Colors.grey,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
+          icon: Icon(Icons.arrow_forward_ios, color: _currentPage < _totalPages ? const Color(0xFFD4AF37) : Colors.grey),
         ),
       ],
     ),

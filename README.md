@@ -5,6 +5,9 @@
 
 [![Ver en Firebase](https://img.shields.io/badge/Ver%20App%20en-Firebase-orange?style=for-the-badge&logo=firebase)](https://nailsoft-7d03c.web.app/login)
 
+## Credenciales de Prueba con Rol Administrativo:
+USUARIO:  test@gmail.com
+PASSWORD: Test123!
 
 NailSoft es un sistema integral para gestionar servicios mediante citas para diseño de uñas, permitiendo la selección de múltiples servicios, registro de ventas y compras de insumos para el Spa "S&B".
 

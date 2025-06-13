@@ -109,10 +109,10 @@ export default function FormularioTipoServicios({ tipoServicioSeleccionado, onTi
 
     const method = tipoServicioSeleccionado ? "PUT" : "POST"
 
-    // 👉 Log para verificar datos antes de enviar
-    console.log("Datos enviados:", formData)
-    console.log("Usando método:", method)
-    console.log("URL:", url)
+    // // 👉 Log para verificar datos antes de enviar
+    // console.log("Datos enviados:", formData)
+    // console.log("Usando método:", method)
+    // console.log("URL:", url)
 
     const response = await fetch(url, {
   method,
@@ -124,7 +124,7 @@ export default function FormularioTipoServicios({ tipoServicioSeleccionado, onTi
 });
 
 // Log para ver si al menos hay respuesta
-console.log("HTTP Status:", response.status);
+// console.log("HTTP Status:", response.status);
 
 // Evita intentar parsear JSON si la respuesta no tiene contenido
 if (response.status === 204) {
@@ -138,7 +138,7 @@ if (response.status === 204) {
 }
 
 const data = await response.json();
-console.log("Respuesta completa:", data);
+// console.log("Respuesta completa:", data);
 
 
     // Validación extra por si el backend no devuelve lo esperado
@@ -183,14 +183,14 @@ console.log("Respuesta completa:", data);
 
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-md dark:bg-zinc-800">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
+    <div className="p-6 max-w-[100%] mx-auto bg-white rounded-lg shadow-md dark:bg-zinc-800">
+      <h2 className="text-2xl font-bold mb-6 text-center text-black">
         {tipoServicioSeleccionado ? "Editar Tipo de Servicio" : "Nuevo Tipo de Servicio"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="nombreTipoServicio" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          <label htmlFor="nombreTipoServicio" className="block text-sm font-medium text-black">
             Nombre del Tipo de Servicio
           </label>
           <input
@@ -203,12 +203,12 @@ console.log("Respuesta completa:", data);
             value={formData.nombreTipoServicio}
             onChange={handleChange}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 dark:bg-zinc-700 dark:border-zinc-600 dark:text-white"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500  dark:border-zinc-600 "
             placeholder="Ingrese el nombre del tipo de servicio"
           />
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center ">
           <input
             type="checkbox"
             id="activo"
@@ -217,7 +217,7 @@ console.log("Respuesta completa:", data);
             onChange={handleChange}
             className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
           />
-          <label htmlFor="activo" className="ml-2 block text-sm text-gray-700 dark:text-gray-200">
+          <label htmlFor="activo" className="ml-2 block text-sm text-black">
             Activo
           </label>
         </div>

@@ -116,8 +116,10 @@
     }
   }
   
-  .formulario-moderno {
+  .formulario-moderno-serv {
     animation: fadeIn 0.3s ease-out;
+    background-color:red;
+    width: 120%;
   }
   
   /* Estilos para descuentos */

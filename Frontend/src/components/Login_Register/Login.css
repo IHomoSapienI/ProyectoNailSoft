@@ -26,9 +26,10 @@ body.login-page-active {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: #ffe6ea; /* Fondo rosa suave */
+  background: #ffe6ea; 
   box-sizing: border-box;
   padding-top: 5vh;
+  
 }
 
 .login-container::before {
@@ -58,13 +59,14 @@ body.login-page-active {
     linear-gradient(-45deg, transparent 75%, rgba(255, 182, 193, 0.05) 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+
 }
 
 .login-card {
   width: 100%;
   max-width: 1000px;
   height: 500px;
-  max-height: 90vh;
+  max-height: 65vh;
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(219, 112, 147, 0.15);
@@ -73,7 +75,7 @@ body.login-page-active {
   z-index: 1;
   position: relative;
   border: 1px solid rgba(255, 182, 193, 0.3);
-  margin: 0;
+  
 }
 
 .login-card::before {
@@ -305,13 +307,13 @@ body.login-page-active {
 }
 
 .logo-container-login {
-  font-size: 1.4rem;
-  font-weight: 100;
-  color: #000000;
-  margin-bottom: 2rem;
+  /* font-size: 1.4rem; */
+  /* font-weight: 100; */
+  /* color: #000000; */
+  /* margin-bottom: 2rem; */
   text-align: center;
-  width: 200%;
-  height: 100%;
+  /* width: 200%; */
+  height: 40%;
 }
 
 
@@ -319,6 +321,7 @@ body.login-page-active {
 .logo-image-login {
   width: auto;
   height: 150px;
+  width: 150px;
   object-fit: contain;
 }
 

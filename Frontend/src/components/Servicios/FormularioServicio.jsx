@@ -141,7 +141,7 @@ const FormularioServicio = ({
       );
 
       // Si llega aquí, el nombre está disponible
-      console.log("Nombre disponible");
+      // console.log("Nombre disponible");
     } catch (error) {
       if (error.response && error.response.status === 400) {
         Swal.fire({
@@ -394,7 +394,7 @@ const FormularioServicio = ({
   const precioConDescuento = calcularPrecioConDescuentoLocal();
 
   return (
-    <div className="formulario-moderno bg-white p-6 rounded-lg shadow-lg w-full max-w-xl max-h-[80vh] overflow-y-auto">
+    <div className="formulario-moderno-serv bg-white p-6 rounded-lg shadow-lg w-full max-w-[100%] max-h-[80vh] overflow-y-auto">
       <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
         {servicioSeleccionado ? "Editar Servicio" : "Agregar Servicio"}
       </h2>
@@ -621,7 +621,7 @@ const FormularioServicio = ({
                       </p>
                     </>
                   ) : (
-                    <div className="relative">
+                    <div className="relative ">
                       <img
                         src={previewImage || "/placeholder.svg"}
                         alt="Vista previa"

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { FaClock, FaTags, FaStar, FaHeart, FaCalendarPlus, FaTimes, FaCheck } from "react-icons/fa"
+import { FaClock, FaTags, FaHeart, FaCalendarPlus, FaTimes, FaCheck } from "react-icons/fa"
 import "./articlesgrid.css"
 import { obtenerServiciosConDescuento } from "../Servicios/obtenerServicios"
 
@@ -34,6 +34,18 @@ const ArticlesGrid = () => {
 
   const manejarClickServicio = (servicio) => {
     setSelectedService(servicio)
+    // Cuando se abre el modal, prevenir el scroll del body
+    if (document.body) {
+      document.body.style.overflow = "hidden"
+    }
+  }
+
+  const cerrarModal = () => {
+    setSelectedService(null)
+    // Restaurar el scroll cuando se cierra el modal
+    if (document.body) {
+      document.body.style.overflow = ""
+    }
   }
 
   const manejarAgregarCita = () => {
@@ -45,14 +57,22 @@ const ArticlesGrid = () => {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05, // Reducir el delay entre elementos
+        delayChildren: 0.1,
       },
     },
   }
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 10 }, // Reducir el movimiento inicial
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3, // Hacer la animación más rápida
+        ease: "easeOut",
+      },
+    },
   }
 
   return (
@@ -92,84 +112,90 @@ const ArticlesGrid = () => {
               </motion.div>
             ))
           : servicios
-    .filter((servicio) => servicio.estado === true)
-    .map((servicio) => (
-              <motion.article
-                key={servicio._id}
-                className="service-card"
-                variants={item}
-                whileHover={{ y: -10 }}
-                onClick={() => manejarClickServicio(servicio)}
-              >
-                <div className="card-image-container">
-                  <img src={`${baseUrl}/${servicio.imagenUrl}`} alt={servicio.nombreServicio} className="card-image" />
-                  <div className="card-overlay">
-                    <motion.div className="overlay-content" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }}>
-                      <FaHeart className="heart-icon" />
-                      <span>Ver Detalles</span>
-                    </motion.div>
-                  </div>
-                  {servicio.tipoServicio?.descuento > 0 && (
-                    <div className="discount-badge">{servicio.tipoServicio.descuento}% OFF</div>
-                  )}
-                </div>
+              .filter((servicio) => servicio.estado === true)
+              .map((servicio) => (
+                <motion.article
+                  key={servicio._id}
+                  className="service-card"
+                  variants={item}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }} // Reducir el movimiento hover
+                  onClick={() => manejarClickServicio(servicio)}
+                >
+                  <div className="card-image-container">
+                  <img
+  src={servicio.imagenUrl?.startsWith("http") ? servicio.imagenUrl : `${baseUrl}/${servicio.imagenUrl}`}
+  alt={servicio.nombreServicio}
+  className="card-image"
+/>
 
-                <div className="card-content">
-                  <div className="card-header">
-                    <h2 className="card-title">{servicio.nombreServicio}</h2>
-                    <div className="price-tag">
-                      {servicio.tieneDescuento ? (
-                        <>
-                          <span className="original-price">${Number(servicio.precioOriginal).toLocaleString("es-ES", {
+
+                    <div className="card-overlay">
+                      <motion.div className="overlay-content" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }}>
+                        <FaHeart className="heart-icon" />
+                        <span>Ver Detalles</span>
+                      </motion.div>
+                    </div>
+                    {servicio.tipoServicio?.descuento > 0 && (
+                      <div className="discount-badge">{servicio.tipoServicio.descuento}% OFF</div>
+                    )}
+                  </div>
+
+                  <div className="card-content">
+                    <div className="card-header">
+                      <h2 className="card-title">{servicio.nombreServicio}</h2>
+                      <div className="price-tag">
+                        {servicio.tieneDescuento ? (
+                          <>
+                            <span className="original-price">
+                              $
+                              {Number(servicio.precioOriginal).toLocaleString("es-ES", {
+                                minimumFractionDigits: 0,
+                              })}
+                            </span>
+
+                            <span className="discounted-price ">
+                              $
+                              {Number(servicio.precioConDescuento).toLocaleString("es-ES", {
+                                minimumFractionDigits: 0,
+                              })}
+                            </span>
+                          </>
+                        ) : (
+                          <span>
+                            $
+                            {Number(servicio.precio).toLocaleString("es-ES", {
                               minimumFractionDigits: 0,
-                              
                             })}
                           </span>
-
-
-                          <span className="discounted-price ">
-                            ${Number(servicio.precioConDescuento).toLocaleString("es-ES", {
-                              minimumFractionDigits: 0,
-                            })}
-                          </span>
-                        </>
-                          ) : (
-                            <span>${Number(servicio.precio).toLocaleString("es-ES", {
-                              minimumFractionDigits: 0,})}
-                          </span>
-                          )}
-                    </div>
-                            
-
-                          
-                          
-                  </div>
-
-                  <p className="card-description">{servicio.descripcion || "Descripción no disponible"}</p>
-
-                  <div className="card-footer">
-                    <div className="service-meta">
-                      <div className="meta-item">
-                        <FaTags className="meta-icon" />
-                        <span>
-                          {servicio.tipoServicio?.nombreTs || "General"}
-                          {servicio.tipoServicio?.esPromocional && <span className="promo-badge">Promo</span>}
-                        </span>
-                      </div>
-                      <div className="meta-item">
-                        <FaClock className="meta-icon" />
-                        <span>{servicio.tiempo} mins</span>
+                        )}
                       </div>
                     </div>
-                    <div className="rating">
-                      {[...Array(2)].map((_, i) => (
-                        <FaHeart key={i} className="star-icon text-rose-500" />
-                      ))}
+
+                    <p className="card-description">{servicio.descripcion || "Descripción no disponible"}</p>
+
+                    <div className="card-footer">
+                      <div className="service-meta">
+                        <div className="meta-item">
+                          <FaTags className="meta-icon" />
+                          <span>
+                            {servicio.tipoServicio?.nombreTs || "General"}
+                            {servicio.tipoServicio?.esPromocional && <span className="promo-badge">Promo</span>}
+                          </span>
+                        </div>
+                        <div className="meta-item">
+                          <FaClock className="meta-icon" />
+                          <span>{servicio.tiempo} mins</span>
+                        </div>
+                      </div>
+                      <div className="rating">
+                        {[...Array(2)].map((_, i) => (
+                          <FaHeart key={i} className="star-icon text-rose-500" />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.article>
-            ))}
+                </motion.article>
+              ))}
       </motion.div>
 
       {/* Call to Action Section */}
@@ -192,21 +218,21 @@ const ArticlesGrid = () => {
       <AnimatePresence>
         {selectedService && (
           <motion.div
-            className="modal-overlay"
+            className="modal-overlay-art"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedService(null)}
+            onClick={cerrarModal}
           >
             <motion.div
-              className="modal-content"
-              initial={{ scale: 0.5, opacity: 0, y: 100 }}
+              className="modal-content-art"
+              initial={{ scale: 0.5, opacity: 0, y: 0 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.5, opacity: 0, y: 100 }}
+              exit={{ scale: 0.5, opacity: 0, y: 0 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button className="modal-close" onClick={() => setSelectedService(null)}>
+              <button className="modal-close" onClick={cerrarModal}>
                 <FaTimes />
               </button>
 
@@ -214,10 +240,11 @@ const ArticlesGrid = () => {
                 <div className="modal-image-section">
                   <div className="image-wrapper">
                     <img
-                      src={`${baseUrl}/${selectedService.imagenUrl}`}
-                      alt={selectedService.nombreServicio}
-                      className="modal-main-image"
-                    />
+  src={selectedService.imagenUrl?.startsWith("http") ? selectedService.imagenUrl : `${baseUrl}/${selectedService.imagenUrl}`}
+  alt={selectedService.nombreServicio}
+  className="modal-main-image"
+/>
+
                     <div className="image-overlay">
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -266,31 +293,29 @@ const ArticlesGrid = () => {
                     <span className="price-label">Precio del Servicio</span>
                     {selectedService.tieneDescuento ? (
                       <div className="">
-                        <span className="modal-original-price">${Number(selectedService.precioOriginal).toLocaleString("es-ES", {
-                          minimumFractionDigits: 0,
-                        })}
-                      </span>
-
-                        
-
-
-                        <span className="modal-discounted-price">
-                          {/* ${selectedService.precioConDescuento.toFixed(2)} */}
-                          ${Number(selectedService.precioConDescuento).toLocaleString("es-ES", {
+                        <span className="modal-original-price">
+                          $
+                          {Number(selectedService.precioOriginal).toLocaleString("es-ES", {
                             minimumFractionDigits: 0,
                           })}
-                          </span>
-                        
-                        
+                        </span>
+
+                        <span className="modal-discounted-price">
+                          $
+                          {Number(selectedService.precioConDescuento).toLocaleString("es-ES", {
+                            minimumFractionDigits: 0,
+                          })}
+                        </span>
+
                         <span className="modal-discount-badge">{selectedService.porcentajeDescuento}% OFF</span>
-                      
-                      
                       </div>
                     ) : (
                       <span className="price-amount">
-                        ${Number(selectedService.precio).toLocaleString("es-ES", {
-                          minimumFractionDigits: 0,})}
-                        </span>
+                        $
+                        {Number(selectedService.precio).toLocaleString("es-ES", {
+                          minimumFractionDigits: 0,
+                        })}
+                      </span>
                     )}
                   </motion.div>
 
@@ -361,4 +386,3 @@ const ArticlesGrid = () => {
 }
 
 export default ArticlesGrid
-

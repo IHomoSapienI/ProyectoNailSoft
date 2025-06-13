@@ -76,8 +76,8 @@ const TablaUsuarios = () => {
       });
       setRolMap(rolMapObj);
 
-      console.log("Roles cargados:", rolesArray);
-      console.log("Mapa de roles:", rolMapObj);
+      // console.log("Roles cargados:", rolesArray);
+      // console.log("Mapa de roles:", rolMapObj);
 
       // Luego obtener los usuarios
       const usuariosResponse = await fetch(
@@ -109,9 +109,9 @@ const TablaUsuarios = () => {
             ? usuario.rol.nombreRol
             : rolMapObj[rolId] || "Desconocido";
 
-        console.log(
-          `Usuario ${usuario.nombre}, ID de rol: ${rolId}, Nombre de rol: ${rolNombre}`
-        );
+        // console.log(
+        //   `Usuario ${usuario.nombre}, ID de rol: ${rolId}, Nombre de rol: ${rolNombre}`
+        // );
         return {
           ...usuario,
           rolNombre,

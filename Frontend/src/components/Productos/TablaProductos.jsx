@@ -14,7 +14,7 @@ import {
   faSync,
   faPrint,
   faToggleOn,
-  faToggleOff
+  faToggleOff,
 } from "@fortawesome/free-solid-svg-icons"
 import Swal from "sweetalert2"
 import * as XLSX from "xlsx"
@@ -86,7 +86,7 @@ const TablaProductos = () => {
   }
 
   const manejarProductoActualizado = () => {
-    console.log("Actualizando lista de productos después de crear/editar")
+    // console.log("Actualizando lista de productos después de crear/editar")
     obtenerProductos()
     cerrarFormulario()
   }
@@ -512,17 +512,22 @@ const TablaProductos = () => {
                   <td>${producto.precio}</td>
                   <td>{producto.stock}</td>
                   <td>
-                    <span className={`universal-estado-badge ${producto.estado 
-                       ? "activo bg-emerald-300/70 dark:bg-emerald-500"
-                          : "inactivo bg-red-500/80"
-                      }`}>
+                    <span
+                      className={`universal-estado-badge ${
+                        producto.estado ? "activo bg-emerald-300/70 dark:bg-emerald-500" : "inactivo bg-red-500/80"
+                      }`}
+                    >
                       {producto.estado ? "Activo" : "Inactivo"}
                     </span>
                   </td>
                   <td>
                     {/* Modificado para usar clases similares a TablaPermisos */}
                     <div className="flex justify-center space-x-2">
-                      <button className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90" onClick={() => abrirFormulario(producto)} title="Editar producto">
+                      <button
+                        className="btn-edit-1 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/90"
+                        onClick={() => abrirFormulario(producto)}
+                        title="Editar producto"
+                      >
                         <FontAwesomeIcon icon={faEdit} />
                       </button>
                       <button
@@ -539,14 +544,8 @@ const TablaProductos = () => {
                                                   ? "bg-emerald-400/70  dark:bg-emerald-700 "
                                                   : "bg-amber-400/70 hover:bg-amber-500 dark:bg-amber-600 dark:hover:bg-amber-500"
                                               }`}
-                        onClick={() =>
-                          manejarToggleEstado(producto._id, producto.estado)
-                        }
-                        title={
-                          producto.estado
-                            ? "Desactivar usuario"
-                            : "Activar usuario"
-                        }
+                        onClick={() => manejarToggleEstado(producto._id, producto.estado)}
+                        title={producto.estado ? "Desactivar usuario" : "Activar usuario"}
                       >
                         <FontAwesomeIcon
                           icon={producto.estado ? faToggleOn : faToggleOff}

@@ -355,14 +355,14 @@ finally {
   }
 
   return (
-    <div className="formulario-moderno max-h-[80vh] overflow-y-auto bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
+    <div className="formulario-moderno-user max-h-[80vh] overflow-y-auto bg-white p-6 rounded-lg shadow-lg w-full max-w-[100%]">
       <h2 className="text-2xl font-semibold mb-6 text-center" style={{ color: "#db2777" }}>
         {usuarioEditando ? "Editar Usuario" : "Agregar Usuario"}
       </h2>
 
       {error && <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200 mb-6">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 text-black">
         <div className="form-group">
           <label htmlFor="nombre" className="form-label">
             Nombre <span className="text-pink-500">*</span>

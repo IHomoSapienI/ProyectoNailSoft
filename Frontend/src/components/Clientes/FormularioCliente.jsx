@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faSave, faTimes } from "@fortawesome/free-solid-svg-icons"
+import "./FormularioCliente.css"
 
 const FormularioCliente = ({ cliente, onClose, onClienteActualizado = () => {} }) => {
   const [formData, setFormData] = useState({
@@ -173,7 +174,7 @@ const FormularioCliente = ({ cliente, onClose, onClienteActualizado = () => {} }
   }
 
   return (
-    <div className=" p-6 w-full max-w-2xl mx-auto">
+   <div className="p-6 w-full mx-auto" style={{ maxWidth: "90%", minWidth: "800px" }}>
       <h2 className="text-2xl font-semibold mb-6 text-center text-pink-600">
         {cliente ? "Editar Cliente" : "Nuevo Cliente"}
       </h2>

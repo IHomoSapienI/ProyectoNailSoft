@@ -96,9 +96,9 @@ const AgendaEmpleado = () => {
         precioFinal = Number.parseFloat(servicio.precioConDescuento)
         precioOriginalServicio = servicio.precioOriginal ? Number.parseFloat(servicio.precioOriginal) : precioBase
         descuentoServicio = precioOriginalServicio - precioFinal
-        console.log(
-          `  -> Precio con descuento detectado: original ${precioOriginalServicio}, final ${precioFinal}, descuento: ${descuentoServicio}`,
-        )
+        // console.log(
+        //   `  -> Precio con descuento detectado: original ${precioOriginalServicio}, final ${precioFinal}, descuento: ${descuentoServicio}`,
+        // )
       }
       // Caso 2: Servicio con porcentaje de descuento
       else if (servicio.descuento && Number.parseFloat(servicio.descuento) > 0) {
@@ -106,9 +106,9 @@ const AgendaEmpleado = () => {
         descuentoServicio = (precioBase * porcentajeDescuento) / 100
         precioFinal = precioBase - descuentoServicio
         precioOriginalServicio = precioBase
-        console.log(
-          `  -> Descuento por porcentaje: ${porcentajeDescuento}%, descuento: ${descuentoServicio}, precio final: ${precioFinal}`,
-        )
+        // console.log(
+        //   `  -> Descuento por porcentaje: ${porcentajeDescuento}%, descuento: ${descuentoServicio}, precio final: ${precioFinal}`,
+        // )
       }
       // Caso 3: Campo tieneDescuento activado
       else if (servicio.tieneDescuento === true || servicio.tieneDescuento === "true") {
@@ -118,9 +118,9 @@ const AgendaEmpleado = () => {
           precioOriginalServicio = Number.parseFloat(servicio.precioOriginal)
           descuentoServicio = precioOriginalServicio - precioBase
           precioFinal = precioBase
-          console.log(
-            `  -> Descuento detectado por precioOriginal: original ${precioOriginalServicio}, final ${precioFinal}, descuento: ${descuentoServicio}`,
-          )
+          // console.log(
+          //   `  -> Descuento detectado por precioOriginal: original ${precioOriginalServicio}, final ${precioFinal}, descuento: ${descuentoServicio}`,
+          // )
         }
       }
       // Caso 4: Verificar si hay campos de descuento en diferentes formatos
@@ -131,7 +131,7 @@ const AgendaEmpleado = () => {
           descuentoServicio = (precioBase * porcentajeDescuento) / 100
           precioFinal = precioBase - descuentoServicio
           precioOriginalServicio = precioBase
-          console.log(`  -> Descuento alternativo detectado: ${porcentajeDescuento}%, descuento: ${descuentoServicio}`)
+          // console.log(`  -> Descuento alternativo detectado: ${porcentajeDescuento}%, descuento: ${descuentoServicio}`)
         }
       }
 
@@ -146,7 +146,7 @@ const AgendaEmpleado = () => {
       const descuentoGeneralMonto = (total * porcentajeDescuentoGeneral) / 100
       descuentoTotal += descuentoGeneralMonto
       total -= descuentoGeneralMonto
-      console.log(`  -> Descuento general aplicado: ${porcentajeDescuentoGeneral}%, monto: ${descuentoGeneralMonto}`)
+      // console.log(`  -> Descuento general aplicado: ${porcentajeDescuentoGeneral}%, monto: ${descuentoGeneralMonto}`)
     }
 
     // Si no se detectaron descuentos pero hay diferencia entre montototal y suma de precios
@@ -156,7 +156,7 @@ const AgendaEmpleado = () => {
         // Evitar diferencias por redondeo
         descuentoTotal = diferenciaDetectada
         total = Number.parseFloat(cita.montototal)
-        console.log(`  -> Descuento detectado por diferencia en montototal: ${diferenciaDetectada}`)
+        // console.log(`  -> Descuento detectado por diferencia en montototal: ${diferenciaDetectada}`)
       }
     }
 
@@ -169,9 +169,9 @@ const AgendaEmpleado = () => {
         descuentoTotal = sumaPreciosBase - montoTotalCita
         subtotal = sumaPreciosBase
         total = montoTotalCita
-        console.log(
-          `  -> Descuento detectado por comparación directa: subtotal ${subtotal}, total ${total}, descuento: ${descuentoTotal}`,
-        )
+        // console.log(
+        //   `  -> Descuento detectado por comparación directa: subtotal ${subtotal}, total ${total}, descuento: ${descuentoTotal}`,
+        // )
       }
     }
 
@@ -183,19 +183,19 @@ const AgendaEmpleado = () => {
       tieneDescuentos: descuentoTotal > 0.01, // Considerar descuentos mayores a 1 centavo
     }
 
-    console.log("💰 [AgendaEmpleado] Resultado final del cálculo:", resultado)
+    // console.log("💰 [AgendaEmpleado] Resultado final del cálculo:", resultado)
     return resultado
   }
 
   // Función para obtener el nombre del cliente de forma robusta
   const obtenerNombreCliente = (cita) => {
-    console.log("🔍 [AgendaEmpleado] Analizando estructura del cliente:", {
-      citaId: cita._id,
-      nombrecliente: cita.nombrecliente,
-      cliente: cita.cliente,
-      clienteId: cita.clienteId,
-      estructuraCompleta: cita,
-    })
+    // console.log("🔍 [AgendaEmpleado] Analizando estructura del cliente:", {
+    //   citaId: cita._id,
+    //   nombrecliente: cita.nombrecliente,
+    //   cliente: cita.cliente,
+    //   clienteId: cita.clienteId,
+    //   estructuraCompleta: cita,
+    // })
 
     // Verificar diferentes estructuras posibles
     if (cita.nombrecliente) {
@@ -313,12 +313,12 @@ const AgendaEmpleado = () => {
 
   // Función para obtener el nombre del empleado de forma robusta
   const obtenerNombreEmpleado = (cita) => {
-    console.log("🔍 [AgendaEmpleado] Analizando estructura del empleado:", {
-      citaId: cita._id,
-      nombreempleado: cita.nombreempleado,
-      empleado: cita.empleado,
-      empleadoId: cita.empleadoId,
-    })
+    // console.log("🔍 [AgendaEmpleado] Analizando estructura del empleado:", {
+    //   citaId: cita._id,
+    //   nombreempleado: cita.nombreempleado,
+    //   empleado: cita.empleado,
+    //   empleadoId: cita.empleadoId,
+    // })
 
     if (cita.nombreempleado) {
       // Estructura 1: { nombreempleado: "María" }
@@ -442,7 +442,7 @@ const AgendaEmpleado = () => {
         throw new Error("Formato de respuesta inválido")
       }
 
-      console.log("📋 [AgendaEmpleado] Empleados obtenidos:", respuesta.data)
+      // console.log("📋 [AgendaEmpleado] Empleados obtenidos:", respuesta.data)
       setEmpleados(respuesta.data)
     } catch (error) {
       console.error("❌ [AgendaEmpleado] Error al cargar empleados:", error)
@@ -472,8 +472,8 @@ const AgendaEmpleado = () => {
         throw new Error("Formato de respuesta inválido")
       }
 
-      console.log("📅 [AgendaEmpleado] Respuesta completa de la API:", respuesta.data)
-      console.log("📅 [AgendaEmpleado] Primeras 3 citas para análisis:", respuesta.data.citas?.slice(0, 3))
+      // console.log("📅 [AgendaEmpleado] Respuesta completa de la API:", respuesta.data)
+      // console.log("📅 [AgendaEmpleado] Primeras 3 citas para análisis:", respuesta.data.citas?.slice(0, 3))
 
       let citasFiltradas = respuesta.data.citas
 
@@ -483,7 +483,7 @@ const AgendaEmpleado = () => {
       // Analizar estructura de datos
       if (citasFiltradas && citasFiltradas.length > 0) {
         const primerasCitas = citasFiltradas.slice(0, 5)
-        console.log("🔍 [AgendaEmpleado] Análisis detallado de las primeras 5 citas:")
+        // console.log("🔍 [AgendaEmpleado] Análisis detallado de las primeras 5 citas:")
         primerasCitas.forEach((cita, index) => {
           console.log(`Cita ${index + 1}:`, {
             id: cita._id,

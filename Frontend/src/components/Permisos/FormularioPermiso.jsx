@@ -60,7 +60,7 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           timer: 1500,
         })
       } else {
-        console.log("Datos enviados:", formData)
+        // console.log("Datos enviados:", formData)
 
         // Crear nuevo permiso
         response = await axios.post("https://gitbf.onrender.com/api/permisos", formData, 
@@ -96,7 +96,7 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
   }
 
   return (
-    <form onSubmit={handleSubmit} className="formulario-moderno bg-white rounded-lg">
+    <form onSubmit={handleSubmit} className="formulario-moderno-perm bg-white rounded-lg max-w-[100%] max-h-[60vh] overflow-y-scroll">
       <div className="form-group">
         <label htmlFor="nombrePermiso" className="form-label">
           Nombre del Permiso: <span className="text-pink-500">*</span>
@@ -152,6 +152,7 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           <option value="clientes">Clientes</option>
           <option value="compras">Compras</option>
           <option value="configuración">Configuración</option>
+           <option value="descuentos">Descuentos</option>
           <option value="empleados">Empleados</option>
           <option value="insumos">Insumos</option>
           <option value="productos">Productos</option>
@@ -160,11 +161,14 @@ const FormularioPermiso = ({ permisoSeleccionado, editMode, onClose, onPermisoCr
           <option value="roles">Roles</option>
           <option value="permisos">Permisos</option>
           <option value="servicios">Servicios</option>
+          <option value="tipoDeServicios">Tipo de Servicios</option>
           <option value="usuarios">Usuarios</option>
           <option value="ventas">Ventas</option>
           <option value="vistasSidebar">Vistas Sidebar</option>
         </select>
       </div>
+         
+
 
       <div className="form-group">
         <label htmlFor="nivel" className="form-label">

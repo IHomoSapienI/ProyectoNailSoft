@@ -51,11 +51,11 @@ const GestionVentaServicio = () => {
         try {
           // Cargar servicios con descuentos directamente usando la función importada
           const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
-          console.log("Importando función obtenerServiciosConDescuento...")
+          // console.log("Importando función obtenerServiciosConDescuento...")
 
           // Obtener servicios con información de descuento
           const serviciosConDescuento = await obtenerServiciosConDescuento()
-          console.log("Servicios obtenidos con descuentos:", serviciosConDescuento)
+          // console.log("Servicios obtenidos con descuentos:", serviciosConDescuento)
 
           // Guardar los servicios en el estado
           setServicios(serviciosConDescuento || [])
@@ -127,7 +127,7 @@ const GestionVentaServicio = () => {
               }
             })
 
-            console.log("Servicios procesados manualmente con descuentos:", serviciosProcesados)
+            // console.log("Servicios procesados manualmente con descuentos:", serviciosProcesados)
             setServicios(serviciosProcesados)
             setProductos(productosResponse.data.productos || [])
           } catch (fallbackError) {
@@ -145,7 +145,7 @@ const GestionVentaServicio = () => {
 
             if (serviciosLocalStorage) {
               serviciosGuardados = JSON.parse(serviciosLocalStorage)
-              console.log("Servicios recuperados de localStorage (sin procesar):", serviciosGuardados)
+              // console.log("Servicios recuperados de localStorage (sin procesar):", serviciosGuardados)
 
               // Asegurar que los servicios recuperados tengan la estructura correcta
               if (Array.isArray(serviciosGuardados)) {
@@ -153,11 +153,11 @@ const GestionVentaServicio = () => {
                 try {
                   // Importar la función para obtener servicios con descuentos
                   const { obtenerServiciosConDescuento } = await import("../Servicios/obtenerServicios")
-                  console.log("Importando función obtenerServiciosConDescuento para procesar localStorage...")
+                  // console.log("Importando función obtenerServiciosConDescuento para procesar localStorage...")
 
                   // Obtener todos los servicios con información de descuento
                   const serviciosConDescuento = await obtenerServiciosConDescuento()
-                  console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
+                  // console.log("Servicios con descuento obtenidos:", serviciosConDescuento.length)
 
                   // Procesar cada servicio guardado para asegurar que tenga información de descuento
                   serviciosGuardados = serviciosGuardados.map((servicio) => {
@@ -168,9 +168,9 @@ const GestionVentaServicio = () => {
                     const servicioCompleto = serviciosConDescuento.find((s) => s._id === servicioId)
 
                     if (servicioCompleto) {
-                      console.log(
-                        `Servicio ${servicioId} encontrado con descuentos. Nombre: ${servicioCompleto.nombreServicio}, Tiene descuento: ${servicioCompleto.tieneDescuento}`,
-                      )
+                      // console.log(
+                      //   `Servicio ${servicioId} encontrado con descuentos. Nombre: ${servicioCompleto.nombreServicio}, Tiene descuento: ${servicioCompleto.tieneDescuento}`,
+                      // )
 
                       return {
                         ...servicio,
@@ -184,11 +184,11 @@ const GestionVentaServicio = () => {
                       }
                     }
 
-                    console.log(`Servicio ${servicioId} no encontrado en la lista de servicios con descuento`)
+                    // console.log(`Servicio ${servicioId} no encontrado en la lista de servicios con descuento`)
                     return servicio
                   })
 
-                  console.log("Servicios procesados con información de descuento:", serviciosGuardados)
+                  // console.log("Servicios procesados con información de descuento:", serviciosGuardados)
                 } catch (error) {
                   console.error("Error al procesar servicios con descuentos desde localStorage:", error)
                 }
@@ -201,7 +201,7 @@ const GestionVentaServicio = () => {
 
             if (productosLocalStorage) {
               productosGuardados = JSON.parse(productosLocalStorage)
-              console.log("Productos recuperados de localStorage:", productosGuardados)
+              // console.log("Productos recuperados de localStorage:", productosGuardados)
 
               if (Array.isArray(productosGuardados) && productosGuardados.length > 0) {
                 setProductosSeleccionados(productosGuardados)
@@ -222,7 +222,7 @@ const GestionVentaServicio = () => {
         // Si tenemos un ID de venta, cargamos la venta existente
         if (id && id !== "new") {
           try {
-            console.log(`Intentando cargar venta con ID: ${id}`)
+            // console.log(`Intentando cargar venta con ID: ${id}`)
 
             // Intentar obtener la venta directamente
             const ventaResponse = await axios.get(`${API_URL}/ventas/${id}`, { headers })
@@ -232,7 +232,7 @@ const GestionVentaServicio = () => {
               throw new Error("Respuesta vacía del servidor")
             }
 
-            console.log("Respuesta de venta:", ventaResponse.data)
+            // console.log("Respuesta de venta:", ventaResponse.data)
 
             // Determinar la estructura correcta de la venta
             let ventaData = null
@@ -287,13 +287,13 @@ const GestionVentaServicio = () => {
                 }
               })
 
-              console.log("Servicios formateados de la venta:", serviciosFormateados)
+              // console.log("Servicios formateados de la venta:", serviciosFormateados)
               setServiciosSeleccionados(serviciosFormateados)
 
               // Guardar estos servicios en localStorage para futuras visitas
               try {
                 localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
-                console.log("Servicios de la venta guardados en localStorage")
+                // console.log("Servicios de la venta guardados en localStorage")
               } catch (storageError) {
                 console.error("Error al guardar servicios en localStorage:", storageError)
               }
@@ -322,13 +322,13 @@ const GestionVentaServicio = () => {
                 }
               })
 
-              console.log("Productos formateados de la venta:", productosFormateados)
+              // console.log("Productos formateados de la venta:", productosFormateados)
               setProductosSeleccionados(productosFormateados)
 
               // Guardar estos productos en localStorage para futuras visitas
               try {
                 localStorage.setItem(`productos_cita_${citaId}`, JSON.stringify(productosFormateados))
-                console.log("Productos de la venta guardados en localStorage")
+                // console.log("Productos de la venta guardados en localStorage")
               } catch (storageError) {
                 console.error("Error al guardar productos en localStorage:", storageError)
               }
@@ -355,14 +355,14 @@ const GestionVentaServicio = () => {
         // Si tenemos un ID de cita pero no de venta, estamos creando una nueva venta desde una cita
         else if (citaId) {
           try {
-            console.log(`Intentando cargar cita con ID: ${citaId}`)
+            // console.log(`Intentando cargar cita con ID: ${citaId}`)
             const citaResponse = await axios.get(`${API_URL}/citas/${citaId}`, { headers })
 
             if (!citaResponse.data || !citaResponse.data.cita) {
               throw new Error("Respuesta de cita inválida")
             }
 
-            console.log("Respuesta de cita:", citaResponse.data)
+            // console.log("Respuesta de cita:", citaResponse.data)
 
             const citaData = citaResponse.data.cita
             setCita(citaData)
@@ -371,7 +371,7 @@ const GestionVentaServicio = () => {
             // Esto es importante para citas en estado "En Progreso"
             let ventaExistente = null
             try {
-              console.log(`Buscando ventas existentes para la cita: ${citaId}`)
+              // console.log(`Buscando ventas existentes para la cita: ${citaId}`)
               // Intentar obtener todas las ventas y filtrar por cita
               const ventasResponse = await axios.get(`${API_URL}/ventas`, { headers })
               const todasLasVentas = ventasResponse.data.ventas || []
@@ -380,12 +380,12 @@ const GestionVentaServicio = () => {
                 const ventaCitaId = venta.cita?._id || venta.cita
                 return ventaCitaId === citaId
               })
-              console.log(`Encontradas ${ventasDeCita.length} ventas para la cita ${citaId}`)
+              // console.log(`Encontradas ${ventasDeCita.length} ventas para la cita ${citaId}`)
 
               if (ventasDeCita.length > 0) {
                 // Encontramos una venta existente para esta cita
                 ventaExistente = ventasDeCita[0]
-                console.log("Venta existente encontrada:", ventaExistente)
+                // console.log("Venta existente encontrada:", ventaExistente)
 
                 // Establecer la venta existente
                 setVenta(ventaExistente)
@@ -411,9 +411,9 @@ const GestionVentaServicio = () => {
                   // Buscar el servicio completo en la lista de servicios disponibles
                   const servicioCompleto = servicios.find((s) => s._id === servicioId)
 
-                  console.log(
-                    `Procesando servicio de venta existente: ID=${servicioId}, Nombre=${servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio")}`,
-                  )
+                  // console.log(
+                  //   `Procesando servicio de venta existente: ID=${servicioId}, Nombre=${servicio.nombreServicio || (servicioCompleto ? servicioCompleto.nombreServicio : "Servicio")}`,
+                  // )
 
                   return {
                     servicio: servicioId, // Usar el ID real del servicio
@@ -424,13 +424,13 @@ const GestionVentaServicio = () => {
                   }
                 })
 
-                console.log("Servicios formateados de la venta existente:", serviciosVenta)
+                // console.log("Servicios formateados de la venta existente:", serviciosVenta)
                 setServiciosSeleccionados(serviciosVenta)
 
                 // Guardar estos servicios en localStorage para futuras visitas
                 try {
                   localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosVenta))
-                  console.log("Servicios de la venta existente guardados en localStorage")
+                  // console.log("Servicios de la venta existente guardados en localStorage")
                 } catch (storageError) {
                   console.error("Error al guardar servicios en localStorage:", storageError)
                 }
@@ -449,7 +449,7 @@ const GestionVentaServicio = () => {
                     return servicio._id
                   })
 
-                  console.log("IDs de servicios extraídos de la cita:", serviciosIds)
+                  // console.log("IDs de servicios extraídos de la cita:", serviciosIds)
 
                   // Obtener información completa de los servicios
                   const serviciosCompletos = await Promise.all(
@@ -458,13 +458,13 @@ const GestionVentaServicio = () => {
                         // Primero buscar en la lista de servicios ya cargados
                         const servicioEnLista = servicios.find((s) => s._id === servicioId)
                         if (servicioEnLista) {
-                          console.log(`Servicio ${servicioId} encontrado en la lista local`)
+                          // console.log(`Servicio ${servicioId} encontrado en la lista local`)
                           return servicioEnLista
                         }
 
                         // Si no está en la lista, buscarlo en la API
                         const response = await axios.get(`${API_URL}/servicios/${servicioId}`, { headers })
-                        console.log(`Servicio ${servicioId} obtenido de la API:`, response.data)
+                        // console.log(`Servicio ${servicioId} obtenido de la API:`, response.data)
                         return response.data.servicio
                       } catch (error) {
                         console.error(`Error al obtener información del servicio ${servicioId}:`, error)
@@ -475,7 +475,7 @@ const GestionVentaServicio = () => {
 
                   // Filtrar servicios nulos
                   const serviciosValidos = serviciosCompletos.filter((servicio) => servicio !== null)
-                  console.log("Servicios válidos obtenidos:", serviciosValidos)
+                  // console.log("Servicios válidos obtenidos:", serviciosValidos)
 
                   // Mapear los servicios con información completa
                   const serviciosFormateados = citaData.servicios.map((servicio) => {
@@ -512,9 +512,9 @@ const GestionVentaServicio = () => {
                       ? precioOriginal - (precioOriginal * servicioCompleto.tipoServicio.descuento) / 100
                       : precioOriginal
 
-                    console.log(
-                      `Servicio formateado: ${servicioCompleto.nombreServicio}, Precio: ${precioOriginal}, Descuento: ${tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0}%, Final: ${precioConDescuento}`,
-                    )
+                    // console.log(
+                    //   `Servicio formateado: ${servicioCompleto.nombreServicio}, Precio: ${precioOriginal}, Descuento: ${tieneDescuento ? servicioCompleto.tipoServicio.descuento : 0}%, Final: ${precioConDescuento}`,
+                    // )
 
                     return {
                       servicio: servicioId,
@@ -528,13 +528,13 @@ const GestionVentaServicio = () => {
                     }
                   })
 
-                  console.log("Servicios formateados de la cita con información completa:", serviciosFormateados)
+                  // console.log("Servicios formateados de la cita con información completa:", serviciosFormateados)
                   setServiciosSeleccionados(serviciosFormateados)
 
                   // Guardar estos servicios en localStorage para futuras visitas
                   try {
                     localStorage.setItem(`servicios_cita_${citaId}`, JSON.stringify(serviciosFormateados))
-                    console.log("Servicios de la cita guardados en localStorage con información completa")
+                    // console.log("Servicios de la cita guardados en localStorage con información completa")
                   } catch (storageError) {
                     console.error("Error al guardar servicios en localStorage:", storageError)
                   }
@@ -591,13 +591,13 @@ const GestionVentaServicio = () => {
                   }
                 })
 
-                console.log("Productos formateados de la venta existente:", productosVenta)
+                // console.log("Productos formateados de la venta existente:", productosVenta)
                 setProductosSeleccionados(productosVenta)
 
                 // Guardar estos productos en localStorage para futuras visitas
                 try {
                   localStorage.setItem(`productos_cita_${citaId}`, JSON.stringify(productosVenta))
-                  console.log("Productos de la venta existente guardados en localStorage")
+                  // console.log("Productos de la venta existente guardados en localStorage")
                 } catch (storageError) {
                   console.error("Error al guardar productos en localStorage:", storageError)
                 }
@@ -694,7 +694,7 @@ const GestionVentaServicio = () => {
         return Swal.fire("Advertencia", "Este servicio ya ha sido agregado", "warning")
       }
 
-      console.log("Servicio seleccionado para agregar:", servicioSeleccionado)
+      // console.log("Servicio seleccionado para agregar:", servicioSeleccionado)
 
       // Verificar si el servicio tiene descuento
       const tieneDescuento =
@@ -724,13 +724,13 @@ const GestionVentaServicio = () => {
         }
       }
 
-      console.log(
-        `Agregando servicio ${servicioSeleccionado.nombreServicio}: ` +
-          `Precio original: ${precioOriginal}, ` +
-          `Tiene descuento: ${tieneDescuento}, ` +
-          `Descuento: ${porcentajeDescuento}%, ` +
-          `Precio con descuento: ${precioConDescuento}`,
-      )
+      // console.log(
+      //   `Agregando servicio ${servicioSeleccionado.nombreServicio}: ` +
+      //     `Precio original: ${precioOriginal}, ` +
+      //     `Tiene descuento: ${tieneDescuento}, ` +
+      //     `Descuento: ${porcentajeDescuento}%, ` +
+      //     `Precio con descuento: ${precioConDescuento}`,
+      // )
 
       // Si llegamos aquí, agregamos el servicio con información de descuento
       const nuevoServicioItem = {
@@ -755,7 +755,7 @@ const GestionVentaServicio = () => {
           localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(nuevosServicios))
           // Verificar que se guardó correctamente
           const serviciosGuardados = JSON.parse(localStorage.getItem(`servicios_cita_${cita._id}`))
-          console.log("Servicios guardados en localStorage:", serviciosGuardados)
+          // console.log("Servicios guardados en localStorage:", serviciosGuardados)
         } catch (storageError) {
           console.error("Error al guardar servicios en localStorage:", storageError)
         }
@@ -824,7 +824,7 @@ const GestionVentaServicio = () => {
         if (cita && cita._id) {
           try {
             localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
-            console.log("Productos actualizados guardados en localStorage después de agregar")
+            // console.log("Productos actualizados guardados en localStorage después de agregar")
           } catch (storageError) {
             console.error("Error al guardar productos en localStorage:", storageError)
           }
@@ -847,7 +847,7 @@ const GestionVentaServicio = () => {
     if (cita && cita._id) {
       try {
         localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(nuevosServicios))
-        console.log("Servicios actualizados guardados en localStorage después de eliminar")
+        // console.log("Servicios actualizados guardados en localStorage después de eliminar")
       } catch (storageError) {
         console.error("Error al guardar servicios en localStorage:", storageError)
       }
@@ -864,7 +864,7 @@ const GestionVentaServicio = () => {
     if (cita && cita._id) {
       try {
         localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(nuevosProductos))
-        console.log("Productos actualizados guardados en localStorage después de eliminar")
+        // console.log("Productos actualizados guardados en localStorage después de eliminar")
       } catch (storageError) {
         console.error("Error al guardar productos en localStorage:", storageError)
       }
@@ -901,7 +901,7 @@ const GestionVentaServicio = () => {
     if (cita && cita._id) {
       try {
         localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(nuevosProductos))
-        console.log("Productos actualizados guardados en localStorage después de actualizar cantidad")
+        // console.log("Productos actualizados guardados en localStorage después de actualizar cantidad")
       } catch (storageError) {
         console.error("Error al guardar productos en localStorage:", storageError)
       }
@@ -941,7 +941,7 @@ const GestionVentaServicio = () => {
       try {
         localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
         localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
-        console.log("Servicios y productos guardados en localStorage antes de guardar en API")
+        // console.log("Servicios y productos guardados en localStorage antes de guardar en API")
       } catch (storageError) {
         console.error("Error al guardar datos en localStorage:", storageError)
       }
@@ -979,7 +979,7 @@ const GestionVentaServicio = () => {
           { headers },
         )
 
-        console.log("Cita actualizada:", citaResponse.data)
+        // console.log("Cita actualizada:", citaResponse.data)
 
         // Actualizar el estado local de la cita
         if (citaResponse.data && citaResponse.data.cita) {
@@ -1060,7 +1060,7 @@ const GestionVentaServicio = () => {
           if (serviciosGuardados) {
             const serviciosParsed = JSON.parse(serviciosGuardados)
             if (Array.isArray(serviciosParsed) && serviciosParsed.length > 0) {
-              console.log("Recuperando servicios de localStorage para finalizar venta:", serviciosParsed)
+              // console.log("Recuperando servicios de localStorage para finalizar venta:", serviciosParsed)
               setServiciosSeleccionados(serviciosParsed)
             }
           }
@@ -1068,7 +1068,7 @@ const GestionVentaServicio = () => {
           if (productosGuardados) {
             const productosParsed = JSON.parse(productosGuardados)
             if (Array.isArray(productosParsed) && productosParsed.length > 0) {
-              console.log("Recuperando productos de localStorage para finalizar venta:", productosParsed)
+              // console.log("Recuperando productos de localStorage para finalizar venta:", productosParsed)
               setProductosSeleccionados(productosParsed)
             }
           }
@@ -1130,8 +1130,8 @@ const GestionVentaServicio = () => {
         }
       })
 
-      console.log("Servicios formateados para finalizar venta:", serviciosFormateados)
-      console.log("Productos formateados para finalizar venta:", productosFormateados)
+      // console.log("Servicios formateados para finalizar venta:", serviciosFormateados)
+      // console.log("Productos formateados para finalizar venta:", productosFormateados)
 
       // Verificar que los IDs de servicio sean válidos y usar los IDs correctos
       const serviciosFormateadosConIdsCorrectos = serviciosFormateados.map((servicio) => {
@@ -1146,9 +1146,9 @@ const GestionVentaServicio = () => {
 
         if (servicioEnLista) {
           // Si encontramos el servicio en la lista, usamos su ID
-          console.log(
-            `Servicio encontrado en la lista: ${servicioEnLista.nombreServicio} con ID ${servicioEnLista._id}`,
-          )
+          // console.log(
+          //   `Servicio encontrado en la lista: ${servicioEnLista.nombreServicio} con ID ${servicioEnLista._id}`,
+          // )
           return {
             ...servicio,
             servicio: servicioEnLista._id,
@@ -1162,7 +1162,7 @@ const GestionVentaServicio = () => {
           )
 
           if (servicioEncontradoPorNombre) {
-            console.log(`Servicio encontrado por nombre: ${servicioNombre} con ID ${servicioEncontradoPorNombre._id}`)
+            // console.log(`Servicio encontrado por nombre: ${servicioNombre} con ID ${servicioEncontradoPorNombre._id}`)
             return {
               ...servicio,
               servicio: servicioEncontradoPorNombre._id,
@@ -1176,7 +1176,7 @@ const GestionVentaServicio = () => {
               const idServicioReal =
                 typeof servicioEnCita.servicio === "object" ? servicioEnCita.servicio._id : servicioEnCita.servicio
 
-              console.log(`Servicio encontrado en la cita: ID ${idServicioReal}`)
+              // console.log(`Servicio encontrado en la cita: ID ${idServicioReal}`)
               return {
                 ...servicio,
                 servicio: idServicioReal,
@@ -1210,7 +1210,7 @@ const GestionVentaServicio = () => {
           }
         }
 
-        console.log("Servicios con IDs validados:", serviciosValidados)
+        // console.log("Servicios con IDs validados:", serviciosValidados)
 
         // Usar los servicios validados para el backend
         const serviciosFormateadosParaBackend = serviciosValidados.map((servicio) => {
@@ -1226,9 +1226,9 @@ const GestionVentaServicio = () => {
             : precioOriginal
           const descuentoAplicado = tieneDescuento ? precioOriginal - precioConDescuento : 0
 
-          console.log(
-            `Preparando servicio para backend - ID: ${servicioId}, Nombre: ${servicio.nombreServicio}, Precio original: ${precioOriginal}, Precio con descuento: ${precioConDescuento}, Descuento aplicado: ${descuentoAplicado}`,
-          )
+          // console.log(
+          //   `Preparando servicio para backend - ID: ${servicioId}, Nombre: ${servicio.nombreServicio}, Precio original: ${precioOriginal}, Precio con descuento: ${precioConDescuento}, Descuento aplicado: ${descuentoAplicado}`,
+          // )
 
           // Crear el objeto con la estructura exacta que espera el backend
           return {
@@ -1248,17 +1248,17 @@ const GestionVentaServicio = () => {
         const subtotalProductos = precioTotalProductos
 
         // Verificar la estructura de datos antes de enviar
-        console.log("Verificando estructura de datos para el backend:")
-        console.log("Cliente ID:", clienteId)
-        console.log("Empleado ID:", empleadoId)
-        console.log("Cita ID:", cita._id)
-        console.log("Servicios formateados para backend:", serviciosFormateadosParaBackend)
-        console.log("Productos formateados:", productosFormateados)
-        console.log("Subtotal servicios:", subtotalServicios)
-        console.log("Subtotal productos:", subtotalProductos)
-        console.log("Total:", precioTotal)
-        console.log("Método de pago:", metodoPago)
-        console.log("Tipo de venta:", getTipoVenta())
+        // console.log("Verificando estructura de datos para el backend:")
+        // console.log("Cliente ID:", clienteId)
+        // console.log("Empleado ID:", empleadoId)
+        // console.log("Cita ID:", cita._id)
+        // console.log("Servicios formateados para backend:", serviciosFormateadosParaBackend)
+        // console.log("Productos formateados:", productosFormateados)
+        // console.log("Subtotal servicios:", subtotalServicios)
+        // console.log("Subtotal productos:", subtotalProductos)
+        // console.log("Total:", precioTotal)
+        // console.log("Método de pago:", metodoPago)
+        // console.log("Tipo de venta:", getTipoVenta())
 
         // Validar que los servicios tengan la estructura correcta
         const serviciosValidos = serviciosFormateadosParaBackend.every(
@@ -1295,19 +1295,19 @@ const GestionVentaServicio = () => {
           estado: true, // Establecer explícitamente como completada
         }
 
-        console.log("Creando venta unificada:", ventaUnificadaData)
+        // console.log("Creando venta unificada:", ventaUnificadaData)
 
         try {
           // Crear la venta unificada
           const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
-          console.log("Respuesta de creación de venta unificada:", createResponse.data)
+          // console.log("Respuesta de creación de venta unificada:", createResponse.data)
 
           // Asegurar que la venta esté marcada como finalizada
           const ventaId = createResponse.data.venta?._id || createResponse.data._id
           if (ventaId) {
             try {
               await axios.put(`${API_URL}/ventas/${ventaId}/finalizar`, { metodoPago }, { headers })
-              console.log("Venta marcada explícitamente como finalizada")
+              // console.log("Venta marcada explícitamente como finalizada")
             } catch (finalizarError) {
               console.error("Error al marcar la venta como finalizada:", finalizarError)
               // No interrumpir el flujo principal si falla esta operación
@@ -1346,7 +1346,7 @@ const GestionVentaServicio = () => {
               },
               { headers },
             )
-            console.log("Respuesta de liberación de horario:", liberarResponse.data)
+            // console.log("Respuesta de liberación de horario:", liberarResponse.data)
 
             // Como respaldo, también actualizar directamente la disponibilidad del empleado
             try {
@@ -1365,12 +1365,12 @@ const GestionVentaServicio = () => {
                 },
                 { headers },
               )
-              console.log("Disponibilidad del empleado actualizada directamente")
+              // console.log("Disponibilidad del empleado actualizada directamente")
             } catch (dispError) {
               console.error("Error al actualizar disponibilidad directamente:", dispError)
             }
 
-            console.log("Horario liberado correctamente en el sistema de agenda")
+            // console.log("Horario liberado correctamente en el sistema de agenda")
           } catch (horarioError) {
             console.error("Error al liberar horario:", horarioError)
 
@@ -1391,7 +1391,7 @@ const GestionVentaServicio = () => {
                 },
                 { headers },
               )
-              console.log("Disponibilidad del empleado actualizada como respaldo")
+              // console.log("Disponibilidad del empleado actualizada como respaldo")
             } catch (dispError) {
               console.error("Error en método alternativo de liberación:", dispError)
               // Mostrar una advertencia al usuario
@@ -1408,7 +1408,7 @@ const GestionVentaServicio = () => {
           try {
             localStorage.removeItem(`servicios_cita_${cita._id}`)
             localStorage.removeItem(`productos_cita_${cita._id}`)
-            console.log("Datos eliminados de localStorage después de finalizar venta")
+            // console.log("Datos eliminados de localStorage después de finalizar venta")
           } catch (storageError) {
             console.error("Error al limpiar localStorage:", storageError)
           }
@@ -1477,12 +1477,12 @@ const GestionVentaServicio = () => {
           tipoVenta: getTipoVenta(),
         }
 
-        console.log("Creando venta unificada (sin validación de IDs):", ventaUnificadaData)
+        // console.log("Creando venta unificada (sin validación de IDs):", ventaUnificadaData)
 
         try {
           // Crear la venta unificada
           const createResponse = await axios.post(`${API_URL}/ventas`, ventaUnificadaData, { headers })
-          console.log("Respuesta de creación de venta unificada:", createResponse.data)
+          // console.log("Respuesta de creación de venta unificada:", createResponse.data)
 
           // Actualizar el estado de la cita a "Completada"
           await axios.put(
@@ -1516,7 +1516,7 @@ const GestionVentaServicio = () => {
               },
               { headers },
             )
-            console.log("Respuesta de liberación de horario:", liberarResponse.data)
+            // console.log("Respuesta de liberación de horario:", liberarResponse.data)
 
             // Como respaldo, también actualizar directamente la disponibilidad del empleado
             try {
@@ -1535,12 +1535,12 @@ const GestionVentaServicio = () => {
                 },
                 { headers },
               )
-              console.log("Disponibilidad del empleado actualizada directamente")
+              // console.log("Disponibilidad del empleado actualizada directamente")
             } catch (dispError) {
               console.error("Error al actualizar disponibilidad directamente:", dispError)
             }
 
-            console.log("Horario liberado correctamente en el sistema de agenda")
+            // console.log("Horario liberado correctamente en el sistema de agenda")
           } catch (horarioError) {
             console.error("Error al liberar horario:", horarioError)
 
@@ -1561,7 +1561,7 @@ const GestionVentaServicio = () => {
                 },
                 { headers },
               )
-              console.log("Disponibilidad del empleado actualizada como respaldo")
+              // console.log("Disponibilidad del empleado actualizada como respaldo")
             } catch (dispError) {
               console.error("Error en método alternativo de liberación:", dispError)
               // Mostrar una advertencia al usuario
@@ -1578,7 +1578,7 @@ const GestionVentaServicio = () => {
           try {
             localStorage.removeItem(`servicios_cita_${cita._id}`)
             localStorage.removeItem(`productos_cita_${cita._id}`)
-            console.log("Datos eliminados de localStorage después de finalizar venta")
+            // console.log("Datos eliminados de localStorage después de finalizar venta")
           } catch (storageError) {
             console.error("Error al limpiar localStorage:", storageError)
           }
@@ -1605,7 +1605,7 @@ const GestionVentaServicio = () => {
       let mensajeError = "No se pudo finalizar la venta"
 
       if (error.response && error.response.data) {
-        console.log("Datos de respuesta de error:", error.response.data)
+        // console.log("Datos de respuesta de error:", error.response.data)
 
         if (error.response.data.msg) {
           mensajeError = error.response.data.msg
@@ -1641,29 +1641,29 @@ const GestionVentaServicio = () => {
 
   // Función para depurar errores de respuesta
   const depurarErrorRespuesta = (error) => {
-    console.log("Error completo:", error)
+    // console.log("Error completo:", error)
 
     if (error.response) {
-      console.log("Datos de la respuesta:", error.response.data)
-      console.log("Estado HTTP:", error.response.status)
-      console.log("Cabeceras:", error.response.headers)
+      // console.log("Datos de la respuesta:", error.response.data)
+      // console.log("Estado HTTP:", error.response.status)
+      // console.log("Cabeceras:", error.response.headers)
 
       // Intentar mostrar más detalles si están disponibles
       if (error.response.data) {
         if (typeof error.response.data === "string") {
-          console.log("Mensaje de error:", error.response.data)
+          // console.log("Mensaje de error:", error.response.data)
         } else {
-          console.log("Detalles del error:", JSON.stringify(error.response.data, null, 2))
+          // console.log("Detalles del error:", JSON.stringify(error.response.data, null, 2))
         }
       }
     } else if (error.request) {
-      console.log("La solicitud fue realizada pero no se recibió respuesta")
-      console.log("Detalles de la solicitud:", error.request)
+      // console.log("La solicitud fue realizada pero no se recibió respuesta")
+      // console.log("Detalles de la solicitud:", error.request)
     } else {
-      console.log("Error al configurar la solicitud:", error.message)
+      // console.log("Error al configurar la solicitud:", error.message)
     }
 
-    console.log("Configuración de la solicitud:", error.config)
+    // console.log("Configuración de la solicitud:", error.config)
   }
 
   // Update the loading state display
@@ -1723,7 +1723,7 @@ const GestionVentaServicio = () => {
                   try {
                     localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
                     localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
-                    console.log("Datos guardados en localStorage antes de navegar sin guardar")
+                    // console.log("Datos guardados en localStorage antes de navegar sin guardar")
                   } catch (storageError) {
                     console.error("Error al guardar datos en localStorage:", storageError)
                   }
@@ -1744,7 +1744,7 @@ const GestionVentaServicio = () => {
               try {
                 localStorage.setItem(`servicios_cita_${cita._id}`, JSON.stringify(serviciosSeleccionados))
                 localStorage.setItem(`productos_cita_${cita._id}`, JSON.stringify(productosSeleccionados))
-                console.log("Datos guardados en localStorage antes de navegar sin cambios")
+                // console.log("Datos guardados en localStorage antes de navegar sin cambios")
               } catch (storageError) {
                 console.error("Error al guardar datos en localStorage:", storageError)
               }

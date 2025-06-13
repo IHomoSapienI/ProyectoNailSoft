@@ -118,7 +118,7 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'VENTAS',
@@ -130,159 +130,114 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFD4AF37).withOpacity(0.7),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD4AF37)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withOpacity(0.7),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
-              onPressed: () {
-                setState(() {
-                  _loadVentas();
-                });
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFFD4AF37)),
+            onPressed: () {
+              setState(() {
+                _loadVentas();
+              });
+            },
           ),
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.black,
+          image: DecorationImage(
+            image: AssetImage('images/logo1.png'),
+            opacity: 0.05,
+            repeat: ImageRepeat.repeat,
+            colorFilter: ColorFilter.mode(
+              const Color(0xFFD4AF37),
+              BlendMode.srcIn,
+            ),
+          ),
         ),
-        child: Stack(
-          children: [
-            // Background pattern
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.05,
-                child: Image.asset(
-                  'images/logo1.png',
-                  repeat: ImageRepeat.repeat,
-                  color: const Color(0xFFD4AF37), // Gold color
-                ),
-              ),
-            ),
-            
-            // Decorative corner elements
-            Positioned(
-              top: 20,
-              left: 20,
-              child: _buildCornerDecoration(),
-            ),
-            Positioned(
-              top: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 1.57, // 90 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: Transform.rotate(
-                angle: 3.14, // 180 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: Transform.rotate(
-                angle: 4.71, // 270 degrees
-                child: _buildCornerDecoration(),
-              ),
-            ),
-            
-            // Main content
-            SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    if (_isLoading)
-                      Expanded(child: _buildLoading())
-                    else if (_allVentas.isEmpty)
-                      Expanded(child: _buildEmpty())
-                    else ...[
-                      // Información de paginación
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedVentas.length} de $_totalItems',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              'Página $_currentPage de $_totalPages',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              if (_isLoading)
+                Expanded(child: _buildLoading())
+              else if (_allVentas.isEmpty)
+                Expanded(child: _buildEmpty())
+              else ...[
+                // Información de paginación
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Mostrando ${(_currentPage - 1) * _itemsPerPage + 1}-${(_currentPage - 1) * _itemsPerPage + _paginatedVentas.length} de $_totalItems',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      
-                      // Lista de ventas
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(top: 8, bottom: 100),
-                          itemCount: _paginatedVentas.length,
-                          itemBuilder: (context, index) {
-                            final venta = _paginatedVentas[index];
-                            return _buildVentaCard(venta);
-                          },
+                      Text(
+                        'Página $_currentPage de $_totalPages',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 12,
                         ),
                       ),
-                      
-                      // Controles de paginación
-                      if (_totalPages > 1) _buildPaginationControls(),
                     ],
-                  ],
+                  ),
+                ),
+                
+                // Lista de ventas
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    itemCount: _paginatedVentas.length,
+                    itemBuilder: (context, index) {
+                      final venta = _paginatedVentas[index];
+                      return _buildVentaCard(venta);
+                    },
+                  ),
+                ),
+                
+                // Controles de paginación
+                if (_totalPages > 1) _buildPaginationControls(),
+              ],
+              
+              // Footer
+              Container(
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  '© Nailsoft 2024 - Todos los derechos reservados',
+                  style: TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD4AF37),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      floatingActionButton: null,
     );
   }
 
   /// Widget para mostrar una venta en una tarjeta expandible.
   Widget _buildVentaCard(Venta venta) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
@@ -529,71 +484,6 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
       ),
     );
   }
-
-  /// Widget para mostrar un mensaje de error.
-  Widget _buildError(String errorMessage) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: const Color(0xFFE0115F).withOpacity(0.5),
-                width: 2,
-              ),
-            ),
-            child: const Icon(
-              Icons.error_outline,
-              size: 60,
-              color: Color(0xFFE0115F),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Ha ocurrido un error',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              errorMessage,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              setState(() {
-                _loadVentas();
-              });
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reintentar'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: const Color(0xFFE0115F),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
   
   /// Widget para mostrar el estado de carga
   Widget _buildLoading() {
@@ -637,19 +527,6 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
       ),
     );
   }
-  
-  Widget _buildCornerDecoration() {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-          left: BorderSide(width: 2, color: const Color(0xFFD4AF37).withOpacity(0.7)),
-        ),
-      ),
-    );
-  }
 
   Widget _buildPaginationControls() {
     return Container(
@@ -658,19 +535,16 @@ class _ListVentasScreenState extends State<ListVentasScreen> with SingleTickerPr
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFD4AF37)),
             onPressed: _currentPage > 1 ? _previousPage : null,
+            icon: Icon(Icons.arrow_back_ios, color: _currentPage > 1 ? const Color(0xFFD4AF37) : Colors.grey),
           ),
           Text(
-            '$_currentPage / $_totalPages',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            '$_currentPage/$_totalPages',
+            style: const TextStyle(color: Colors.white),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, color: Color(0xFFD4AF37)),
             onPressed: _currentPage < _totalPages ? _nextPage : null,
+            icon: Icon(Icons.arrow_forward_ios, color: _currentPage < _totalPages ? const Color(0xFFD4AF37) : Colors.grey),
           ),
         ],
       ),

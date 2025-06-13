@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPercent, faTag, faSave, faTimes } from "@fortawesome/free-solid-svg-icons"
+import "./formularioServ.css";
 
 export default function FormularioTipoServicio({ tipoServicioSeleccionado, onTipoServicioActualizado, onClose }) {
   const [formData, setFormData] = useState({
